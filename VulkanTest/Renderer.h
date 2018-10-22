@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include "Util.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -21,6 +22,8 @@ public:
 
 	uint32_t getGraphicsFamilyIndex();
 	VkDevice getDevice();
+
+	VkQueue getQueue();
 
 private:
 	void _InitInstance();
@@ -40,10 +43,13 @@ private:
 
 	VkInstance instance = nullptr;
 	VkPhysicalDevice gpu = nullptr;
-	VkDevice device = VK_NULL_HANDLE;
+	VkDevice device = nullptr;
 	VkPhysicalDeviceProperties gpuProperties = {};
 	VkDebugReportCallbackEXT debugReportHandle = nullptr;
 	VkDebugReportCallbackCreateInfoEXT debugCallbackCreateInfo = {};
+	VkQueue	queue = nullptr;
+	PFN_vkCreateDebugReportCallbackEXT fvkCreateDebugReportCallbackEXT = nullptr;
+	PFN_vkDestroyDebugReportCallbackEXT fvkDestroyDebugReportCallbackEXT = nullptr;
 
 	std::vector<const char*> instanceLayers;
 	std::vector<const char*> instanceExtensions;

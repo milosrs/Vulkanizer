@@ -4,8 +4,8 @@
 Renderer::Renderer()
 {
 	SetupDebug();
-	InitDebug();
 	_InitInstance();
+	InitDebug();
 	_InitDevice();
 }
 
@@ -37,7 +37,7 @@ void Renderer::_InitInstance() {
 	VkResult result = vkCreateInstance(&instance_create_info, nullptr, &instance);
 
 	if (result < 0) {
-		assert(1 && "Vulkan Error: Create instance failed.");
+		assert(0 && "Vulkan Error: Create instance failed.");
 		std::exit(result);
 	}
 }
@@ -56,6 +56,7 @@ void Renderer::_DeinitDevice() {
 
 ///Trazimo GPU, smestamo sve GPU u listu.
 void Renderer::_InitDevice() {
+	Util& util = Util::instance();
 	VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
 	VkDeviceCreateInfo deviceCreateInfo{};
 	float queuePriorities[]{1.0f};
@@ -76,9 +77,13 @@ void Renderer::_InitDevice() {
 	
 	auto err = vkCreateDevice(this->gpu, &deviceCreateInfo, nullptr, &device);
 	if (VK_SUCCESS != err) {
-		assert(1 && "Vulkan Error: Device creation failed.");
+		assert(0 && "Vulkan Error: Device creation failed.");
 		exit(1);
 	}
+
+	util.ErrorCheck(err);
+
+	vkGetDeviceQueue(device, this->graphicsFamilyIndex, 0, &this->queue);			//Iz kog reda hocemo da fetchujemo? Mozemo imati vise queue...
 }
 
 void Renderer::createQueueFamilyProperties() {
@@ -100,7 +105,7 @@ void Renderer::createQueueFamilyProperties() {
 	}
 
 	if (!foundWantedQueue) {
-		assert(1 && "Vulkan Error: No GRAPHICS queue family found.");
+		assert(0 && "Vulkan Error: No GRAPHICS queue family found.");
 		exit(-1);
 	}
 }
@@ -144,24 +149,16 @@ void Renderer::enumerateInstanceLayers() {
 	std::cout << std::endl;
 }
 
-void Renderer::SetupDebug() {
-	debugCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-	debugCallbackCreateInfo.pfnCallback = VulkanDebugCallback;
-	debugCallbackCreateInfo.flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT
-		| VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT
-		| VK_DEBUG_REPORT_DEBUG_BIT_EXT | VK_DEBUG_REPORT_FLAG_BITS_MAX_ENUM_EXT
-		| 0;
-
-	instanceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
-	instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
+{
+	wchar_t* wString = new wchar_t[4096];
+	MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
+	return wString;
 }
-
-PFN_vkCreateDebugReportCallbackEXT fvkCreateDebugReportCallbackEXT = nullptr;
-PFN_vkDestroyDebugReportCallbackEXT fvkDestroyDebugReportCallbackEXT = nullptr;
 
 //True ili false, kako ce se layeri ponasati po nastanku greske. True - Vulkan Core ili drugi layer nece okinuti kod. False - Ide uvek do Vulkan Core-a (.
 VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback
-( 
+(
 	VkDebugReportFlagsEXT flags,					//Kojom vrstom greske/upozorenja se upravlja? (Peek definition)
 	VkDebugReportObjectTypeEXT objectType,			//Tip objekta koji je proizveo gresku?
 	uint64_t src_obj,								//Pokazivac na taj objekat
@@ -171,17 +168,15 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback
 	const char* msg,								//Poruka greske (Opet citljiv)
 	void* userData									//Opet bog zna
 ) {
+	bool shouldShowMessage = false;
 	std::cout << msg << std::endl;
 	std::cout << "VulkanDebug: ";
 	std::ostringstream stream;
 
 	switch (flags) {
-		case VK_DEBUG_REPORT_INFORMATION_BIT_EXT: stream << "INFORMATION bit \n" << std::endl; break;
-		case VK_DEBUG_REPORT_WARNING_BIT_EXT: stream << "WARNING bit \n" << std::endl; break;
-		case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT: stream << "PERFORMANCE WARNING bit \n" << std::endl; break;
-		case VK_DEBUG_REPORT_ERROR_BIT_EXT: stream << "ERROR bit \n" << std::endl; break;
-		case VK_DEBUG_REPORT_DEBUG_BIT_EXT: stream << "DEBUG bit \n" << std::endl; break;
-		case VK_DEBUG_REPORT_FLAG_BITS_MAX_ENUM_EXT: stream << "FLAG BITS MAX ENUM bit \n" << std::endl; break;
+	case VK_DEBUG_REPORT_WARNING_BIT_EXT: stream << "WARNING bit \n" << std::endl; shouldShowMessage = true; break;
+	case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT: stream << "PERFORMANCE WARNING bit \n" << std::endl; shouldShowMessage = true; break;
+	case VK_DEBUG_REPORT_ERROR_BIT_EXT: stream << "ERROR bit \n" << std::endl; shouldShowMessage = true; break;
 	}
 
 	stream << "@[" << layerPrefix << "]: ";
@@ -189,18 +184,35 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback
 	std::cout << stream.str();
 
 #ifdef _WIN32
-	MessageBox(NULL, (LPCWSTR)stream.str().c_str(), L"Vulkan Error!", 0);
+	if(shouldShowMessage)
+		MessageBox(NULL, convertCharArrayToLPCWSTR(stream.str().c_str()), L"Vulkan Error!", 0);
 #endif // DEBUG
 
 	return false;									//xD
 }
 
+void Renderer::SetupDebug() {
+	debugCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+	debugCallbackCreateInfo.pfnCallback = VulkanDebugCallback;
+	debugCallbackCreateInfo.flags = 
+	//	VK_DEBUG_REPORT_INFORMATION_BIT_EXT |
+		 VK_DEBUG_REPORT_WARNING_BIT_EXT
+		| VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT 
+		| VK_DEBUG_REPORT_ERROR_BIT_EXT
+	//	| VK_DEBUG_REPORT_DEBUG_BIT_EXT 
+		| VK_DEBUG_REPORT_FLAG_BITS_MAX_ENUM_EXT
+		| 0;
+
+	instanceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
+	instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+}
+
 void Renderer::InitDebug() {
-	fvkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "fvkCreateDebugReportCallbackEXT");
-	fvkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "fvkDestroyDebugReportCallbackEXT");
+	fvkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
+	fvkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
 
 	if (nullptr == fvkCreateDebugReportCallbackEXT || nullptr == fvkDestroyDebugReportCallbackEXT) {
-		assert(1 && "Vulkan Error: Error creating debug report callbacks.");
+		assert(0 && "Vulkan Error: Error creating debug report callbacks.");
 		exit(-1);
 	}
 	
@@ -218,4 +230,8 @@ uint32_t Renderer::getGraphicsFamilyIndex() {
 
 VkDevice Renderer::getDevice() {
 	return this->device;
+}
+
+VkQueue Renderer::getQueue() {
+	return this->queue;
 }
