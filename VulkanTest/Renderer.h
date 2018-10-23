@@ -1,6 +1,9 @@
 #pragma once
+#ifndef RENDERER_H
+#define RENDERER_H
+#endif // !RENDERER_H
 
-#include <vulkan/vulkan.h>
+#include "PLATFORM.h"
 #include <vector>
 #include <cstdlib>
 #include <assert.h>
@@ -9,10 +12,9 @@
 #include <iostream>
 #include <sstream>
 #include "Util.h"
+#include "BUILD_OPTIONS.h"
 
-#ifdef _WIN32
-#include <Windows.h>
-#endif
+class MainWindow;
 
 class Renderer
 {
@@ -21,9 +23,17 @@ public:
 	~Renderer();
 
 	uint32_t getGraphicsFamilyIndex();
-	VkDevice getDevice();
 
-	VkQueue getQueue();
+	MainWindow* createWindow(uint32_t, uint32_t, std::string);
+	bool run();
+
+	const VkInstance getInstance();
+	const VkPhysicalDevice getGpu();
+	const VkDevice getDevice();
+	const VkPhysicalDeviceProperties& getGpuProperties();
+	const VkDebugReportCallbackEXT getDebugReportHandle();
+	const VkDebugReportCallbackCreateInfoEXT& getDebugCallbackCreateInfo();
+	const VkQueue getQueue();
 
 private:
 	void _InitInstance();
@@ -35,6 +45,7 @@ private:
 	void SetupDebug();
 	void InitDebug();
 	void DeinitDebug();
+	void SetupLayersAndExtensions();
 
 	void enumerateInstanceLayers();
 	void enumerateDeviceLayers();
@@ -48,12 +59,17 @@ private:
 	VkDebugReportCallbackEXT debugReportHandle = nullptr;
 	VkDebugReportCallbackCreateInfoEXT debugCallbackCreateInfo = {};
 	VkQueue	queue = nullptr;
+
+	
+
 	PFN_vkCreateDebugReportCallbackEXT fvkCreateDebugReportCallbackEXT = nullptr;
 	PFN_vkDestroyDebugReportCallbackEXT fvkDestroyDebugReportCallbackEXT = nullptr;
 
 	std::vector<const char*> instanceLayers;
 	std::vector<const char*> instanceExtensions;
 
+
+	MainWindow* window;
 	uint32_t graphicsFamilyIndex = 0;
 };
 

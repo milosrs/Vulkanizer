@@ -10,6 +10,8 @@ Util::~Util()
 {
 }
 
+#if BUILD_ENABLE_VULKAN_RUNTIME_DEBUG
+
 void Util::ErrorCheck(VkResult result) {
 	if (result < 0) {
 		std::cout << "Vulkan Error: ";
@@ -38,6 +40,17 @@ void Util::ErrorCheck(VkResult result) {
 		case VK_ERROR_NOT_PERMITTED_EXT : std::cout << "Not permitted" << std::endl; break;
 		}
 	}
+}
+
+#else
+void Util::ErrorCheck(VkResult result) {};
+#endif
+
+wchar_t* Util::convertCharArrayToLPCWSTR(const char* charArray)
+{
+	wchar_t* wString = new wchar_t[4096];
+	MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
+	return wString;
 }
 
 VkDevice Util::getDevice() {

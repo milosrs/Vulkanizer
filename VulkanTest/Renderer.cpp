@@ -3,6 +3,7 @@
 
 Renderer::Renderer()
 {
+	SetupLayersAndExtensions();
 	SetupDebug();
 	_InitInstance();
 	InitDebug();
@@ -15,6 +16,7 @@ Renderer::~Renderer()
 	DeinitDebug();
 	_DeinitInstance();
 	_DeinitDevice();
+	delete this->window;
 }
 
 void Renderer::_InitInstance() {
@@ -54,7 +56,7 @@ void Renderer::_DeinitDevice() {
 	}
 }
 
-///Trazimo GPU, smestamo sve GPU u listu.
+//Trazimo GPU, smestamo sve GPU u listu.
 void Renderer::_InitDevice() {
 	Util& util = Util::instance();
 	VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
@@ -149,12 +151,20 @@ void Renderer::enumerateInstanceLayers() {
 	std::cout << std::endl;
 }
 
-wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
-{
-	wchar_t* wString = new wchar_t[4096];
-	MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
-	return wString;
+MainWindow* Renderer::createWindow(uint32_t sizeX, uint32_t sizeY, std::string windowName) {
+	this->window = new MainWindow(this, sizeX, sizeY, windowName);
+	return this->window;
 }
+
+bool Renderer::run() {
+	if (this->window != nullptr) {
+		return this->window->update();
+	}
+
+	return true;
+}
+
+#if BUILD_ENABLE_VULKAN_DEBUG
 
 //True ili false, kako ce se layeri ponasati po nastanku greske. True - Vulkan Core ili drugi layer nece okinuti kod. False - Ide uvek do Vulkan Core-a (.
 VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback
@@ -168,6 +178,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback
 	const char* msg,								//Poruka greske (Opet citljiv)
 	void* userData									//Opet bog zna
 ) {
+	Util& util = Util::instance();
 	bool shouldShowMessage = false;
 	std::cout << msg << std::endl;
 	std::cout << "VulkanDebug: ";
@@ -185,7 +196,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback
 
 #ifdef _WIN32
 	if(shouldShowMessage)
-		MessageBox(NULL, convertCharArrayToLPCWSTR(stream.str().c_str()), L"Vulkan Error!", 0);
+		MessageBox(NULL, util.convertCharArrayToLPCWSTR(stream.str().c_str()), L"Vulkan Error!", 0);
 #endif // DEBUG
 
 	return false;									//xD
@@ -224,14 +235,27 @@ void Renderer::DeinitDebug() {
 	debugReportHandle = nullptr;
 }
 
+void Renderer::SetupLayersAndExtensions()
+{
+	//instanceExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);		Direktno koristi ekran, sto ne mozemo na PC-u i telefonu
+	instanceExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+	instanceExtensions.push_back(PLATFORM_SURFACE_EXTENSION_NAME);
+}
+
+#else
+void Renderer::SetupDebug() {};
+void Renderer::DeinitDebug() {};
+void Renderer::InitDebug() {};
+#endif		//BUILD_ENABLE_VULKAN_DEBUG
+
 uint32_t Renderer::getGraphicsFamilyIndex() {
 	return this->graphicsFamilyIndex;
 }
 
-VkDevice Renderer::getDevice() {
+const VkDevice Renderer::getDevice() {
 	return this->device;
 }
 
-VkQueue Renderer::getQueue() {
+const VkQueue Renderer::getQueue() {
 	return this->queue;
 }

@@ -157,10 +157,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BUILD_OPTIONS.h" />
     <ClInclude Include="CommandBuffer.h" />
     <ClInclude Include="CommandBufferSemaphoreInfo.h" />
     <ClInclude Include="CommandPool.h" />
+    <ClInclude Include="MainWindow.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PLATFORM.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Semaphore.h" />
     <ClInclude Include="Util.h" />
@@ -169,6 +172,7 @@
     <ClCompile Include="CommandBuffer.cpp" />
     <ClCompile Include="CommandBufferSemaphoreInfo.cpp" />
     <ClCompile Include="CommandPool.cpp" />
+    <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
