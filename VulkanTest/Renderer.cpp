@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Renderer.h"
-
+#include "MainWindow.h"
 Renderer::Renderer()
 {
 	SetupLayersAndExtensions();

@@ -69,7 +69,7 @@ private:
 	std::vector<const char*> instanceExtensions;
 
 
-	MainWindow* window;
+	MainWindow* window = NULL;
 	uint32_t graphicsFamilyIndex = 0;
 };
 

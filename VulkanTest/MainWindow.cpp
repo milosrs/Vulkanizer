@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "MainWindow.h"
+#include "Renderer.h"
 
 MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::string windowName)
 {

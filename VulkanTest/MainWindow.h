@@ -31,7 +31,7 @@ private:
 	void InitSurface();
 	void DestroySurface();
 
-	Renderer* renderer = nullptr;
+	Renderer* renderer = NULL;
 	VkSurfaceKHR surfaceKHR = nullptr;
 	VkSurfaceCapabilitiesKHR surfaceCapatibilities = {};
 	VkBool32 isWSISupported = false;
