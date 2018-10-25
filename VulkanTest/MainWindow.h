@@ -6,10 +6,12 @@
 #include "PLATFORM.h"
 #include "BUILD_OPTIONS.h"
 #include "Util.h"
+#include "Util.h"
 #include <vector>
 #include <string>
 #include <assert.h>
 #include <iostream>
+#include <vector>
 
 class Renderer;
 
@@ -31,12 +33,23 @@ private:
 	void InitSurface();
 	void DestroySurface();
 
+	void initSwapchain();
+	void destroySwapchain();
+
+	void initSwapchainImgs();
+	void destroySwapchainImgs();
+
 	Renderer* renderer = NULL;
 	VkSurfaceKHR surfaceKHR = nullptr;
 	VkSurfaceCapabilitiesKHR surfaceCapatibilities = {};
 	VkBool32 isWSISupported = false;
 	VkSurfaceFormatKHR surfaceFormat = {};
-
+	VkSwapchainKHR swapchain = nullptr;
+	VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
+	std::vector<VkImage> images;
+	std::vector<VkImageView> imageViews;
+	
+	uint32_t swapchainImageCount = 2;
 	uint32_t sizeX = 512;
 	uint32_t sizeY = 512;
 	std::string name = "MainWindow";

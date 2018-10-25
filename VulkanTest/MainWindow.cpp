@@ -11,6 +11,8 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 
 	InitOSWindow();
 	InitSurface();
+	initSwapchain();
+	initSwapchainImgs();
 }
 
 
@@ -18,6 +20,8 @@ MainWindow::~MainWindow()
 {
 	DestroySurface();
 	DeinitOSWindow();
+	destroySwapchain();
+	destroySwapchainImgs();
 }
 
 void MainWindow::close()
@@ -45,6 +49,12 @@ void MainWindow::InitSurface() {
 	}
 
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, this->surfaceKHR, &surfaceCapatibilities);
+
+	if (surfaceCapatibilities.currentExtent.width < UINT32_MAX) {		//Ako je > exception
+		surfaceX = surfaceCapatibilities.currentExtent.width;
+		surfaceY = surfaceCapatibilities.currentExtent.height;
+	}
+
 	{
 		vkGetPhysicalDeviceSurfaceFormatsKHR(device, this->surfaceKHR, &formatCount, nullptr);	//Kakve frame buffere treba da napravimo
 		
@@ -63,6 +73,92 @@ void MainWindow::InitSurface() {
 		else {
 			this->surfaceFormat = surfaceFormats[0];
 		}
+	}
+}
+
+void MainWindow::initSwapchain() {
+	Util& util = Util::instance();
+
+	if (swapchainImageCount > surfaceCapatibilities.maxImageCount) {
+		swapchainImageCount = surfaceCapatibilities.maxImageCount;
+	}
+	if (swapchainImageCount < surfaceCapatibilities.minImageCount) {
+		swapchainImageCount = surfaceCapatibilities.minImageCount + 1;
+	}
+
+	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;					//Ako nista drugo ne radi, Vulkan garantuje da je ovaj prez. mode dostupan
+
+	{
+		uint32_t presentModeCount = 0;
+		vkGetPhysicalDeviceSurfacePresentModesKHR(renderer->getGpu(), this->surfaceKHR, &presentModeCount, nullptr);
+		std::vector<VkPresentModeKHR> presentModeList(presentModeCount);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(renderer->getGpu(), this->surfaceKHR, &presentModeCount, presentModeList.data());
+
+		if (std::find(presentModeList.begin(), presentModeList.end(), VK_PRESENT_MODE_MAILBOX_KHR) != presentModeList.end()) {
+			presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+		}
+	}
+
+	swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	swapchainCreateInfo.surface = this->surfaceKHR;
+	swapchainCreateInfo.minImageCount = swapchainImageCount;					//Double buffering (Bufferovanje slika display buffera)
+	swapchainCreateInfo.imageFormat = this->surfaceFormat.format;
+	swapchainCreateInfo.imageColorSpace = this->surfaceFormat.colorSpace;
+	swapchainCreateInfo.imageExtent.width = this->surfaceX;
+	swapchainCreateInfo.imageExtent.height = this->surfaceY;
+	swapchainCreateInfo.imageArrayLayers = 1;									//Koliko slojeva ima slika (1 je obicno renderovanje, 2 je stetoskopsko)
+	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;			//NE delimo slike izmedju Queue-ova. Paralel znaci da hocemo da delimo.
+	swapchainCreateInfo.queueFamilyIndexCount = 0;								//Za exclusive je uvek 0
+	swapchainCreateInfo.pQueueFamilyIndices = nullptr;							//Isto ignorisemo za Exclusive
+	swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;	
+	swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;		//Alfa kanal SURFACE-a, da li je ona transparentna
+	swapchainCreateInfo.presentMode = ;											//Vertical Sync
+	swapchainCreateInfo.clipped = VK_TRUE;										//Ukljucujemo clipping, jako bitno za telefone
+	swapchainCreateInfo.oldSwapchain = swapchain;								//Ako rekonstruisemo swapchain, pokazivac na stari
+
+	util.ErrorCheck(vkCreateSwapchainKHR(renderer->getDevice(), &swapchainCreateInfo, nullptr, &swapchain));
+	util.ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, nullptr));
+}
+
+void MainWindow::destroySwapchain()
+{
+	vkDestroySwapchainKHR(renderer->getDevice(), swapchain, nullptr);
+}
+
+void MainWindow::initSwapchainImgs()
+{
+	Util& util = Util::instance();
+	images.resize(swapchainImageCount);
+	imageViews.resize(swapchainImageCount);
+
+	util.ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, images.data()));
+
+	for (int i = 0; i < swapchainImageCount; i++) {
+		VkImageViewCreateInfo imgCreateInfo = {};
+		imgCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+		imgCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+		imgCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+		imgCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+		imgCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imgCreateInfo.subresourceRange.baseMipLevel = 0;
+		imgCreateInfo.subresourceRange.levelCount = 1;
+		imgCreateInfo.subresourceRange.baseArrayLayer = 0;
+		imgCreateInfo.subresourceRange.layerCount = 1;
+		imgCreateInfo.format = surfaceFormat.format;
+		imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imgCreateInfo.image = images[i];
+		imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+
+		util.ErrorCheck(vkCreateImageView(renderer->getDevice(), &imgCreateInfo, nullptr, &imageViews[i]));
+	}
+}	
+
+void MainWindow::destroySwapchainImgs()
+{
+	for (int i = 0; i < imageViews.size(); i++) {
+		vkDestroyImageView(renderer->getDevice(), imageViews[i], nullptr);
 	}
 }
 

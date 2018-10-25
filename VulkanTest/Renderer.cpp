@@ -240,6 +240,7 @@ void Renderer::SetupLayersAndExtensions()
 	//instanceExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);		Direktno koristi ekran, sto ne mozemo na PC-u i telefonu
 	instanceExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 	instanceExtensions.push_back(PLATFORM_SURFACE_EXTENSION_NAME);
+	instanceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);		//Omogucava swapchain
 }
 
 #else
