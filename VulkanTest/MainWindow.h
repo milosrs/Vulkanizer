@@ -39,22 +39,33 @@ private:
 	void initSwapchainImgs();
 	void destroySwapchainImgs();
 
+	void initDepthStencilImage();
+	void destroyDepthStencilImage();
+
 	Renderer* renderer = NULL;
 	VkSurfaceKHR surfaceKHR = nullptr;
 	VkSurfaceCapabilitiesKHR surfaceCapatibilities = {};
 	VkBool32 isWSISupported = false;
 	VkSurfaceFormatKHR surfaceFormat = {};
+
 	VkSwapchainKHR swapchain = nullptr;
 	VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
 	std::vector<VkImage> images;
 	std::vector<VkImageView> imageViews;
-	
+
+	VkImage depthStencilImage = nullptr;						//Ne treba nam vise od jedne slike, jedino ako hocemo double/tripple buffering
+	VkImageView depthStencilImageView = nullptr;				//Ne treba nam vise od jedne slike, jedino ako hocemo double/tripple buffering
+	VkFormat depthStencilFormat = VK_FORMAT_UNDEFINED;
+	VkMemoryAllocateInfo allocateInfo = {};
+	VkDeviceMemory depthStencilImageMemory = nullptr;
+
 	uint32_t swapchainImageCount = 2;
 	uint32_t sizeX = 512;
 	uint32_t sizeY = 512;
 	std::string name = "MainWindow";
 
 	bool window_should_run = true;
+	bool stencilAvaiable = false;
 	uint32_t							surfaceX = 512;
 	uint32_t							surfaceY = 512;
 	std::string							_window_name;

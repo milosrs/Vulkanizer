@@ -13,15 +13,17 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 	InitSurface();
 	initSwapchain();
 	initSwapchainImgs();
+	initDepthStencilImage();
 }
 
 
 MainWindow::~MainWindow()
 {
+	destroyDepthStencilImage();
+	destroySwapchainImgs();
+	destroySwapchain();
 	DestroySurface();
 	DeinitOSWindow();
-	destroySwapchain();
-	destroySwapchainImgs();
 }
 
 void MainWindow::close()
@@ -50,13 +52,13 @@ void MainWindow::InitSurface() {
 
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, this->surfaceKHR, &surfaceCapatibilities);
 
-	if (surfaceCapatibilities.currentExtent.width < UINT32_MAX) {		//Ako je > exception
+	if (surfaceCapatibilities.currentExtent.width < UINT32_MAX) {												//Ako je > exception
 		surfaceX = surfaceCapatibilities.currentExtent.width;
 		surfaceY = surfaceCapatibilities.currentExtent.height;
 	}
 
 	{
-		vkGetPhysicalDeviceSurfaceFormatsKHR(device, this->surfaceKHR, &formatCount, nullptr);	//Kakve frame buffere treba da napravimo
+		vkGetPhysicalDeviceSurfaceFormatsKHR(device, this->surfaceKHR, &formatCount, nullptr);					//Kakve frame buffere treba da napravimo
 		
 		if (formatCount == 0) {
 			assert(0 && "Surface format missing.");
@@ -66,7 +68,7 @@ void MainWindow::InitSurface() {
 		std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
 		vkGetPhysicalDeviceSurfaceFormatsKHR(device, this->surfaceKHR, &formatCount, surfaceFormats.data());	//Kakve frame buffere treba da napravimo
 		
-		if (surfaceFormats[0].format == VK_FORMAT_UNDEFINED) {			//Surface-u nije bitan format
+		if (surfaceFormats[0].format == VK_FORMAT_UNDEFINED) {													//Surface-u nije bitan format
 			this->surfaceFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 			this->surfaceFormat.format = VK_FORMAT_B8G8R8_UNORM;
 		}
@@ -160,6 +162,87 @@ void MainWindow::destroySwapchainImgs()
 	for (int i = 0; i < imageViews.size(); i++) {
 		vkDestroyImageView(renderer->getDevice(), imageViews[i], nullptr);
 	}
+}
+
+void MainWindow::initDepthStencilImage()
+{
+	{
+		std::vector<VkFormat> tryoutFormats
+		{
+			VK_FORMAT_D32_SFLOAT_S8_UINT,
+			VK_FORMAT_D24_UNORM_S8_UINT,
+			VK_FORMAT_D16_UNORM,
+			VK_FORMAT_D16_UNORM_S8_UINT,
+			VK_FORMAT_D32_SFLOAT
+		};
+
+		for (auto f : tryoutFormats) {
+			VkFormatProperties formatProperties = {};
+			vkGetPhysicalDeviceFormatProperties(renderer->getGpu(), f, &formatProperties);
+
+			if (formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
+				depthStencilFormat = f;
+				break;
+			}
+		}
+		if (depthStencilFormat == VK_FORMAT_UNDEFINED) {
+			assert(0 && "Vulkan Error: No depth stencil format avaiable");
+			exit(-1);
+		}
+
+		stencilAvaiable = depthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+							depthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
+							depthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT ||
+							depthStencilFormat == VK_FORMAT_D32_SFLOAT;
+	}
+
+	VkImageCreateInfo imgInfo = {};
+	imgInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imgInfo.flags = 0;												//Pogledaj sta ima i dokumentaciju
+	imgInfo.imageType = VK_IMAGE_TYPE_2D;
+	imgInfo.extent.width = surfaceX;
+	imgInfo.extent.height = surfaceY;
+	imgInfo.extent.depth = 1;
+	imgInfo.mipLevels = 1;											//Nivo mipmapinga. Ako je 0 nema slike.
+	imgInfo.arrayLayers = 1;										//Slojevi slike. Ako je 0 nema slike.
+	imgInfo.samples = VK_SAMPLE_COUNT_1_BIT;						//Multisampling, ne koristimo multisample. Ako koristimo multisample, moramo da koristimo isti sample i za depthStencil i sa swapchain slike
+	imgInfo.tiling = VK_IMAGE_TILING_OPTIMAL;						//Kako se slika dobija, ovo je bitno za teksture. (Fragmentacija trouglova)
+	imgInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;	//Kako koristimo sliku
+	imgInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;				//Da li delimo sliku izmedju redova (Trenutno ne)
+	imgInfo.queueFamilyIndexCount = VK_QUEUE_FAMILY_IGNORED;
+	imgInfo.pQueueFamilyIndices = nullptr;
+	imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;				//Slike u Vulkanu imaju uvek neki layout.
+	imgInfo.format = depthStencilFormat;							//Moramo da proverimo koji format je podrzan na nasoj GPU
+
+	vkCreateImage(renderer->getDevice(), &imgInfo, nullptr, &depthStencilImage);		//Ako izostavimo metodu ispod, nece nam raditi program jer nije alocirana memorija za sliku
+	
+	this->allocateInfo.allocationSize = ;
+	this->allocateInfo.memoryTypeIndex = ;
+	this->allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	this->allocateInfo.pNext = ;
+	
+	vkAllocateMemory(renderer->getDevice(), &this->allocateInfo, nullptr, &this->depthStencilImageMemory);
+
+	VkImageViewCreateInfo imgCreateInfo = {};
+	imgCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+	imgCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+	imgCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+	imgCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+	imgCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | (stencilAvaiable ? VK_IMAGE_ASPECT_STENCIL_BIT : 0);
+	imgCreateInfo.subresourceRange.baseMipLevel = 0;
+	imgCreateInfo.subresourceRange.levelCount = 1;
+	imgCreateInfo.subresourceRange.baseArrayLayer = 0;
+	imgCreateInfo.subresourceRange.layerCount = 1;
+	imgCreateInfo.format = depthStencilFormat;
+	imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imgCreateInfo.image = depthStencilImage;
+	imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+	vkCreateImageView(renderer->getDevice(), &imgCreateInfo, nullptr, &depthStencilImageView);
+}
+
+void MainWindow::destroyDepthStencilImage()
+{
 }
 
 void MainWindow::DestroySurface() {
