@@ -70,6 +70,8 @@ private:
 	uint32_t							surfaceY = 512;
 	std::string							_window_name;
 
+	Util* util = nullptr;
+
 #if VK_USE_PLATFORM_WIN32_KHR
 	HINSTANCE							win32_instance = NULL;
 	HWND								win32_window = NULL;

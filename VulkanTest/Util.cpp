@@ -76,3 +76,14 @@ void Util::setGraphicsFamilyIndex(uint32_t gfi) {
 void Util::setCommandPool(VkCommandPool pool) {
 	this->commandPool = pool;
 }
+
+uint32_t Util::findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties * memoryProps, const VkMemoryRequirements * memoryRequirements, const VkMemoryPropertyFlags memoryFlags)
+{
+	for (uint32_t i = 0; i < memoryProps->memoryTypeCount; ++i) {
+		if (memoryRequirements->memoryTypeBits & (1 << i)) {
+			if ((memoryProps->memoryTypes[i].propertyFlags & memoryFlags) == memoryFlags) {
+				return i;
+			}
+		}
+	}
+}

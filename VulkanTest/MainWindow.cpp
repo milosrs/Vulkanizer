@@ -8,6 +8,7 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 	this->sizeX = sizeX;
 	this->sizeY = sizeY;
 	this->name = windowName;
+	this->util = &Util::instance();
 
 	InitOSWindow();
 	InitSurface();
@@ -79,8 +80,6 @@ void MainWindow::InitSurface() {
 }
 
 void MainWindow::initSwapchain() {
-	Util& util = Util::instance();
-
 	if (swapchainImageCount > surfaceCapatibilities.maxImageCount) {
 		swapchainImageCount = surfaceCapatibilities.maxImageCount;
 	}
@@ -115,12 +114,12 @@ void MainWindow::initSwapchain() {
 	swapchainCreateInfo.pQueueFamilyIndices = nullptr;							//Isto ignorisemo za Exclusive
 	swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;	
 	swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;		//Alfa kanal SURFACE-a, da li je ona transparentna
-	swapchainCreateInfo.presentMode = ;											//Vertical Sync
+	swapchainCreateInfo.presentMode = presentMode;								//Vertical Sync
 	swapchainCreateInfo.clipped = VK_TRUE;										//Ukljucujemo clipping, jako bitno za telefone
 	swapchainCreateInfo.oldSwapchain = swapchain;								//Ako rekonstruisemo swapchain, pokazivac na stari
 
-	util.ErrorCheck(vkCreateSwapchainKHR(renderer->getDevice(), &swapchainCreateInfo, nullptr, &swapchain));
-	util.ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, nullptr));
+	util->ErrorCheck(vkCreateSwapchainKHR(renderer->getDevice(), &swapchainCreateInfo, nullptr, &swapchain));
+	util->ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, nullptr));
 }
 
 void MainWindow::destroySwapchain()
@@ -130,11 +129,10 @@ void MainWindow::destroySwapchain()
 
 void MainWindow::initSwapchainImgs()
 {
-	Util& util = Util::instance();
 	images.resize(swapchainImageCount);
 	imageViews.resize(swapchainImageCount);
 
-	util.ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, images.data()));
+	util->ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, images.data()));
 
 	for (int i = 0; i < swapchainImageCount; i++) {
 		VkImageViewCreateInfo imgCreateInfo = {};
@@ -153,7 +151,7 @@ void MainWindow::initSwapchainImgs()
 		imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 
 
-		util.ErrorCheck(vkCreateImageView(renderer->getDevice(), &imgCreateInfo, nullptr, &imageViews[i]));
+		util->ErrorCheck(vkCreateImageView(renderer->getDevice(), &imgCreateInfo, nullptr, &imageViews[i]));
 	}
 }	
 
@@ -214,14 +212,23 @@ void MainWindow::initDepthStencilImage()
 	imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;				//Slike u Vulkanu imaju uvek neki layout.
 	imgInfo.format = depthStencilFormat;							//Moramo da proverimo koji format je podrzan na nasoj GPU
 
+	VkMemoryRequirements memoryRequirements = {};
+
 	vkCreateImage(renderer->getDevice(), &imgInfo, nullptr, &depthStencilImage);		//Ako izostavimo metodu ispod, nece nam raditi program jer nije alocirana memorija za sliku
+	vkGetImageMemoryRequirements(renderer->getDevice(), this->depthStencilImage, &memoryRequirements);
+
 	
-	this->allocateInfo.allocationSize = ;
-	this->allocateInfo.memoryTypeIndex = ;
+	VkPhysicalDeviceMemoryProperties memoryProps = renderer->getPhysicalDeviceMemoryProperties();
+
+
+	uint32_t memoryIndex = this->util->findMemoryTypeIndex(&memoryProps, &memoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	this->allocateInfo.allocationSize = memoryRequirements.size;
+	this->allocateInfo.memoryTypeIndex = memoryIndex;
 	this->allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	this->allocateInfo.pNext = ;
-	
+
+	//Postoji ogranicen broj alokacija na GPU-u.
 	vkAllocateMemory(renderer->getDevice(), &this->allocateInfo, nullptr, &this->depthStencilImageMemory);
+	vkBindImageMemory(renderer->getDevice(), depthStencilImage, depthStencilImageMemory, 0);
 
 	VkImageViewCreateInfo imgCreateInfo = {};
 	imgCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -243,6 +250,9 @@ void MainWindow::initDepthStencilImage()
 
 void MainWindow::destroyDepthStencilImage()
 {
+	vkDestroyImageView(renderer->getDevice(), depthStencilImageView, nullptr);
+	vkFreeMemory(renderer->getDevice(), depthStencilImageMemory, nullptr);
+	vkDestroyImage(renderer->getDevice(), depthStencilImage, nullptr);
 }
 
 void MainWindow::DestroySurface() {
@@ -277,7 +287,6 @@ uint64_t	MainWindow::win32_class_id_counter = 0;
 
 void MainWindow::InitOSWindow()
 {
-	Util& util = Util::instance();
 	WNDCLASSEX win_class{};
 	assert(sizeX > 0);
 	assert(sizeY > 0);
@@ -298,7 +307,7 @@ void MainWindow::InitOSWindow()
 	win_class.hCursor = LoadCursor(NULL, IDC_ARROW);
 	win_class.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	win_class.lpszMenuName = NULL;
-	win_class.lpszClassName = util.convertCharArrayToLPCWSTR(win32_class_name.c_str());
+	win_class.lpszClassName = util->convertCharArrayToLPCWSTR(win32_class_name.c_str());
 	win_class.hIconSm = LoadIcon(NULL, IDI_WINLOGO);
 	// Register window class:
 	if (!RegisterClassEx(&win_class)) {
@@ -315,8 +324,8 @@ void MainWindow::InitOSWindow()
 	RECT wr = { 0, 0, LONG(surfaceX), LONG(surfaceY) };
 	AdjustWindowRectEx(&wr, style, FALSE, ex_style);
 	win32_window = CreateWindowEx(0,
-		util.convertCharArrayToLPCWSTR(win32_class_name.c_str()),		// class name
-		util.convertCharArrayToLPCWSTR(_window_name.c_str()),			// app name
+		util->convertCharArrayToLPCWSTR(win32_class_name.c_str()),		// class name
+		util->convertCharArrayToLPCWSTR(_window_name.c_str()),			// app name
 		style,							// window style
 		CW_USEDEFAULT, CW_USEDEFAULT,	// x/y coords
 		wr.right - wr.left,				// width
@@ -340,9 +349,8 @@ void MainWindow::InitOSWindow()
 
 void MainWindow::DeinitOSWindow()
 {
-	Util& util = Util::instance();
 	DestroyWindow(win32_window);
-	UnregisterClass(util.convertCharArrayToLPCWSTR(win32_class_name.c_str()), win32_instance);
+	UnregisterClass(util->convertCharArrayToLPCWSTR(win32_class_name.c_str()), win32_instance);
 }
 
 void MainWindow::UpdateOSWindow()

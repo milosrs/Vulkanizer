@@ -34,6 +34,7 @@ public:
 	const VkDebugReportCallbackEXT getDebugReportHandle();
 	const VkDebugReportCallbackCreateInfoEXT& getDebugCallbackCreateInfo();
 	const VkQueue getQueue();
+	const VkPhysicalDeviceMemoryProperties& getPhysicalDeviceMemoryProperties();
 
 private:
 	void _InitInstance();
@@ -59,7 +60,7 @@ private:
 	VkDebugReportCallbackEXT debugReportHandle = nullptr;
 	VkDebugReportCallbackCreateInfoEXT debugCallbackCreateInfo = {};
 	VkQueue	queue = nullptr;
-
+	VkPhysicalDeviceMemoryProperties gpuMemoryProperties = {};
 	
 
 	PFN_vkCreateDebugReportCallbackEXT fvkCreateDebugReportCallbackEXT = nullptr;

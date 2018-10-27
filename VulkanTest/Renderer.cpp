@@ -64,7 +64,6 @@ void Renderer::_InitDevice() {
 	float queuePriorities[]{1.0f};
 
 	this->createPhysicalDevices();
-	this->createPhysicalDevices();
 	this->enumerateInstanceLayers();
 	this->enumerateDeviceLayers();
 
@@ -121,6 +120,7 @@ void Renderer::createPhysicalDevices() {
 
 	gpu = gpuList[0];
 	vkGetPhysicalDeviceProperties(gpu, &gpuProperties);
+	vkGetPhysicalDeviceMemoryProperties(gpu, &gpuMemoryProperties);
 }
 
 void Renderer::enumerateDeviceLayers() {
@@ -259,4 +259,9 @@ const VkDevice Renderer::getDevice() {
 
 const VkQueue Renderer::getQueue() {
 	return this->queue;
+}
+
+const VkPhysicalDeviceMemoryProperties & Renderer::getPhysicalDeviceMemoryProperties()
+{
+	return this->gpuMemoryProperties;
 }
