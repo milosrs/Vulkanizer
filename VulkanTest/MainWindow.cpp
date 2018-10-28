@@ -15,11 +15,15 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 	initSwapchain();
 	initSwapchainImgs();
 	initDepthStencilImage();
+	initRenderPass();
+	initFrameBuffer();
 }
 
 
 MainWindow::~MainWindow()
 {
+	destroyFrameBuffer();
+	destroyRenderPass();
 	destroyDepthStencilImage();
 	destroySwapchainImgs();
 	destroySwapchain();
@@ -253,6 +257,92 @@ void MainWindow::destroyDepthStencilImage()
 	vkDestroyImageView(renderer->getDevice(), depthStencilImageView, nullptr);
 	vkFreeMemory(renderer->getDevice(), depthStencilImageMemory, nullptr);
 	vkDestroyImage(renderer->getDevice(), depthStencilImage, nullptr);
+}
+
+void MainWindow::initRenderPass()
+{
+	std::array<VkAttachmentDescription, 2> attachments{};
+	std::array<VkSubpassDescription, 1> subpasses{};
+	std::array<VkAttachmentReference, 1> subpassAttachments{};
+	VkAttachmentReference depthStencilAttachment;
+
+	attachments[0].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	attachments[0].format = depthStencilFormat;
+	attachments[0].flags = 0;
+	attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+	attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+	attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+	attachments[1].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	attachments[1].format = surfaceFormat.format;
+	attachments[1].flags = 0;
+	attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
+	attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+	depthStencilAttachment.attachment = 0;
+	depthStencilAttachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+	subpassAttachments[0].attachment = 1;
+	subpassAttachments[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	subpasses[0].colorAttachmentCount = subpassAttachments.size();
+	subpasses[0].pColorAttachments = subpassAttachments.data();
+	subpasses[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpasses[0].inputAttachmentCount = 0;
+	subpasses[0].pInputAttachments = nullptr;
+	subpasses[0].pDepthStencilAttachment = &depthStencilAttachment;
+
+	VkRenderPassCreateInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo.attachmentCount = attachments.size();
+	renderPassInfo.pAttachments = attachments.data();
+	renderPassInfo.subpassCount = subpasses.size();
+	renderPassInfo.pSubpasses = subpasses.data();
+
+
+	util->ErrorCheck(vkCreateRenderPass(renderer->getDevice(), &renderPassInfo, nullptr, &renderPass));
+}
+
+void MainWindow::destroyRenderPass()
+{
+	vkDestroyRenderPass(renderer->getDevice(), renderPass, nullptr);
+}
+
+void MainWindow::initFrameBuffer()
+{
+	frameBuffers.resize(swapchainImageCount);
+
+	for (int i = 0; i < swapchainImageCount; ++i) {
+		VkFramebufferCreateInfo frameBufferCreateInfo{};
+		std::array<VkImageView, 2> attachments{};
+
+		attachments[0] = depthStencilImageView;
+		attachments[1] = imageViews[i];
+
+		frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		frameBufferCreateInfo.renderPass = renderPass;
+		frameBufferCreateInfo.width = surfaceX;
+		frameBufferCreateInfo.height = surfaceY;
+		frameBufferCreateInfo.layers = 1;
+		frameBufferCreateInfo.pAttachments = attachments.data();
+		frameBufferCreateInfo.attachmentCount = attachments.size();
+
+		util->ErrorCheck(vkCreateFramebuffer(renderer->getDevice(), &frameBufferCreateInfo, nullptr, &frameBuffers[i]));
+	}
+}
+
+void MainWindow::destroyFrameBuffer()
+{
+	for (const VkFramebuffer& frameBuffer : frameBuffers) {
+		vkDestroyFramebuffer(renderer->getDevice(), frameBuffer, nullptr);
+	}
+
+	frameBuffers.clear();
 }
 
 void MainWindow::DestroySurface() {

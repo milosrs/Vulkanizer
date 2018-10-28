@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <iostream>
 #include <vector>
+#include <array>
 
 class Renderer;
 
@@ -42,6 +43,12 @@ private:
 	void initDepthStencilImage();
 	void destroyDepthStencilImage();
 
+	void initRenderPass();
+	void destroyRenderPass();
+
+	void initFrameBuffer();
+	void destroyFrameBuffer();
+
 	Renderer* renderer = NULL;
 	VkSurfaceKHR surfaceKHR = nullptr;
 	VkSurfaceCapabilitiesKHR surfaceCapatibilities = {};
@@ -58,6 +65,8 @@ private:
 	VkFormat depthStencilFormat = VK_FORMAT_UNDEFINED;
 	VkMemoryAllocateInfo allocateInfo = {};
 	VkDeviceMemory depthStencilImageMemory = nullptr;
+	VkRenderPass renderPass;
+	std::vector<VkFramebuffer> frameBuffers;
 
 	uint32_t swapchainImageCount = 2;
 	uint32_t sizeX = 512;
