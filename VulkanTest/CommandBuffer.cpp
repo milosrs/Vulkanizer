@@ -9,12 +9,20 @@ CommandBuffer::CommandBuffer(VkCommandPool commandPool)
 	this->allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	this->allocateInfo.commandPool = commandPool;
 	this->allocateInfo.commandBufferCount = 1;
-	this->allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	this->allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;				//Moze da bude submitovan u Queue, ostali moraju da budu pozivani iz primarnog.
 	
 	this->beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-//	this->beginInfo.flags = PEEK DEFINITION
+	this->beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;	//Submitovacemo ovaj command buffer samo jednom u red. Dovoljno da se izrenderuje.
+	//this->beginInfo.pInheritanceInfo = KORISTI SE ZA SEKUNDARNE I OSTALE REDOVE 
+}
 
+void CommandBuffer::startRecording() {
+	Util& util = Util::instance();
 	vkAllocateCommandBuffers(util.getDevice(), &this->allocateInfo, &this->commandBuffer);
+}
+
+void CommandBuffer::endRecording() {
+	vkEndCommandBuffer(this->commandBuffer);
 }
 
 void CommandBuffer::doSomeWork(VkQueue queue) {
@@ -36,23 +44,23 @@ void CommandBuffer::doSomeWork(VkQueue queue) {
 /*VkQueue - U koji red bi trebalo da se submituje posao bafera.
   VkPipelineStageFlags - U kom trenutku u pipeline-u Vulkan Core-a bi semafori trebalo da reaguju na ovaj submit
   ComandBufferSemaphoreInfo - informacije koje su potrebne za reagovanje nad semaforima*/
-bool CommandBuffer::submitQueue(VkQueue queue, VkPipelineStageFlags* flags, CommandBufferSemaphoreInfo semaphoreInfo){
+bool CommandBuffer::submitQueue(VkQueue queue, VkPipelineStageFlags* flags, CommandBufferSemaphoreInfo* semaphoreInfo){
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &this->commandBuffer;
 
 	if (&semaphoreInfo != NULL) {
-		VkSemaphore sem = semaphoreInfo.getSemaphore();
+		VkSemaphore sem = semaphoreInfo->getSemaphore();
 		
-		if (&semaphoreInfo != NULL && semaphoreInfo.getShouldWaitForSignalization()) {
+		if (&semaphoreInfo != NULL && semaphoreInfo->getShouldWaitForSignalization()) {
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &sem;
 		}
 		else if (&semaphoreInfo != NULL) {
 			submitInfo.waitSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &sem;
-			submitInfo.pWaitDstStageMask = semaphoreInfo.getPipelineStages();
+			submitInfo.pWaitDstStageMask = semaphoreInfo->getPipelineStages();
 		}
 	}
 

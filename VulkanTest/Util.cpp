@@ -5,6 +5,18 @@ Util::Util()
 {
 }
 
+void Util::printFPS()
+{
+	++frameCounter;
+
+	if (last_time + std::chrono::seconds(1) < timer.now()) {
+		last_time = timer.now();
+		fps = frameCounter;
+		frameCounter = 0;
+		std::cout << "FPS: " + fps << std::endl;
+	}
+}
+
 
 Util::~Util()
 {

@@ -161,6 +161,7 @@
     <ClInclude Include="CommandBuffer.h" />
     <ClInclude Include="CommandBufferSemaphoreInfo.h" />
     <ClInclude Include="CommandPool.h" />
+    <ClInclude Include="EpilepsyWarning.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PLATFORM.h" />
@@ -172,6 +173,7 @@
     <ClCompile Include="CommandBuffer.cpp" />
     <ClCompile Include="CommandBufferSemaphoreInfo.cpp" />
     <ClCompile Include="CommandPool.cpp" />
+    <ClCompile Include="EpilepsyWarning.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

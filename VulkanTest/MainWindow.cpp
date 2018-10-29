@@ -17,11 +17,14 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 	initDepthStencilImage();
 	initRenderPass();
 	initFrameBuffer();
+	initSync();
 }
 
 
 MainWindow::~MainWindow()
 {
+	vkQueueWaitIdle(renderer->getQueue());
+	destroySync();
 	destroyFrameBuffer();
 	destroyRenderPass();
 	destroyDepthStencilImage();
@@ -343,6 +346,70 @@ void MainWindow::destroyFrameBuffer()
 	}
 
 	frameBuffers.clear();
+}
+
+void MainWindow::beginRender()
+{
+	//Kada funkcija vrati sliku, moze da bude koriscena od strane prezentacionog endzina. Semafor i/ili Ograda ce nam reci kada je prez.endz. gotov sa poslom. Nesto kao mutex.
+	vkAcquireNextImageKHR(renderer->getDevice(), this->swapchain, UINT64_MAX, nullptr, activeImageAvaiableFence, &activeImageSwapchainId);
+
+	//Koji uredjaj (ili graficka) ceka, koliko ograda, lista ograda (ili samo jedna ograda), da li sve ograde cekamo, koliko dugo cekamo da ograda vrati signal (ns) (Kod nas je zauvek, dok ne dodje signal)
+	vkWaitForFences(renderer->getDevice(), 1, &activeImageAvaiableFence, VK_TRUE, UINT64_MAX);	
+
+	//Resetujemo ograde kad vrate signal
+	vkResetFences(renderer->getDevice(), 1, &activeImageAvaiableFence);
+
+	//Ako imamo potrebu da uredjaj postane besposlen (tj neki red koji puni graficku u nasem slucaju), koristimo zakomentarisanu funkcju
+	vkQueueWaitIdle(renderer->getQueue());
+}
+
+void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
+{
+	VkResult presentResult = VkResult::VK_RESULT_MAX_ENUM;
+
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.pWaitSemaphores = waitSemaphores.data();
+	presentInfo.waitSemaphoreCount = waitSemaphores.size();
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &this->swapchain;
+	presentInfo.pImageIndices = &this->activeImageSwapchainId;
+	presentInfo.pResults = &presentResult;
+
+	util->ErrorCheck(vkQueuePresentKHR(renderer->getQueue(), &presentInfo));
+}
+
+VkRenderPass MainWindow::getRenderPass()
+{
+	return this->renderPass;
+}
+
+VkFramebuffer MainWindow::getActiveFrameBuffer()
+{
+	return this->frameBuffers[activeImageSwapchainId];
+}
+
+VkSurfaceKHR MainWindow::getSurface()
+{
+	return this->surfaceKHR;
+}
+
+VkExtent2D MainWindow::getSurfaceSize()
+{
+	return { surfaceX, surfaceY };
+}
+
+void MainWindow::initSync()
+{
+	VkFenceCreateInfo fenceInfo = {};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
+	util->ErrorCheck(vkCreateFence(renderer->getDevice(), &fenceInfo, nullptr, &this->activeImageAvaiableFence));
+}
+
+void MainWindow::destroySync()
+{
+	vkDestroyFence(renderer->getDevice(), activeImageAvaiableFence, nullptr);
 }
 
 void MainWindow::DestroySurface() {

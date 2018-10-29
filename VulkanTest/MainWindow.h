@@ -25,6 +25,13 @@ public:
 	void close();
 	bool update();
 
+	void beginRender();
+	void endRender(std::vector<VkSemaphore>);
+
+	VkRenderPass getRenderPass();
+	VkFramebuffer getActiveFrameBuffer();
+	VkSurfaceKHR getSurface();
+	VkExtent2D getSurfaceSize();
 private:
 	void InitOSWindow();
 	void DeinitOSWindow();
@@ -49,6 +56,9 @@ private:
 	void initFrameBuffer();
 	void destroyFrameBuffer();
 
+	void initSync();
+	void destroySync();
+
 	Renderer* renderer = NULL;
 	VkSurfaceKHR surfaceKHR = nullptr;
 	VkSurfaceCapabilitiesKHR surfaceCapatibilities = {};
@@ -65,13 +75,15 @@ private:
 	VkFormat depthStencilFormat = VK_FORMAT_UNDEFINED;
 	VkMemoryAllocateInfo allocateInfo = {};
 	VkDeviceMemory depthStencilImageMemory = nullptr;
-	VkRenderPass renderPass;
+	VkRenderPass renderPass = nullptr;
+	VkFence activeImageAvaiableFence = nullptr;
 	std::vector<VkFramebuffer> frameBuffers;
 
 	uint32_t swapchainImageCount = 2;
 	uint32_t sizeX = 512;
 	uint32_t sizeY = 512;
 	std::string name = "MainWindow";
+	uint32_t activeImageSwapchainId;
 
 	bool window_should_run = true;
 	bool stencilAvaiable = false;

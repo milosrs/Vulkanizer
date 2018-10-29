@@ -14,7 +14,10 @@ public:
 
 	void doSomeWork(VkQueue);
 	void createFence();
-	bool submitQueue(VkQueue, VkPipelineStageFlags*, CommandBufferSemaphoreInfo);
+	bool submitQueue(VkQueue, VkPipelineStageFlags*, CommandBufferSemaphoreInfo*);
+
+	void startRecording();
+	void endRecording();
 
 	VkFence getFence();
 	VkCommandBuffer getCommandBuffer();
