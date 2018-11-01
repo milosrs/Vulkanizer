@@ -4,11 +4,12 @@
 
 Renderer::Renderer()
 {
+	util = &Util::instance();
 	SetupLayersAndExtensions();
 	SetupDebug();
 	_InitInstance();
-	InitDebug();
 	_InitDevice();
+	InitDebug();
 }
 
 
@@ -115,7 +116,7 @@ void Renderer::createQueueFamilyProperties() {
 void Renderer::createPhysicalDevices() {
 	VkPhysicalDevice ret = NULL;
 	uint32_t gpuCount = 0;
-	vkEnumeratePhysicalDevices(instance, &gpuCount, nullptr);
+	util->ErrorCheck(vkEnumeratePhysicalDevices(instance, &gpuCount, nullptr));
 	std::vector<VkPhysicalDevice> gpuList(gpuCount);
 	vkEnumeratePhysicalDevices(instance, &gpuCount, gpuList.data());
 
@@ -251,7 +252,10 @@ void Renderer::SetupLayersAndExtensions()
 	//instanceExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);		Direktno koristi ekran, sto ne mozemo na PC-u i telefonu
 	instanceExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 	instanceExtensions.push_back(PLATFORM_SURFACE_EXTENSION_NAME);
-	instanceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);		//Omogucava swapchain
+}
+
+void Renderer::setupDeviceExtensions() {
+	deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);		//Omogucava swapchain
 }
 
 #else

@@ -47,6 +47,7 @@ private:
 	void InitDebug();
 	void DeinitDebug();
 	void SetupLayersAndExtensions();
+	void setupDeviceExtensions();
 
 	void enumerateInstanceLayers();
 	void enumerateDeviceLayers();
@@ -68,8 +69,9 @@ private:
 
 	std::vector<const char*> instanceLayers;
 	std::vector<const char*> instanceExtensions;
+	std::vector<const char*> deviceExtensions;
 
-
+	Util* util = nullptr;
 	MainWindow* window = NULL;
 	uint32_t graphicsFamilyIndex = 0;
 };
