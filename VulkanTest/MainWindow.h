@@ -30,6 +30,7 @@ public:
 
 	void beginRender();
 	void endRender(std::vector<VkSemaphore>);
+	void mainLoop();
 
 	RenderPass getRenderPass();
 	FrameBuffer getActiveFrameBuffer();
@@ -57,7 +58,9 @@ private:
 	RenderPass renderPass;
 	FrameBuffer frameBuffer;
 
-	Renderer* renderer = NULL;
+	Renderer* renderer = nullptr;
+	GLFWwindow* window = nullptr;
+
 	VkSurfaceKHR surfaceKHR = nullptr;
 	VkSurfaceCapabilitiesKHR surfaceCapatibilities = {};
 	VkBool32 isWSISupported = false;
@@ -74,16 +77,6 @@ private:
 
 	Util* util = nullptr;
 
-#if VK_USE_PLATFORM_WIN32_KHR
-	HINSTANCE							win32_instance = NULL;
-	HWND								win32_window = NULL;
-	std::string							win32_class_name;
-	static uint64_t						win32_class_id_counter;
-#elif VK_USE_PLATFORM_XCB_KHR
-	xcb_connection_t				*	xcb_connection = nullptr;
-	xcb_screen_t					*	xcb_screen = nullptr;
-	xcb_window_t						xcb_window = 0;
-	xcb_intern_atom_reply_t			*	xcb_atom_window_reply = nullptr;
-#endif
+
 };
 

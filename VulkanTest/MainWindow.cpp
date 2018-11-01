@@ -116,6 +116,13 @@ void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
 	util->ErrorCheck(vkQueuePresentKHR(renderer->getQueue(), &presentInfo));
 }
 
+void MainWindow::mainLoop()
+{
+	while (!glfwWindowShouldClose(window)) {
+		glfwPollEvents();
+	}
+}
+
 RenderPass MainWindow::getRenderPass()
 {
 	return this->renderPass;
@@ -178,8 +185,32 @@ void MainWindow::DestroySurface() {
 	vkDestroySurfaceKHR(renderer->getInstance(), this->surfaceKHR, nullptr);
 }
 
+void MainWindow::InitOSWindow()
+{
+	glfwInit();
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);													//Ovo kaze biblioteci da aplikacija nije pisana u OpenGL/ES
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);														//Za sada, promena velicine prozora nije moguca
+	this->window = glfwCreateWindow(this->sizeX, this->sizeY, "Hello world!", nullptr, nullptr);	//4-i param: Koji monitor je u pitanju (sada je default)  5-i param: Samo za OpenGL aplikacije
+}
+
+void MainWindow::DeinitOSWindow()
+{
+	glfwDestroyWindow(this->window);
+	glfwTerminate();
+}
+
+void MainWindow::UpdateOSWindow()
+{
+}
+
+void MainWindow::InitOSSurface()
+{
+}
+
+/*AKO HOCES DA SE ZLOPATIS I DA NE KORISTIS GLFW, ODKOMENTARISI KOD ISPOD!*/
 /*Ispod su platformski zavisne definicije metoda za ovu klasu*/
 
+/*
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 // Microsoft Windows specific versions of window functions
 LRESULT CALLBACK WindowsEventHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -337,7 +368,7 @@ void MainWindow::InitOSWindow()
 		XCB_WINDOW_CLASS_INPUT_OUTPUT, xcb_screen->root_visual,
 		value_mask, value_list);
 
-	/* Magic code that will send notification when window is destroyed */
+	//Magic code that will send notification when window is destroyed 
 	xcb_intern_atom_cookie_t cookie =
 		xcb_intern_atom(xcb_connection, 1, 12, "WM_PROTOCOLS");
 	xcb_intern_atom_reply_t *reply =
@@ -362,13 +393,13 @@ void MainWindow::InitOSWindow()
 		XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, coords);
 	xcb_flush(xcb_connection);
 
-	/*
+	
 	xcb_generic_event_t *e;
 	while( ( e = xcb_wait_for_event( xcb_connection ) ) ) {
 		if( ( e->response_type & ~0x80 ) == XCB_EXPOSE )
 			break;
 	}
-	*/
+	
 }
 
 void MainWindow::DeinitOSWindow()
@@ -413,6 +444,5 @@ void MainWindow::InitOSSurface()
 	create_info.window			= xcb_window;
 	ErrorCheck( vkCreateXcbSurfaceKHR( _renderer->GetVulkanInstance(), &create_info, nullptr, &_surface ) );
 }
-*/
-
 #endif
+*/

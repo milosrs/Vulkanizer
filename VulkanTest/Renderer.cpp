@@ -60,7 +60,6 @@ void Renderer::_DeinitDevice() {
 
 //Trazimo GPU, smestamo sve GPU u listu.
 void Renderer::_InitDevice() {
-	Util& util = Util::instance();
 	VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
 	VkDeviceCreateInfo deviceCreateInfo{};
 	float queuePriorities[]{1.0f};
@@ -84,7 +83,7 @@ void Renderer::_InitDevice() {
 		exit(1);
 	}
 
-	util.ErrorCheck(err);
+	util->ErrorCheck(err);
 
 	vkGetDeviceQueue(device, this->graphicsFamilyIndex, 0, &this->queue);			//Iz kog reda hocemo da fetchujemo? Mozemo imati vise queue...
 }
@@ -189,7 +188,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback
 	const char* layerPrefix,						//Koji Layer je pozvao ovaj callback (String koji covek moze da procita)
 	const char* msg,								//Poruka greske (Opet citljiv)
 	void* userData									//Opet bog zna
-) {
+) 
+{
 	Util& util = Util::instance();
 	bool shouldShowMessage = false;
 	std::cout << msg << std::endl;
@@ -256,6 +256,10 @@ void Renderer::SetupLayersAndExtensions()
 
 void Renderer::setupDeviceExtensions() {
 	deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);		//Omogucava swapchain
+}
+
+bool isDeviceSuitable(VkPhysicalDevice device) {
+	return true;
 }
 
 #else
