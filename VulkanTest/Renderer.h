@@ -30,7 +30,7 @@ public:
 	const VkInstance getInstance();
 	const VkPhysicalDevice getGpu();
 	const VkDevice getDevice();
-	const VkPhysicalDeviceProperties& getGpuProperties();
+	const VkPhysicalDeviceProperties* getGpuProperties();
 	const VkDebugReportCallbackEXT getDebugReportHandle();
 	const VkDebugReportCallbackCreateInfoEXT& getDebugCallbackCreateInfo();
 	const VkQueue getQueue();

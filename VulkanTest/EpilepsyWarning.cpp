@@ -15,6 +15,8 @@ std::array<VkClearValue, 2> EpilepsyWarning::getNewClearValues() {
 	clearValues[1].color.float32[1] = getColor(CIRCLE_THIRD_2);			//Ima veze sa surfaceom. InitSurface linija 80. G
 	clearValues[1].color.float32[2] = getColor(CIRCLE_THIRD_3);			//Ima veze sa surfaceom. InitSurface linija 80. B
 	clearValues[1].color.float32[3] = 0.0f;								//Ima veze sa surfaceom. InitSurface linija 80. A
+
+	return clearValues;
 }
 
 EpilepsyWarning::~EpilepsyWarning()

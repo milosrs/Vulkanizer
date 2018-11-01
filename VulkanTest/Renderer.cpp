@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Renderer.h"
 #include "MainWindow.h"
+
 Renderer::Renderer()
 {
 	SetupLayersAndExtensions();
@@ -164,6 +165,16 @@ bool Renderer::run() {
 	return true;
 }
 
+const VkInstance Renderer::getInstance()
+{
+	return this->instance;
+}
+
+const VkPhysicalDevice Renderer::getGpu()
+{
+	return this->gpu;
+}
+
 #if BUILD_ENABLE_VULKAN_DEBUG
 
 //True ili false, kako ce se layeri ponasati po nastanku greske. True - Vulkan Core ili drugi layer nece okinuti kod. False - Ide uvek do Vulkan Core-a (.
@@ -255,6 +266,21 @@ uint32_t Renderer::getGraphicsFamilyIndex() {
 
 const VkDevice Renderer::getDevice() {
 	return this->device;
+}
+
+const VkPhysicalDeviceProperties* Renderer::getGpuProperties()
+{
+	return &this->gpuProperties;
+}
+
+const VkDebugReportCallbackEXT Renderer::getDebugReportHandle()
+{
+	return this->debugReportHandle;
+}
+
+const VkDebugReportCallbackCreateInfoEXT & Renderer::getDebugCallbackCreateInfo()
+{
+	return debugCallbackCreateInfo;
 }
 
 const VkQueue Renderer::getQueue() {

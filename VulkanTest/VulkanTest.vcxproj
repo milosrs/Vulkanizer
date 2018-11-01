@@ -162,11 +162,14 @@
     <ClInclude Include="CommandBufferSemaphoreInfo.h" />
     <ClInclude Include="CommandPool.h" />
     <ClInclude Include="EpilepsyWarning.h" />
+    <ClInclude Include="FrameBuffer.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PLATFORM.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RenderPass.h" />
     <ClInclude Include="Semaphore.h" />
+    <ClInclude Include="Swapchain.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
@@ -174,6 +177,7 @@
     <ClCompile Include="CommandBufferSemaphoreInfo.cpp" />
     <ClCompile Include="CommandPool.cpp" />
     <ClCompile Include="EpilepsyWarning.cpp" />
+    <ClCompile Include="FrameBuffer.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -183,7 +187,9 @@
     </ClCompile>
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="Semaphore.cpp" />
+    <ClCompile Include="Swapchain.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

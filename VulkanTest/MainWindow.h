@@ -7,6 +7,9 @@
 #include "BUILD_OPTIONS.h"
 #include "Util.h"
 #include "Util.h"
+#include "Swapchain.h"
+#include "RenderPass.h"
+#include "FrameBuffer.h"
 #include <vector>
 #include <string>
 #include <assert.h>
@@ -28,10 +31,16 @@ public:
 	void beginRender();
 	void endRender(std::vector<VkSemaphore>);
 
-	VkRenderPass getRenderPass();
-	VkFramebuffer getActiveFrameBuffer();
+	RenderPass getRenderPass();
+	FrameBuffer getActiveFrameBuffer();
+	Swapchain getSwapchain();
+
 	VkSurfaceKHR getSurface();
 	VkExtent2D getSurfaceSize();
+	VkSurfaceKHR getSurfaceKHR();
+	VkSurfaceCapabilitiesKHR getSurfaceCapatibilities();
+	VkBool32 getIsWSISupported();
+	VkSurfaceFormatKHR getSurfaceFormat();
 private:
 	void InitOSWindow();
 	void DeinitOSWindow();
@@ -41,52 +50,24 @@ private:
 	void InitSurface();
 	void DestroySurface();
 
-	void initSwapchain();
-	void destroySwapchain();
-
-	void initSwapchainImgs();
-	void destroySwapchainImgs();
-
-	void initDepthStencilImage();
-	void destroyDepthStencilImage();
-
-	void initRenderPass();
-	void destroyRenderPass();
-
-	void initFrameBuffer();
-	void destroyFrameBuffer();
-
 	void initSync();
 	void destroySync();
+
+	Swapchain swapchain;
+	RenderPass renderPass;
+	FrameBuffer frameBuffer;
 
 	Renderer* renderer = NULL;
 	VkSurfaceKHR surfaceKHR = nullptr;
 	VkSurfaceCapabilitiesKHR surfaceCapatibilities = {};
 	VkBool32 isWSISupported = false;
 	VkSurfaceFormatKHR surfaceFormat = {};
-
-	VkSwapchainKHR swapchain = nullptr;
-	VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
-	std::vector<VkImage> images;
-	std::vector<VkImageView> imageViews;
-
-	VkImage depthStencilImage = nullptr;						//Ne treba nam vise od jedne slike, jedino ako hocemo double/tripple buffering
-	VkImageView depthStencilImageView = nullptr;				//Ne treba nam vise od jedne slike, jedino ako hocemo double/tripple buffering
-	VkFormat depthStencilFormat = VK_FORMAT_UNDEFINED;
-	VkMemoryAllocateInfo allocateInfo = {};
-	VkDeviceMemory depthStencilImageMemory = nullptr;
-	VkRenderPass renderPass = nullptr;
-	VkFence activeImageAvaiableFence = nullptr;
-	std::vector<VkFramebuffer> frameBuffers;
-
-	uint32_t swapchainImageCount = 2;
+	
 	uint32_t sizeX = 512;
 	uint32_t sizeY = 512;
 	std::string name = "MainWindow";
-	uint32_t activeImageSwapchainId;
 
 	bool window_should_run = true;
-	bool stencilAvaiable = false;
 	uint32_t							surfaceX = 512;
 	uint32_t							surfaceY = 512;
 	std::string							_window_name;

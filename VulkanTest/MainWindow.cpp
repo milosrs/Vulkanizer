@@ -2,8 +2,7 @@
 #include "MainWindow.h"
 #include "Renderer.h"
 
-MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::string windowName)
-{
+MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::string windowName) {
 	this->renderer = renderer;
 	this->sizeX = sizeX;
 	this->sizeY = sizeY;
@@ -12,11 +11,12 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 
 	InitOSWindow();
 	InitSurface();
-	initSwapchain();
-	initSwapchainImgs();
-	initDepthStencilImage();
-	initRenderPass();
-	initFrameBuffer();
+
+	swapchain = Swapchain(this, renderer);
+	renderPass = RenderPass(renderer, swapchain.getDepthStencilFormat(), this->surfaceFormat);
+	frameBuffer = FrameBuffer(renderer, swapchain.getSwapchainImageCount(), swapchain.getDepthStencilImageView(), swapchain.getImageViews(),
+		renderPass.getRenderPass(), this->getSurfaceSize());
+
 	initSync();
 }
 
@@ -25,11 +25,9 @@ MainWindow::~MainWindow()
 {
 	vkQueueWaitIdle(renderer->getQueue());
 	destroySync();
-	destroyFrameBuffer();
-	destroyRenderPass();
-	destroyDepthStencilImage();
-	destroySwapchainImgs();
-	destroySwapchain();
+	frameBuffer.~FrameBuffer();
+	renderPass.~RenderPass();
+	swapchain.~Swapchain();
 	DestroySurface();
 	DeinitOSWindow();
 }
@@ -86,278 +84,17 @@ void MainWindow::InitSurface() {
 	}
 }
 
-void MainWindow::initSwapchain() {
-	if (swapchainImageCount > surfaceCapatibilities.maxImageCount) {
-		swapchainImageCount = surfaceCapatibilities.maxImageCount;
-	}
-	if (swapchainImageCount < surfaceCapatibilities.minImageCount) {
-		swapchainImageCount = surfaceCapatibilities.minImageCount + 1;
-	}
-
-	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;					//Ako nista drugo ne radi, Vulkan garantuje da je ovaj prez. mode dostupan
-
-	{
-		uint32_t presentModeCount = 0;
-		vkGetPhysicalDeviceSurfacePresentModesKHR(renderer->getGpu(), this->surfaceKHR, &presentModeCount, nullptr);
-		std::vector<VkPresentModeKHR> presentModeList(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(renderer->getGpu(), this->surfaceKHR, &presentModeCount, presentModeList.data());
-
-		if (std::find(presentModeList.begin(), presentModeList.end(), VK_PRESENT_MODE_MAILBOX_KHR) != presentModeList.end()) {
-			presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-		}
-	}
-
-	swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	swapchainCreateInfo.surface = this->surfaceKHR;
-	swapchainCreateInfo.minImageCount = swapchainImageCount;					//Double buffering (Bufferovanje slika display buffera)
-	swapchainCreateInfo.imageFormat = this->surfaceFormat.format;
-	swapchainCreateInfo.imageColorSpace = this->surfaceFormat.colorSpace;
-	swapchainCreateInfo.imageExtent.width = this->surfaceX;
-	swapchainCreateInfo.imageExtent.height = this->surfaceY;
-	swapchainCreateInfo.imageArrayLayers = 1;									//Koliko slojeva ima slika (1 je obicno renderovanje, 2 je stetoskopsko)
-	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;			//NE delimo slike izmedju Queue-ova. Paralel znaci da hocemo da delimo.
-	swapchainCreateInfo.queueFamilyIndexCount = 0;								//Za exclusive je uvek 0
-	swapchainCreateInfo.pQueueFamilyIndices = nullptr;							//Isto ignorisemo za Exclusive
-	swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;	
-	swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;		//Alfa kanal SURFACE-a, da li je ona transparentna
-	swapchainCreateInfo.presentMode = presentMode;								//Vertical Sync
-	swapchainCreateInfo.clipped = VK_TRUE;										//Ukljucujemo clipping, jako bitno za telefone
-	swapchainCreateInfo.oldSwapchain = swapchain;								//Ako rekonstruisemo swapchain, pokazivac na stari
-
-	util->ErrorCheck(vkCreateSwapchainKHR(renderer->getDevice(), &swapchainCreateInfo, nullptr, &swapchain));
-	util->ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, nullptr));
-}
-
-void MainWindow::destroySwapchain()
-{
-	vkDestroySwapchainKHR(renderer->getDevice(), swapchain, nullptr);
-}
-
-void MainWindow::initSwapchainImgs()
-{
-	images.resize(swapchainImageCount);
-	imageViews.resize(swapchainImageCount);
-
-	util->ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, images.data()));
-
-	for (int i = 0; i < swapchainImageCount; i++) {
-		VkImageViewCreateInfo imgCreateInfo = {};
-		imgCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
-		imgCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
-		imgCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
-		imgCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-		imgCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		imgCreateInfo.subresourceRange.baseMipLevel = 0;
-		imgCreateInfo.subresourceRange.levelCount = 1;
-		imgCreateInfo.subresourceRange.baseArrayLayer = 0;
-		imgCreateInfo.subresourceRange.layerCount = 1;
-		imgCreateInfo.format = surfaceFormat.format;
-		imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		imgCreateInfo.image = images[i];
-		imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-
-
-		util->ErrorCheck(vkCreateImageView(renderer->getDevice(), &imgCreateInfo, nullptr, &imageViews[i]));
-	}
-}	
-
-void MainWindow::destroySwapchainImgs()
-{
-	for (int i = 0; i < imageViews.size(); i++) {
-		vkDestroyImageView(renderer->getDevice(), imageViews[i], nullptr);
-	}
-}
-
-void MainWindow::initDepthStencilImage()
-{
-	{
-		std::vector<VkFormat> tryoutFormats
-		{
-			VK_FORMAT_D32_SFLOAT_S8_UINT,
-			VK_FORMAT_D24_UNORM_S8_UINT,
-			VK_FORMAT_D16_UNORM,
-			VK_FORMAT_D16_UNORM_S8_UINT,
-			VK_FORMAT_D32_SFLOAT
-		};
-
-		for (auto f : tryoutFormats) {
-			VkFormatProperties formatProperties = {};
-			vkGetPhysicalDeviceFormatProperties(renderer->getGpu(), f, &formatProperties);
-
-			if (formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
-				depthStencilFormat = f;
-				break;
-			}
-		}
-		if (depthStencilFormat == VK_FORMAT_UNDEFINED) {
-			assert(0 && "Vulkan Error: No depth stencil format avaiable");
-			exit(-1);
-		}
-
-		stencilAvaiable = depthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
-							depthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
-							depthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT ||
-							depthStencilFormat == VK_FORMAT_D32_SFLOAT;
-	}
-
-	VkImageCreateInfo imgInfo = {};
-	imgInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	imgInfo.flags = 0;												//Pogledaj sta ima i dokumentaciju
-	imgInfo.imageType = VK_IMAGE_TYPE_2D;
-	imgInfo.extent.width = surfaceX;
-	imgInfo.extent.height = surfaceY;
-	imgInfo.extent.depth = 1;
-	imgInfo.mipLevels = 1;											//Nivo mipmapinga. Ako je 0 nema slike.
-	imgInfo.arrayLayers = 1;										//Slojevi slike. Ako je 0 nema slike.
-	imgInfo.samples = VK_SAMPLE_COUNT_1_BIT;						//Multisampling, ne koristimo multisample. Ako koristimo multisample, moramo da koristimo isti sample i za depthStencil i sa swapchain slike
-	imgInfo.tiling = VK_IMAGE_TILING_OPTIMAL;						//Kako se slika dobija, ovo je bitno za teksture. (Fragmentacija trouglova)
-	imgInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;	//Kako koristimo sliku
-	imgInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;				//Da li delimo sliku izmedju redova (Trenutno ne)
-	imgInfo.queueFamilyIndexCount = VK_QUEUE_FAMILY_IGNORED;
-	imgInfo.pQueueFamilyIndices = nullptr;
-	imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;				//Slike u Vulkanu imaju uvek neki layout.
-	imgInfo.format = depthStencilFormat;							//Moramo da proverimo koji format je podrzan na nasoj GPU
-
-	VkMemoryRequirements memoryRequirements = {};
-
-	vkCreateImage(renderer->getDevice(), &imgInfo, nullptr, &depthStencilImage);		//Ako izostavimo metodu ispod, nece nam raditi program jer nije alocirana memorija za sliku
-	vkGetImageMemoryRequirements(renderer->getDevice(), this->depthStencilImage, &memoryRequirements);
-
-	
-	VkPhysicalDeviceMemoryProperties memoryProps = renderer->getPhysicalDeviceMemoryProperties();
-
-
-	uint32_t memoryIndex = this->util->findMemoryTypeIndex(&memoryProps, &memoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	this->allocateInfo.allocationSize = memoryRequirements.size;
-	this->allocateInfo.memoryTypeIndex = memoryIndex;
-	this->allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-
-	//Postoji ogranicen broj alokacija na GPU-u.
-	vkAllocateMemory(renderer->getDevice(), &this->allocateInfo, nullptr, &this->depthStencilImageMemory);
-	vkBindImageMemory(renderer->getDevice(), depthStencilImage, depthStencilImageMemory, 0);
-
-	VkImageViewCreateInfo imgCreateInfo = {};
-	imgCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-	imgCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-	imgCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-	imgCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-	imgCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | (stencilAvaiable ? VK_IMAGE_ASPECT_STENCIL_BIT : 0);
-	imgCreateInfo.subresourceRange.baseMipLevel = 0;
-	imgCreateInfo.subresourceRange.levelCount = 1;
-	imgCreateInfo.subresourceRange.baseArrayLayer = 0;
-	imgCreateInfo.subresourceRange.layerCount = 1;
-	imgCreateInfo.format = depthStencilFormat;
-	imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	imgCreateInfo.image = depthStencilImage;
-	imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-
-	vkCreateImageView(renderer->getDevice(), &imgCreateInfo, nullptr, &depthStencilImageView);
-}
-
-void MainWindow::destroyDepthStencilImage()
-{
-	vkDestroyImageView(renderer->getDevice(), depthStencilImageView, nullptr);
-	vkFreeMemory(renderer->getDevice(), depthStencilImageMemory, nullptr);
-	vkDestroyImage(renderer->getDevice(), depthStencilImage, nullptr);
-}
-
-void MainWindow::initRenderPass()
-{
-	std::array<VkAttachmentDescription, 2> attachments{};
-	std::array<VkSubpassDescription, 1> subpasses{};
-	std::array<VkAttachmentReference, 1> subpassAttachments{};
-	VkAttachmentReference depthStencilAttachment;
-
-	attachments[0].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-	attachments[0].format = depthStencilFormat;
-	attachments[0].flags = 0;
-	attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-	attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-	attachments[1].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-	attachments[1].format = surfaceFormat.format;
-	attachments[1].flags = 0;
-	attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
-	attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-	depthStencilAttachment.attachment = 0;
-	depthStencilAttachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-	subpassAttachments[0].attachment = 1;
-	subpassAttachments[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-	subpasses[0].colorAttachmentCount = subpassAttachments.size();
-	subpasses[0].pColorAttachments = subpassAttachments.data();
-	subpasses[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpasses[0].inputAttachmentCount = 0;
-	subpasses[0].pInputAttachments = nullptr;
-	subpasses[0].pDepthStencilAttachment = &depthStencilAttachment;
-
-	VkRenderPassCreateInfo renderPassInfo{};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassInfo.attachmentCount = attachments.size();
-	renderPassInfo.pAttachments = attachments.data();
-	renderPassInfo.subpassCount = subpasses.size();
-	renderPassInfo.pSubpasses = subpasses.data();
-
-
-	util->ErrorCheck(vkCreateRenderPass(renderer->getDevice(), &renderPassInfo, nullptr, &renderPass));
-}
-
-void MainWindow::destroyRenderPass()
-{
-	vkDestroyRenderPass(renderer->getDevice(), renderPass, nullptr);
-}
-
-void MainWindow::initFrameBuffer()
-{
-	frameBuffers.resize(swapchainImageCount);
-
-	for (int i = 0; i < swapchainImageCount; ++i) {
-		VkFramebufferCreateInfo frameBufferCreateInfo{};
-		std::array<VkImageView, 2> attachments{};
-
-		attachments[0] = depthStencilImageView;
-		attachments[1] = imageViews[i];
-
-		frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		frameBufferCreateInfo.renderPass = renderPass;
-		frameBufferCreateInfo.width = surfaceX;
-		frameBufferCreateInfo.height = surfaceY;
-		frameBufferCreateInfo.layers = 1;
-		frameBufferCreateInfo.pAttachments = attachments.data();
-		frameBufferCreateInfo.attachmentCount = attachments.size();
-
-		util->ErrorCheck(vkCreateFramebuffer(renderer->getDevice(), &frameBufferCreateInfo, nullptr, &frameBuffers[i]));
-	}
-}
-
-void MainWindow::destroyFrameBuffer()
-{
-	for (const VkFramebuffer& frameBuffer : frameBuffers) {
-		vkDestroyFramebuffer(renderer->getDevice(), frameBuffer, nullptr);
-	}
-
-	frameBuffers.clear();
-}
-
 void MainWindow::beginRender()
 {
 	//Kada funkcija vrati sliku, moze da bude koriscena od strane prezentacionog endzina. Semafor i/ili Ograda ce nam reci kada je prez.endz. gotov sa poslom. Nesto kao mutex.
-	vkAcquireNextImageKHR(renderer->getDevice(), this->swapchain, UINT64_MAX, nullptr, activeImageAvaiableFence, &activeImageSwapchainId);
+	vkAcquireNextImageKHR(renderer->getDevice(), this->swapchain.getSwapchain(), 
+		UINT64_MAX, nullptr, frameBuffer.getActiveImageFence(), this->swapchain.getActiveImageSwapchainPTR());
 
 	//Koji uredjaj (ili graficka) ceka, koliko ograda, lista ograda (ili samo jedna ograda), da li sve ograde cekamo, koliko dugo cekamo da ograda vrati signal (ns) (Kod nas je zauvek, dok ne dodje signal)
-	vkWaitForFences(renderer->getDevice(), 1, &activeImageAvaiableFence, VK_TRUE, UINT64_MAX);	
+	vkWaitForFences(renderer->getDevice(), 1, frameBuffer.getActiveImageFencePTR(), VK_TRUE, UINT64_MAX);	
 
 	//Resetujemo ograde kad vrate signal
-	vkResetFences(renderer->getDevice(), 1, &activeImageAvaiableFence);
+	vkResetFences(renderer->getDevice(), 1, frameBuffer.getActiveImageFencePTR());
 
 	//Ako imamo potrebu da uredjaj postane besposlen (tj neki red koji puni graficku u nasem slucaju), koristimo zakomentarisanu funkcju
 	vkQueueWaitIdle(renderer->getQueue());
@@ -372,21 +109,26 @@ void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
 	presentInfo.pWaitSemaphores = waitSemaphores.data();
 	presentInfo.waitSemaphoreCount = waitSemaphores.size();
 	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = &this->swapchain;
-	presentInfo.pImageIndices = &this->activeImageSwapchainId;
+	presentInfo.pSwapchains = this->swapchain.getSwapchainPTR();
+	presentInfo.pImageIndices = this->swapchain.getActiveImageSwapchainPTR();
 	presentInfo.pResults = &presentResult;
 
 	util->ErrorCheck(vkQueuePresentKHR(renderer->getQueue(), &presentInfo));
 }
 
-VkRenderPass MainWindow::getRenderPass()
+RenderPass MainWindow::getRenderPass()
 {
 	return this->renderPass;
 }
 
-VkFramebuffer MainWindow::getActiveFrameBuffer()
+FrameBuffer MainWindow::getActiveFrameBuffer()
 {
-	return this->frameBuffers[activeImageSwapchainId];
+	return this->frameBuffer;
+}
+
+Swapchain MainWindow::getSwapchain()
+{
+	return this->swapchain;
 }
 
 VkSurfaceKHR MainWindow::getSurface()
@@ -399,17 +141,37 @@ VkExtent2D MainWindow::getSurfaceSize()
 	return { surfaceX, surfaceY };
 }
 
+VkSurfaceKHR MainWindow::getSurfaceKHR()
+{
+	return this->surfaceKHR;
+}
+
+VkSurfaceCapabilitiesKHR MainWindow::getSurfaceCapatibilities()
+{
+	return this->surfaceCapatibilities;
+}
+
+VkBool32 MainWindow::getIsWSISupported()
+{
+	return this->isWSISupported;
+}
+
+VkSurfaceFormatKHR MainWindow::getSurfaceFormat()
+{
+	return this->surfaceFormat;
+}
+
 void MainWindow::initSync()
 {
 	VkFenceCreateInfo fenceInfo = {};
 	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
-	util->ErrorCheck(vkCreateFence(renderer->getDevice(), &fenceInfo, nullptr, &this->activeImageAvaiableFence));
+	util->ErrorCheck(vkCreateFence(renderer->getDevice(), &fenceInfo, nullptr, this->frameBuffer.getActiveImageFencePTR()));
 }
 
 void MainWindow::destroySync()
 {
-	vkDestroyFence(renderer->getDevice(), activeImageAvaiableFence, nullptr);
+	vkDestroyFence(renderer->getDevice(), frameBuffer.getActiveImageFence(), nullptr);
 }
 
 void MainWindow::DestroySurface() {
