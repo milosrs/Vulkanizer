@@ -11,7 +11,9 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 
 	InitOSWindow();
 	InitSurface();
+}
 
+void MainWindow::continueInitialization() {
 	swapchain = Swapchain(this, renderer);
 	renderPass = RenderPass(renderer, swapchain.getDepthStencilFormat(), this->surfaceFormat);
 	frameBuffer = FrameBuffer(renderer, swapchain.getSwapchainImageCount(), swapchain.getDepthStencilImageView(), swapchain.getImageViews(),
@@ -19,7 +21,6 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 
 	initSync();
 }
-
 
 MainWindow::~MainWindow()
 {
@@ -29,6 +30,7 @@ MainWindow::~MainWindow()
 	renderPass.~RenderPass();
 	swapchain.~Swapchain();
 	DestroySurface();
+	renderer->_DeinitInstance();
 	DeinitOSWindow();
 }
 
@@ -49,7 +51,7 @@ void MainWindow::InitSurface() {
 	std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
 
 	InitOSSurface();
-	vkGetPhysicalDeviceSurfaceSupportKHR(device, renderer->getGraphicsFamilyIndex(), this->surfaceKHR, &isWSISupported);
+	vkGetPhysicalDeviceSurfaceSupportKHR(device, renderer->getQueueIndices()->getGraphicsFamilyIndex(), this->surfaceKHR, &isWSISupported);
 
 	if (!isWSISupported) {
 		assert(0 && "WSI not supported.");
@@ -187,7 +189,6 @@ void MainWindow::DestroySurface() {
 
 void MainWindow::InitOSWindow()
 {
-	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);													//Ovo kaze biblioteci da aplikacija nije pisana u OpenGL/ES
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);														//Za sada, promena velicine prozora nije moguca
 	this->window = glfwCreateWindow(this->sizeX, this->sizeY, "Hello world!", nullptr, nullptr);	//4-i param: Koji monitor je u pitanju (sada je default)  5-i param: Samo za OpenGL aplikacije
@@ -205,6 +206,13 @@ void MainWindow::UpdateOSWindow()
 
 void MainWindow::InitOSSurface()
 {
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+	
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+	surfaceCreateInfo.hwnd = glfwGetWin32Window(this->window);
+
+	util->ErrorCheck(glfwCreateWindowSurface(renderer->getInstance(), this->window, nullptr, &surfaceKHR));
 }
 
 /*AKO HOCES DA SE ZLOPATIS I DA NE KORISTIS GLFW, ODKOMENTARISI KOD ISPOD!*/

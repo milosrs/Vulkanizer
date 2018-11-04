@@ -13,6 +13,10 @@
 #include <sstream>
 #include "Util.h"
 #include "BUILD_OPTIONS.h"
+#include "QueueFamilyIndices.h"
+#include <cstring>
+#include <iostream>
+#include <map>
 
 class MainWindow;
 
@@ -21,8 +25,6 @@ class Renderer
 public:
 	Renderer();
 	~Renderer();
-
-	uint32_t getGraphicsFamilyIndex();
 
 	MainWindow* createWindow(uint32_t, uint32_t, std::string);
 	bool run();
@@ -35,10 +37,12 @@ public:
 	const VkDebugReportCallbackCreateInfoEXT& getDebugCallbackCreateInfo();
 	const VkQueue getQueue();
 	const VkPhysicalDeviceMemoryProperties& getPhysicalDeviceMemoryProperties();
+	void _DeinitInstance();
+	QueueFamilyIndices* getQueueIndices();
 
+	void continueInitialization();
 private:
 	void _InitInstance();
-	void _DeinitInstance();
 
 	void _InitDevice();
 	void _DeinitDevice();
@@ -49,30 +53,40 @@ private:
 	void SetupLayersAndExtensions();
 	void setupDeviceExtensions();
 
-	void enumerateInstanceLayers();
+	bool enumerateInstanceLayers();
 	void enumerateDeviceLayers();
-	void createQueueFamilyProperties();
 	void createPhysicalDevices();
 
+	bool areGLFWExtensionsSupported();
+
 	VkInstance instance = nullptr;
-	VkPhysicalDevice gpu = nullptr;
+	VkPhysicalDevice gpu = VK_NULL_HANDLE;
 	VkDevice device = nullptr;
 	VkPhysicalDeviceProperties gpuProperties = {};
 	VkDebugReportCallbackEXT debugReportHandle = nullptr;
 	VkDebugReportCallbackCreateInfoEXT debugCallbackCreateInfo = {};
 	VkQueue	queue = nullptr;
 	VkPhysicalDeviceMemoryProperties gpuMemoryProperties = {};
+	VkPhysicalDeviceFeatures gpuFeatures = {};
 	
 
 	PFN_vkCreateDebugReportCallbackEXT fvkCreateDebugReportCallbackEXT = nullptr;
 	PFN_vkDestroyDebugReportCallbackEXT fvkDestroyDebugReportCallbackEXT = nullptr;
 
+	uint32_t extensionsCount = 0;
+	std::vector<VkExtensionProperties> supportedExtensionProperties;
+
 	std::vector<const char*> instanceLayers;
 	std::vector<const char*> instanceExtensions;
 	std::vector<const char*> deviceExtensions;
 
+	uint32_t glfwInstanceExtensionsCount = 0;
+	const char** glfwInstanceExtensions;
+
+
 	Util* util = nullptr;
-	MainWindow* window = NULL;
+	MainWindow* window = nullptr;
 	uint32_t graphicsFamilyIndex = 0;
+	QueueFamilyIndices* queueFamilyIndices = nullptr;
 };
 

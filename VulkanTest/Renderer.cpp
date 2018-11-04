@@ -2,12 +2,18 @@
 #include "Renderer.h"
 #include "MainWindow.h"
 
+VkPhysicalDevice findMostSuitableGPU(std::vector<VkPhysicalDevice>);
+int ratePhysicalDevice(VkPhysicalDevice gpu);
+
 Renderer::Renderer()
 {
 	util = &Util::instance();
 	SetupLayersAndExtensions();
 	SetupDebug();
 	_InitInstance();
+}
+
+void Renderer::continueInitialization() {
 	_InitDevice();
 	InitDebug();
 }
@@ -22,27 +28,31 @@ Renderer::~Renderer()
 }
 
 void Renderer::_InitInstance() {
-	VkInstanceCreateInfo instance_create_info{};
-	VkApplicationInfo application_info{};
+	VkInstanceCreateInfo instance_create_info{};					//Informacije o instanci aplikacije, koje slojeve koristimo, koja prosirenja...
+	VkApplicationInfo application_info{};							//Informacije o samoj aplikaciji, nepotrebno ali dobro za opis
 
-	application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-	application_info.apiVersion = VK_MAKE_VERSION(1,1,0);
-	application_info.applicationVersion = VK_MAKE_VERSION(1, 1, 0);
-	application_info.pApplicationName = "Hello world by Riki";
+	bool areExtensionsSupported = areGLFWExtensionsSupported();
 
-	instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-	instance_create_info.pApplicationInfo = &application_info;
-	instance_create_info.enabledLayerCount = instanceLayers.size();
-	instance_create_info.ppEnabledLayerNames = instanceLayers.data();
-	instance_create_info.enabledExtensionCount = instanceExtensions.size();
-	instance_create_info.ppEnabledExtensionNames = instanceExtensions.data();
-	instance_create_info.pNext = &debugCallbackCreateInfo;
+	if (areExtensionsSupported) {
+		application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+		application_info.apiVersion = VK_MAKE_VERSION(1, 1, 0);
+		application_info.applicationVersion = VK_MAKE_VERSION(1, 1, 0);
+		application_info.pApplicationName = "Hello world by Riki";
 
-	VkResult result = vkCreateInstance(&instance_create_info, nullptr, &instance);
+		instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+		instance_create_info.pApplicationInfo = &application_info;
+		instance_create_info.enabledLayerCount = static_cast<uint32_t>(instanceLayers.size());
+		instance_create_info.ppEnabledLayerNames = instanceLayers.data();
+		instance_create_info.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
+		instance_create_info.ppEnabledExtensionNames = instanceExtensions.data();
+		instance_create_info.pNext = &debugCallbackCreateInfo;
 
-	if (result < 0) {
-		assert(0 && "Vulkan Error: Create instance failed.");
-		std::exit(result);
+		VkResult result = vkCreateInstance(&instance_create_info, nullptr, &instance);
+
+		if (result < 0) {
+			assert(0 && "Vulkan Error: Create instance failed.");
+			std::exit(result);
+		}
 	}
 }
 
@@ -60,68 +70,82 @@ void Renderer::_DeinitDevice() {
 
 //Trazimo GPU, smestamo sve GPU u listu.
 void Renderer::_InitDevice() {
-	VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
+	queueFamilyIndices = &QueueFamilyIndices(&this->gpu);
 	VkDeviceCreateInfo deviceCreateInfo{};
-	float queuePriorities[]{1.0f};
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfo;
+	bool layersAvaiable = this->enumerateInstanceLayers();
+	uint32_t enabledLayersCount = 0;
 
-	this->createPhysicalDevices();
-	this->enumerateInstanceLayers();
-	this->enumerateDeviceLayers();
+	if (layersAvaiable) {
+		this->enumerateDeviceLayers();
+		this->createPhysicalDevices();
+		
+		queueFamilyIndices->createQueue(&this->device);
+		queueCreateInfo.insert(queueCreateInfo.begin(), queueFamilyIndices->getQueues().begin(), queueFamilyIndices->getQueues().end());
 
-	deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	deviceQueueCreateInfo.queueFamilyIndex = this->graphicsFamilyIndex;
-	deviceQueueCreateInfo.queueCount = 1;
-	deviceQueueCreateInfo.pQueuePriorities = queuePriorities;
+		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfo.size());
+		deviceCreateInfo.pQueueCreateInfos = queueCreateInfo.data();
+		deviceCreateInfo.pEnabledFeatures = &gpuFeatures;										//Ako smo samo uradili enumerate pa se referenciramo na stvorenu strukturu, ukljucicemo sve mogucnosti kartice 
+		deviceCreateInfo.enabledLayerCount = instanceLayers.size();
+		deviceCreateInfo.ppEnabledLayerNames = instanceLayers.data();
+		deviceCreateInfo.pQueueCreateInfos = queueCreateInfo.data();
 
-	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	deviceCreateInfo.queueCreateInfoCount = 1;
-	deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
-	
-	auto err = vkCreateDevice(this->gpu, &deviceCreateInfo, nullptr, &device);
-	if (VK_SUCCESS != err) {
-		assert(0 && "Vulkan Error: Device creation failed.");
-		exit(1);
+		util->ErrorCheck(vkCreateDevice(this->gpu, &deviceCreateInfo, nullptr, &device));		//Napravimo uredjaj pa queue.
+		
 	}
-
-	util->ErrorCheck(err);
-
-	vkGetDeviceQueue(device, this->graphicsFamilyIndex, 0, &this->queue);			//Iz kog reda hocemo da fetchujemo? Mozemo imati vise queue...
+	else {
+		assert(0 && "VK ERROR: No layers are avaiable.");
+		exit(-1);
+	}
 }
 
-void Renderer::createQueueFamilyProperties() {
-	uint32_t familyCount = 0;
-	bool foundWantedQueue = false;
+bool Renderer::areGLFWExtensionsSupported() {
+	int supportedFound = 0;
+	
+	vkEnumerateInstanceExtensionProperties(nullptr, &this->extensionsCount, nullptr);		//Prvo da vidimo kolko ima podrzanih
+	this->supportedExtensionProperties.resize(this->extensionsCount);
+	vkEnumerateInstanceExtensionProperties(nullptr, &this->extensionsCount, this->supportedExtensionProperties.data());
 
-	vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, nullptr);	//Koliko porodica postoje u GPU?
-	std::vector<VkQueueFamilyProperties> familyPropertyList(familyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, familyPropertyList.data());
+	std::cout << "*********GLFW Extensions*********" << std::endl << std::endl;
+	for (uint32_t i = 0; i < glfwInstanceExtensionsCount; i++) {
+		std::cout << "Extension GLFW: " << glfwInstanceExtensions[i] << std::endl;
+	}
 
-	for (uint32_t i = 0; i < familyCount; ++i) {
-		VkQueueFamilyProperties prop = familyPropertyList[i];
+	std::cout << "*********Vulkan Core Extensions*********" << std::endl;
+	for (uint32_t i = 0; i < extensionsCount; i++) {
+		std::cout << "Extension VKEnumerate: " << supportedExtensionProperties[i].extensionName << std::endl;
+	}
 
-		if (prop.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-			foundWantedQueue = true;
-			this->graphicsFamilyIndex = i;
-			break;
+	for (uint32_t i = 0; i < glfwInstanceExtensionsCount; i++) {
+		for (uint32_t j = 0; j < extensionsCount; j++) {
+			if(strcmp(supportedExtensionProperties[j].extensionName, glfwInstanceExtensions[i]) == 0) {
+				++supportedFound;
+				break;
+			}
 		}
 	}
 
-	if (!foundWantedQueue) {
-		assert(0 && "Vulkan Error: No GRAPHICS queue family found.");
-		exit(-1);
-	}
+	return supportedFound == this->glfwInstanceExtensionsCount;
 }
 
 void Renderer::createPhysicalDevices() {
 	VkPhysicalDevice ret = NULL;
 	uint32_t gpuCount = 0;
 	util->ErrorCheck(vkEnumeratePhysicalDevices(instance, &gpuCount, nullptr));
+
+	if (gpuCount == 0) {
+		assert(0 && "Vulkan Error: No GPU-s with Vulkan support present.");
+		exit(-1);
+	}
+
 	std::vector<VkPhysicalDevice> gpuList(gpuCount);
 	vkEnumeratePhysicalDevices(instance, &gpuCount, gpuList.data());
 
-	gpu = gpuList[0];
+	gpu = findMostSuitableGPU(gpuList);
 	vkGetPhysicalDeviceProperties(gpu, &gpuProperties);
 	vkGetPhysicalDeviceMemoryProperties(gpu, &gpuMemoryProperties);
+	vkGetPhysicalDeviceFeatures(this->gpu, &this->gpuFeatures);				//Izlistaj mogucnost GPUA
 }
 
 void Renderer::enumerateDeviceLayers() {
@@ -138,7 +162,7 @@ void Renderer::enumerateDeviceLayers() {
 	std::cout << std::endl;
 }
 
-void Renderer::enumerateInstanceLayers() {
+bool Renderer::enumerateInstanceLayers() {
 	uint32_t layerCount = 0;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 	std::vector<VkLayerProperties> layerProperties(layerCount);
@@ -150,6 +174,19 @@ void Renderer::enumerateInstanceLayers() {
 	}
 
 	std::cout << std::endl;
+	
+	bool layerFound = false;
+
+	for (const char* layer : instanceLayers) {	
+		for (const auto& layerProp : layerProperties) {
+			if (strcmp(layer, layerProp.layerName) == 0) {
+				layerFound = true;
+				break;
+			}
+		}
+	}
+
+	return layerFound;
 }
 
 MainWindow* Renderer::createWindow(uint32_t sizeX, uint32_t sizeY, std::string windowName) {
@@ -174,8 +211,6 @@ const VkPhysicalDevice Renderer::getGpu()
 {
 	return this->gpu;
 }
-
-#if BUILD_ENABLE_VULKAN_DEBUG
 
 //True ili false, kako ce se layeri ponasati po nastanku greske. True - Vulkan Core ili drugi layer nece okinuti kod. False - Ide uvek do Vulkan Core-a (.
 VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback
@@ -217,14 +252,13 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback
 void Renderer::SetupDebug() {
 	debugCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
 	debugCallbackCreateInfo.pfnCallback = VulkanDebugCallback;
-	debugCallbackCreateInfo.flags = 
-	//	VK_DEBUG_REPORT_INFORMATION_BIT_EXT |
-		 VK_DEBUG_REPORT_WARNING_BIT_EXT
-		| VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT 
+	debugCallbackCreateInfo.flags =
+		//	VK_DEBUG_REPORT_INFORMATION_BIT_EXT |
+		VK_DEBUG_REPORT_WARNING_BIT_EXT
+		| VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT
 		| VK_DEBUG_REPORT_ERROR_BIT_EXT
-	//	| VK_DEBUG_REPORT_DEBUG_BIT_EXT 
-		| VK_DEBUG_REPORT_FLAG_BITS_MAX_ENUM_EXT
-		| 0;
+		//	| VK_DEBUG_REPORT_DEBUG_BIT_EXT 
+		| VK_DEBUG_REPORT_FLAG_BITS_MAX_ENUM_EXT;
 
 	instanceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
 	instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
@@ -249,27 +283,69 @@ void Renderer::DeinitDebug() {
 
 void Renderer::SetupLayersAndExtensions()
 {
-	//instanceExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);		Direktno koristi ekran, sto ne mozemo na PC-u i telefonu
-	instanceExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-	instanceExtensions.push_back(PLATFORM_SURFACE_EXTENSION_NAME);
+	glfwInit();															//Poziva linker i ucitava vulkan-1.dll
+
+	if (glfwVulkanSupported()) {
+		glfwInstanceExtensions = glfwGetRequiredInstanceExtensions(&this->glfwInstanceExtensionsCount);
+	}
+	else {
+		//instanceExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);		Direktno koristi ekran, sto ne mozemo na PC-u i telefonu
+		instanceExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+		instanceExtensions.push_back(PLATFORM_SURFACE_EXTENSION_NAME);
+	}
 }
 
 void Renderer::setupDeviceExtensions() {
 	deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);		//Omogucava swapchain
 }
 
-bool isDeviceSuitable(VkPhysicalDevice device) {
-	return true;
+VkPhysicalDevice findMostSuitableGPU(std::vector<VkPhysicalDevice> gpuList) {
+	VkPhysicalDevice ret = VK_NULL_HANDLE;
+	int maxScore = 0;
+	std::map<int, VkPhysicalDevice> candidates;
+
+	for (const auto& gpu : gpuList) {
+		int score = ratePhysicalDevice(gpu);
+		candidates.insert(std::pair<int, VkPhysicalDevice>(score, gpu));
+	}
+
+	for (auto i = candidates.begin(); i != candidates.end(); i++) {
+		if (i == candidates.begin()) {
+			maxScore = i->first;
+			ret = i->second;
+		}
+		else if (i->first > maxScore) {
+			maxScore = i->first;
+			ret = i->second;
+		}
+	}
+
+	return ret;
 }
 
-#else
-void Renderer::SetupDebug() {};
-void Renderer::DeinitDebug() {};
-void Renderer::InitDebug() {};
-#endif		//BUILD_ENABLE_VULKAN_DEBUG
+int ratePhysicalDevice(VkPhysicalDevice gpu) {
+	int score = 0;
+	VkPhysicalDeviceProperties properties;
+	VkPhysicalDeviceFeatures features;
 
-uint32_t Renderer::getGraphicsFamilyIndex() {
-	return this->graphicsFamilyIndex;
+	vkGetPhysicalDeviceFeatures(gpu, &features);
+	vkGetPhysicalDeviceProperties(gpu, &properties);
+
+	if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+		score += 1000;
+	}
+
+	score += properties.limits.maxImageDimension2D;
+	score += properties.limits.maxComputeSharedMemorySize;
+	score += properties.limits.maxGeometryShaderInvocations;
+	score += features.multiViewport ? 200 : 0;
+	score += features.tessellationShader ? 500 : 0;
+
+	if (!features.geometryShader) {
+		score = 0;
+	}
+
+	return score;
 }
 
 const VkDevice Renderer::getDevice() {
@@ -298,4 +374,9 @@ const VkQueue Renderer::getQueue() {
 const VkPhysicalDeviceMemoryProperties & Renderer::getPhysicalDeviceMemoryProperties()
 {
 	return this->gpuMemoryProperties;
+}
+
+QueueFamilyIndices* Renderer::getQueueIndices()
+{
+	return this->queueFamilyIndices;
 }

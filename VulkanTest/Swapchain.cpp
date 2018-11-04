@@ -202,15 +202,19 @@ bool Swapchain::isStencilAvaiable() {
 			break;
 		}
 	}
+
 	if (depthStencilFormat == VK_FORMAT_UNDEFINED) {
 		assert(0 && "Vulkan Error: No depth stencil format avaiable");
 		exit(-1);
+		return false;
 	}
 
 	stencilAvaiable = depthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
 		depthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
 		depthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT ||
 		depthStencilFormat == VK_FORMAT_D32_SFLOAT;
+
+	return stencilAvaiable;
 }
 
 VkSwapchainKHR Swapchain::getSwapchain()

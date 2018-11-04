@@ -10,6 +10,7 @@
 #include "Swapchain.h"
 #include "RenderPass.h"
 #include "FrameBuffer.h"
+#include "QueueFamilyIndices.h"
 #include <vector>
 #include <string>
 #include <assert.h>
@@ -27,6 +28,7 @@ public:
 
 	void close();
 	bool update();
+	void continueInitialization();
 
 	void beginRender();
 	void endRender(std::vector<VkSemaphore>);
