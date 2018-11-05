@@ -39,8 +39,8 @@ public:
 	Swapchain getSwapchain();
 
 	VkSurfaceKHR getSurface();
+	VkSurfaceKHR* getSurfacePTR();
 	VkExtent2D getSurfaceSize();
-	VkSurfaceKHR getSurfaceKHR();
 	VkSurfaceCapabilitiesKHR getSurfaceCapatibilities();
 	VkBool32 getIsWSISupported();
 	VkSurfaceFormatKHR getSurfaceFormat();

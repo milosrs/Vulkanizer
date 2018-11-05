@@ -59,22 +59,23 @@ private:
 
 	bool areGLFWExtensionsSupported();
 
-	VkInstance instance = nullptr;
+	VkInstance instance = VK_NULL_HANDLE;
 	VkPhysicalDevice gpu = VK_NULL_HANDLE;
-	VkDevice device = nullptr;
+	VkDevice device = VK_NULL_HANDLE;
 	VkPhysicalDeviceProperties gpuProperties = {};
-	VkDebugReportCallbackEXT debugReportHandle = nullptr;
+	VkDebugReportCallbackEXT debugReportHandle = VK_NULL_HANDLE;
 	VkDebugReportCallbackCreateInfoEXT debugCallbackCreateInfo = {};
-	VkQueue	queue = nullptr;
+	VkQueue	queue = VK_NULL_HANDLE;
 	VkPhysicalDeviceMemoryProperties gpuMemoryProperties = {};
 	VkPhysicalDeviceFeatures gpuFeatures = {};
 	
 
-	PFN_vkCreateDebugReportCallbackEXT fvkCreateDebugReportCallbackEXT = nullptr;
-	PFN_vkDestroyDebugReportCallbackEXT fvkDestroyDebugReportCallbackEXT = nullptr;
+	PFN_vkCreateDebugReportCallbackEXT fvkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
+	PFN_vkDestroyDebugReportCallbackEXT fvkDestroyDebugReportCallbackEXT = VK_NULL_HANDLE;
 
 	uint32_t extensionsCount = 0;
-	std::vector<VkExtensionProperties> supportedExtensionProperties;
+	std::vector<const char*> supportedExtensionProperties;
+	std::vector<VkExtensionProperties> supportedProperties;
 
 	std::vector<const char*> instanceLayers;
 	std::vector<const char*> instanceExtensions;

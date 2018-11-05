@@ -12,13 +12,21 @@ QueueFamilyIndices::QueueFamilyIndices(VkPhysicalDevice* physicalDevice, VkSurfa
 	int i = 0;
 	for (const auto& queueFamilyProp : queueFamilyProperties) {
 		if (surface != VK_NULL_HANDLE) {
-			vkGetPhysicalDeviceSurfaceSupportKHR(*physicalDevice, i, *surface, &this->isPresentationSupported);
-		}
-		if (queueFamilyProp.queueCount > 0 && isPresentationSupported && queueFamilyProp.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+			vkGetPhysicalDeviceSurfaceSupportKHR(*physicalDevice, i, *surface, &isPresentationSupported);
+
+			if (queueFamilyProp.queueCount > 0 && isPresentationSupported) {
+				this->presentFamily = i;
+				foundWantedQueue = true;
+			}
+			if (queueFamilyProp.queueCount > 0 && queueFamilyProp.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+				this->graphicsFamilyIndex = i;
+				foundWantedQueue = true;
+			}
+		} else if (queueFamilyProp.queueCount > 0 && queueFamilyProp.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 			this->graphicsFamilyIndex = i;
 			foundWantedQueue = true;
-			break;
 		}
+		
 
 		++i;
 	}
@@ -60,23 +68,38 @@ std::vector<VkQueue> QueueFamilyIndices::getQueues()
 	return this->queues;
 }
 
-VkDeviceQueueCreateInfo QueueFamilyIndices::createQueue(VkDevice* device)
+std::vector<VkDeviceQueueCreateInfo> QueueFamilyIndices::getQueueCreateInfos() {
+	return this->queueCreateInfos;
+}
+
+void QueueFamilyIndices::createQueueCreateInfos()
 {
+	std::set<uint32_t> uniqueQueueFamilies = { this->graphicsFamilyIndex.value(), this->presentFamily.value() };
+	
 	if (this->isComplete()) {
-		for (VkQueue& queue : queues) {
+		for (uint32_t family : uniqueQueueFamilies) {
 			VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
 			float queuePriorities[]{ 1.0f };														//Ovo pomaze Vulkan Core-u da skonta koji red je najprioritetniji za zavrsavanje zadataka iz Command Buffera
 
 			deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-			deviceQueueCreateInfo.queueFamilyIndex = this->graphicsFamilyIndex.value();
+			deviceQueueCreateInfo.queueFamilyIndex = family;
 			deviceQueueCreateInfo.queueCount = 1;
 			deviceQueueCreateInfo.pQueuePriorities = queuePriorities;
-
-			vkGetDeviceQueue(*device, this->graphicsFamilyIndex.value(), 0, &queue);			//Iz kog reda hocemo da fetchujemo? Mozemo imati vise queue...
+			queueCreateInfos.push_back(deviceQueueCreateInfo);
 		}
 	}
 	else {
 		assert(0 && "Vulkan Error: No queue family avaiable for this device. Aborting.");
 		exit(-1);
+	}
+}
+
+void QueueFamilyIndices::createQueues(VkDevice* device) {
+	std::set<uint32_t> uniqueQueueFamilies = { this->graphicsFamilyIndex.value(), this->presentFamily.value() };
+
+	for (uint32_t i = 0; i < uniqueQueueFamilies.size(); i++) {
+		VkQueue queue = VK_NULL_HANDLE;
+		queues.push_back(queue);
+		vkGetDeviceQueue(*device, this->graphicsFamilyIndex.value(), 0, &queues[i]);			//Iz kog reda hocemo da fetchujemo? Mozemo imati vise queue...
 	}
 }

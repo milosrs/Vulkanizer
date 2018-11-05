@@ -51,6 +51,7 @@ void Util::ErrorCheck(VkResult result) {
 		case VK_ERROR_FRAGMENTATION_EXT : std::cout << "Fragmentation error" << std::endl; break;
 		case VK_ERROR_NOT_PERMITTED_EXT : std::cout << "Not permitted" << std::endl; break;
 		}
+		exit(-1);
 	}
 }
 

@@ -43,8 +43,8 @@ void Renderer::_InitInstance() {
 		instance_create_info.pApplicationInfo = &application_info;
 		instance_create_info.enabledLayerCount = static_cast<uint32_t>(instanceLayers.size());
 		instance_create_info.ppEnabledLayerNames = instanceLayers.data();
-		instance_create_info.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
-		instance_create_info.ppEnabledExtensionNames = instanceExtensions.data();
+		instance_create_info.enabledExtensionCount = static_cast<uint32_t>(supportedExtensionProperties.size());
+		instance_create_info.ppEnabledExtensionNames = supportedExtensionProperties.data();
 		instance_create_info.pNext = &debugCallbackCreateInfo;
 
 		VkResult result = vkCreateInstance(&instance_create_info, nullptr, &instance);
@@ -70,7 +70,9 @@ void Renderer::_DeinitDevice() {
 
 //Trazimo GPU, smestamo sve GPU u listu.
 void Renderer::_InitDevice() {
-	queueFamilyIndices = &QueueFamilyIndices(&this->gpu);
+	this->createPhysicalDevices();
+
+	queueFamilyIndices = &QueueFamilyIndices(&this->gpu, this->window->getSurfacePTR());
 	VkDeviceCreateInfo deviceCreateInfo{};
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfo;
 	bool layersAvaiable = this->enumerateInstanceLayers();
@@ -78,21 +80,20 @@ void Renderer::_InitDevice() {
 
 	if (layersAvaiable) {
 		this->enumerateDeviceLayers();
-		this->createPhysicalDevices();
-		
-		queueFamilyIndices->createQueue(&this->device);
-		queueCreateInfo.insert(queueCreateInfo.begin(), queueFamilyIndices->getQueues().begin(), queueFamilyIndices->getQueues().end());
+
+		queueFamilyIndices->createQueueCreateInfos();
+		queueCreateInfo = queueFamilyIndices->getQueueCreateInfos();
 
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfo.size());
-		deviceCreateInfo.pQueueCreateInfos = queueCreateInfo.data();
 		deviceCreateInfo.pEnabledFeatures = &gpuFeatures;										//Ako smo samo uradili enumerate pa se referenciramo na stvorenu strukturu, ukljucicemo sve mogucnosti kartice 
 		deviceCreateInfo.enabledLayerCount = instanceLayers.size();
 		deviceCreateInfo.ppEnabledLayerNames = instanceLayers.data();
 		deviceCreateInfo.pQueueCreateInfos = queueCreateInfo.data();
 
-		util->ErrorCheck(vkCreateDevice(this->gpu, &deviceCreateInfo, nullptr, &device));		//Napravimo uredjaj pa queue.
-		
+		util->ErrorCheck(vkCreateDevice(this->gpu, &deviceCreateInfo, nullptr, &device));		//Napravimo uredjaj
+		queueFamilyIndices->createQueues(&this->device);										//Napravimo queue za uredjaj
+		this->supportedProperties.clear();														//Sprecimo memory leak
 	}
 	else {
 		assert(0 && "VK ERROR: No layers are avaiable.");
@@ -104,8 +105,8 @@ bool Renderer::areGLFWExtensionsSupported() {
 	int supportedFound = 0;
 	
 	vkEnumerateInstanceExtensionProperties(nullptr, &this->extensionsCount, nullptr);		//Prvo da vidimo kolko ima podrzanih
-	this->supportedExtensionProperties.resize(this->extensionsCount);
-	vkEnumerateInstanceExtensionProperties(nullptr, &this->extensionsCount, this->supportedExtensionProperties.data());
+	supportedProperties.resize(this->extensionsCount);
+	vkEnumerateInstanceExtensionProperties(nullptr, &this->extensionsCount, supportedProperties.data());
 
 	std::cout << "*********GLFW Extensions*********" << std::endl << std::endl;
 	for (uint32_t i = 0; i < glfwInstanceExtensionsCount; i++) {
@@ -114,13 +115,15 @@ bool Renderer::areGLFWExtensionsSupported() {
 
 	std::cout << "*********Vulkan Core Extensions*********" << std::endl;
 	for (uint32_t i = 0; i < extensionsCount; i++) {
-		std::cout << "Extension VKEnumerate: " << supportedExtensionProperties[i].extensionName << std::endl;
+		std::cout << "Extension VKEnumerate: " << supportedProperties[i].extensionName << std::endl;
 	}
 
 	for (uint32_t i = 0; i < glfwInstanceExtensionsCount; i++) {
 		for (uint32_t j = 0; j < extensionsCount; j++) {
-			if(strcmp(supportedExtensionProperties[j].extensionName, glfwInstanceExtensions[i]) == 0) {
+			const char* extensionName = supportedProperties[j].extensionName;
+			if(strcmp(extensionName, glfwInstanceExtensions[i]) == 0) {
 				++supportedFound;
+				this->supportedExtensionProperties.push_back(extensionName);
 				break;
 			}
 		}
@@ -253,15 +256,13 @@ void Renderer::SetupDebug() {
 	debugCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
 	debugCallbackCreateInfo.pfnCallback = VulkanDebugCallback;
 	debugCallbackCreateInfo.flags =
-		//	VK_DEBUG_REPORT_INFORMATION_BIT_EXT |
-		VK_DEBUG_REPORT_WARNING_BIT_EXT
+		  VK_DEBUG_REPORT_WARNING_BIT_EXT
 		| VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT
 		| VK_DEBUG_REPORT_ERROR_BIT_EXT
-		//	| VK_DEBUG_REPORT_DEBUG_BIT_EXT 
-		| VK_DEBUG_REPORT_FLAG_BITS_MAX_ENUM_EXT;
+		| 0;
 
 	instanceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
-	instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+	supportedExtensionProperties.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 }
 
 void Renderer::InitDebug() {

@@ -10,10 +10,11 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 	this->util = &Util::instance();
 
 	InitOSWindow();
-	InitSurface();
+	InitOSSurface();
 }
 
 void MainWindow::continueInitialization() {
+	InitSurface();
 	swapchain = Swapchain(this, renderer);
 	renderPass = RenderPass(renderer, swapchain.getDepthStencilFormat(), this->surfaceFormat);
 	frameBuffer = FrameBuffer(renderer, swapchain.getSwapchainImageCount(), swapchain.getDepthStencilImageView(), swapchain.getImageViews(),
@@ -50,7 +51,7 @@ void MainWindow::InitSurface() {
 	uint32_t formatCount = 0;
 	std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
 
-	InitOSSurface();
+	
 	vkGetPhysicalDeviceSurfaceSupportKHR(device, renderer->getQueueIndices()->getGraphicsFamilyIndex(), this->surfaceKHR, &isWSISupported);
 
 	if (!isWSISupported) {
@@ -145,14 +146,14 @@ VkSurfaceKHR MainWindow::getSurface()
 	return this->surfaceKHR;
 }
 
+VkSurfaceKHR * MainWindow::getSurfacePTR()
+{
+	return &this->surfaceKHR;
+}
+
 VkExtent2D MainWindow::getSurfaceSize()
 {
 	return { surfaceX, surfaceY };
-}
-
-VkSurfaceKHR MainWindow::getSurfaceKHR()
-{
-	return this->surfaceKHR;
 }
 
 VkSurfaceCapabilitiesKHR MainWindow::getSurfaceCapatibilities()
