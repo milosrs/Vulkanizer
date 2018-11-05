@@ -2,38 +2,45 @@
 #include "QueueFamilyIndices.h"
 
 
+QueueFamilyIndices::QueueFamilyIndices()
+{
+}
+
 QueueFamilyIndices::QueueFamilyIndices(VkPhysicalDevice* physicalDevice, VkSurfaceKHR* surface)
 {
-	bool foundWantedQueue = false;
-	vkGetPhysicalDeviceQueueFamilyProperties(*physicalDevice, &familyCount, nullptr);
-	queueFamilyProperties.resize(familyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(*physicalDevice, &familyCount, queueFamilyProperties.data());
+	if (physicalDevice != VK_NULL_HANDLE && surface != VK_NULL_HANDLE) {
+		bool foundWantedQueue = false;
+		vkGetPhysicalDeviceQueueFamilyProperties(*physicalDevice, &familyCount, nullptr);
+		queueFamilyProperties.resize(familyCount);
+		vkGetPhysicalDeviceQueueFamilyProperties(*physicalDevice, &familyCount, queueFamilyProperties.data());
 
-	int i = 0;
-	for (const auto& queueFamilyProp : queueFamilyProperties) {
-		if (surface != VK_NULL_HANDLE) {
-			vkGetPhysicalDeviceSurfaceSupportKHR(*physicalDevice, i, *surface, &isPresentationSupported);
+		int i = 0;
+		for (const auto& queueFamilyProp : queueFamilyProperties) {
+			if (surface != VK_NULL_HANDLE) {
+				vkGetPhysicalDeviceSurfaceSupportKHR(*physicalDevice, i, *surface, &isPresentationSupported);
 
-			if (queueFamilyProp.queueCount > 0 && isPresentationSupported) {
-				this->presentFamily = i;
-				foundWantedQueue = true;
+				if (queueFamilyProp.queueCount > 0 && isPresentationSupported) {
+					this->presentFamily = i;
+					foundWantedQueue = true;
+				}
+				if (queueFamilyProp.queueCount > 0 && queueFamilyProp.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+					this->graphicsFamilyIndex = i;
+					foundWantedQueue = true;
+				}
 			}
-			if (queueFamilyProp.queueCount > 0 && queueFamilyProp.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+			else if (queueFamilyProp.queueCount > 0 && queueFamilyProp.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 				this->graphicsFamilyIndex = i;
 				foundWantedQueue = true;
 			}
-		} else if (queueFamilyProp.queueCount > 0 && queueFamilyProp.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-			this->graphicsFamilyIndex = i;
-			foundWantedQueue = true;
+
+
+			++i;
 		}
-		
 
-		++i;
-	}
-
-	if (!foundWantedQueue) {
-		assert(0 && "Vulkan Error: No GRAPHICS queue family found.");
-		exit(-1);
+		if (!foundWantedQueue) {
+			assert(0 && "Vulkan Error: No GRAPHICS queue family found.");
+			exit(-1);
+		}
 	}
 }
 

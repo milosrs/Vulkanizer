@@ -13,7 +13,8 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 	InitOSSurface();
 }
 
-void MainWindow::continueInitialization() {
+void MainWindow::continueInitialization(Renderer* renderer) {
+	this->renderer = renderer;
 	InitSurface();
 	swapchain = Swapchain(this, renderer);
 	renderPass = RenderPass(renderer, swapchain.getDepthStencilFormat(), this->surfaceFormat);

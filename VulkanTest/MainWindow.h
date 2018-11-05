@@ -28,7 +28,7 @@ public:
 
 	void close();
 	bool update();
-	void continueInitialization();
+	void continueInitialization(Renderer* renderer);
 
 	void beginRender();
 	void endRender(std::vector<VkSemaphore>);

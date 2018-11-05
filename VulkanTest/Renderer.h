@@ -88,6 +88,6 @@ private:
 	Util* util = nullptr;
 	MainWindow* window = nullptr;
 	uint32_t graphicsFamilyIndex = 0;
-	QueueFamilyIndices* queueFamilyIndices = nullptr;
+	QueueFamilyIndices queueFamilyIndices = nullptr;
 };
 

@@ -72,7 +72,7 @@ void Renderer::_DeinitDevice() {
 void Renderer::_InitDevice() {
 	this->createPhysicalDevices();
 
-	queueFamilyIndices = &QueueFamilyIndices(&this->gpu, this->window->getSurfacePTR());
+	queueFamilyIndices = QueueFamilyIndices(&this->gpu, this->window->getSurfacePTR());
 	VkDeviceCreateInfo deviceCreateInfo{};
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfo;
 	bool layersAvaiable = this->enumerateInstanceLayers();
@@ -81,8 +81,8 @@ void Renderer::_InitDevice() {
 	if (layersAvaiable) {
 		this->enumerateDeviceLayers();
 
-		queueFamilyIndices->createQueueCreateInfos();
-		queueCreateInfo = queueFamilyIndices->getQueueCreateInfos();
+		queueFamilyIndices.createQueueCreateInfos();
+		queueCreateInfo = queueFamilyIndices.getQueueCreateInfos();
 
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfo.size());
@@ -92,7 +92,7 @@ void Renderer::_InitDevice() {
 		deviceCreateInfo.pQueueCreateInfos = queueCreateInfo.data();
 
 		util->ErrorCheck(vkCreateDevice(this->gpu, &deviceCreateInfo, nullptr, &device));		//Napravimo uredjaj
-		queueFamilyIndices->createQueues(&this->device);										//Napravimo queue za uredjaj
+		queueFamilyIndices.createQueues(&this->device);										//Napravimo queue za uredjaj
 		this->supportedProperties.clear();														//Sprecimo memory leak
 	}
 	else {
@@ -379,5 +379,5 @@ const VkPhysicalDeviceMemoryProperties & Renderer::getPhysicalDeviceMemoryProper
 
 QueueFamilyIndices* Renderer::getQueueIndices()
 {
-	return this->queueFamilyIndices;
+	return &this->queueFamilyIndices;
 }
