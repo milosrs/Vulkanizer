@@ -34,6 +34,7 @@ public:
 	void endRender(std::vector<VkSemaphore>);
 	void mainLoop();
 
+	Renderer* getRenderer();
 	RenderPass getRenderPass();
 	FrameBuffer getActiveFrameBuffer();
 	Swapchain getSwapchain();
@@ -55,6 +56,8 @@ private:
 
 	void initSync();
 	void destroySync();
+
+	void choosePreferedFormat();
 
 	Swapchain swapchain;
 	RenderPass renderPass;

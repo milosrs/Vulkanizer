@@ -49,9 +49,6 @@ bool MainWindow::update()
 
 void MainWindow::InitSurface() {
 	VkPhysicalDevice device = renderer->getGpu();
-	uint32_t formatCount = 0;
-	std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
-
 	
 	vkGetPhysicalDeviceSurfaceSupportKHR(device, renderer->getQueueIndices()->getGraphicsFamilyIndex(), this->surfaceKHR, &isWSISupported);
 
@@ -62,29 +59,45 @@ void MainWindow::InitSurface() {
 
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, this->surfaceKHR, &surfaceCapatibilities);
 
-	if (surfaceCapatibilities.currentExtent.width < UINT32_MAX) {												//Ako je > exception
+	if (surfaceCapatibilities.currentExtent.width < UINT32_MAX) {											//Ako je > exception
 		surfaceX = surfaceCapatibilities.currentExtent.width;
 		surfaceY = surfaceCapatibilities.currentExtent.height;
 	}
 
-	{
-		vkGetPhysicalDeviceSurfaceFormatsKHR(device, this->surfaceKHR, &formatCount, nullptr);					//Kakve frame buffere treba da napravimo
-		
-		if (formatCount == 0) {
-			assert(0 && "Surface format missing.");
-			exit(-1);
-		}
+	choosePreferedFormat();
+}
 
-		std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(device, this->surfaceKHR, &formatCount, surfaceFormats.data());	//Kakve frame buffere treba da napravimo
-		
-		if (surfaceFormats[0].format == VK_FORMAT_UNDEFINED) {													//Surface-u nije bitan format
-			this->surfaceFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-			this->surfaceFormat.format = VK_FORMAT_B8G8R8_UNORM;
+void MainWindow::choosePreferedFormat() {
+	VkPhysicalDevice device = renderer->getGpu();
+	uint32_t formatCount = 0;
+	bool surfaceFormatFound = false;
+
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, this->surfaceKHR, &formatCount, nullptr);					//Kakve frame buffere treba da napravimo
+
+	if (formatCount == 0) {
+		assert(0 && "Surface format missing.");
+		exit(-1);
+	}
+
+	std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, this->surfaceKHR, &formatCount, surfaceFormats.data());	//Kakve frame buffere treba da napravimo
+
+	if (surfaceFormats.size() == 1 && surfaceFormats[0].format == VK_FORMAT_UNDEFINED) {					//Surface-u nije bitan format
+		this->surfaceFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;									//SRGB je prostor boja koji je najbolje prilagodjen ljudskom oku. NONLINEAR je da bi smo mogli da iskoristimo bitove sRGB boja na najbolji moguci nacin.
+		this->surfaceFormat.format = VK_FORMAT_B8G8R8_UNORM;												//Format koji koristimo je BGR 8bit. Manipulisanje sRGB bojama je dosta zahtevno i izlazi van okvira vulkana.
+		surfaceFormatFound = true;
+	}
+	else {
+		for (const VkSurfaceFormatKHR& format : surfaceFormats) {
+			if (format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR && format.format == VK_FORMAT_B8G8R8_UNORM) {
+				this->surfaceFormat = format;
+				surfaceFormatFound = true;
+			}
 		}
-		else {
-			this->surfaceFormat = surfaceFormats[0];
-		}
+	}
+
+	if (!surfaceFormatFound) {
+		this->surfaceFormat = surfaceFormats[0];
 	}
 }
 
@@ -125,6 +138,11 @@ void MainWindow::mainLoop()
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 	}
+}
+
+Renderer* MainWindow::getRenderer()
+{
+	return this->renderer;
 }
 
 RenderPass MainWindow::getRenderPass()
@@ -213,8 +231,8 @@ void MainWindow::InitOSSurface()
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 	surfaceCreateInfo.hwnd = glfwGetWin32Window(this->window);
-
-	util->ErrorCheck(glfwCreateWindowSurface(renderer->getInstance(), this->window, nullptr, &surfaceKHR));
+	VkResult result = glfwCreateWindowSurface(renderer->getInstance(), this->window, nullptr, &surfaceKHR);
+	util->ErrorCheck(result);
 }
 
 /*AKO HOCES DA SE ZLOPATIS I DA NE KORISTIS GLFW, ODKOMENTARISI KOD ISPOD!*/

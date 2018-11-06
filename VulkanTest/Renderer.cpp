@@ -84,15 +84,19 @@ void Renderer::_InitDevice() {
 		queueFamilyIndices.createQueueCreateInfos();
 		queueCreateInfo = queueFamilyIndices.getQueueCreateInfos();
 
+		setupDeviceExtensions();
+
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfo.size());
 		deviceCreateInfo.pEnabledFeatures = &gpuFeatures;										//Ako smo samo uradili enumerate pa se referenciramo na stvorenu strukturu, ukljucicemo sve mogucnosti kartice 
 		deviceCreateInfo.enabledLayerCount = instanceLayers.size();
 		deviceCreateInfo.ppEnabledLayerNames = instanceLayers.data();
 		deviceCreateInfo.pQueueCreateInfos = queueCreateInfo.data();
+		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+		deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
 		util->ErrorCheck(vkCreateDevice(this->gpu, &deviceCreateInfo, nullptr, &device));		//Napravimo uredjaj
-		queueFamilyIndices.createQueues(&this->device);										//Napravimo queue za uredjaj
+		queueFamilyIndices.createQueues(&this->device);											//Napravimo queue za uredjaj
 		this->supportedProperties.clear();														//Sprecimo memory leak
 	}
 	else {
@@ -297,7 +301,26 @@ void Renderer::SetupLayersAndExtensions()
 }
 
 void Renderer::setupDeviceExtensions() {
-	deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);		//Omogucava swapchain
+	deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);		//Omogucava swapchain, treba da vidimo da li je podrzan
+	uint32_t extensionsCount = 0;
+	int supported = 0;
+
+	vkEnumerateDeviceExtensionProperties(this->gpu, nullptr, &extensionsCount, nullptr);
+	std::vector<VkExtensionProperties> allSupportedExtensions(extensionsCount);
+	vkEnumerateDeviceExtensionProperties(this->gpu, nullptr, &extensionsCount, allSupportedExtensions.data());
+
+	std::cout << "*****SUPPORTED DEVICE EXTENSIONS****" << std::endl;
+	for (const VkExtensionProperties& extension : allSupportedExtensions) {
+		std::cout << extension.extensionName << std::endl;
+		if (strcmp(VK_KHR_SWAPCHAIN_EXTENSION_NAME, extension.extensionName) == 0 && supported < deviceExtensions.size()) {
+			supported++;
+		}
+	}
+
+	if (supported != deviceExtensions.size()) {
+		std::cout << "Vulkan Error: Requested device extensions not supported." << std::endl;
+		exit(-1);
+	}
 }
 
 VkPhysicalDevice findMostSuitableGPU(std::vector<VkPhysicalDevice> gpuList) {

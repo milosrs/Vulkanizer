@@ -17,6 +17,7 @@ public:
 	void createQueues(VkDevice* device);
 
 	uint32_t getGraphicsFamilyIndex();
+	uint32_t getPresentationFamilyIndex();
 	VkQueue getQueue();
 	VkQueue* getQueuePTR();
 	std::vector<VkQueue> getQueues();

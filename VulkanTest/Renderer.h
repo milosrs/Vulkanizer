@@ -55,6 +55,7 @@ private:
 
 	bool enumerateInstanceLayers();
 	void enumerateDeviceLayers();
+
 	void createPhysicalDevices();
 
 	bool areGLFWExtensionsSupported();

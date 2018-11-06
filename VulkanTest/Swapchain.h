@@ -5,6 +5,7 @@
 #include "PLATFORM.h"
 #include "Renderer.h"
 #include <vector>
+#include <algorithm>
 
 class MainWindow;
 class Renderer;
@@ -34,6 +35,8 @@ private:
 	void initDepthStencilImage();
 	void destroyDepthStencilImage();
 
+	void setupSwapExtent();
+
 	VkPresentModeKHR getAvaiablePresentMode();
 	bool isStencilAvaiable();
 
@@ -41,21 +44,20 @@ private:
 	Renderer* renderer = nullptr;
 	Util* util = nullptr;
 
-	VkSurfaceKHR surfaceKHR = nullptr;
-	VkSurfaceCapabilitiesKHR surfaceCapatibilities = {};
 	VkBool32 isWSISupported = false;
-	VkSurfaceFormatKHR surfaceFormat = {};
 
 	bool stencilAvaiable = false;
-	VkSwapchainKHR swapchain = nullptr;
+	VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 	VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
 	std::vector<VkImage> images;
 	std::vector<VkImageView> imageViews;
-	VkImage depthStencilImage = nullptr;						//Ne treba nam vise od jedne slike, jedino ako hocemo double/tripple buffering
-	VkImageView depthStencilImageView = nullptr;				//Ne treba nam vise od jedne slike, jedino ako hocemo double/tripple buffering
+	VkImage depthStencilImage = VK_NULL_HANDLE;						//Ne treba nam vise od jedne slike, jedino ako hocemo double/tripple buffering
+	VkImageView depthStencilImageView = VK_NULL_HANDLE;				//Ne treba nam vise od jedne slike, jedino ako hocemo double/tripple buffering
 	VkFormat depthStencilFormat = VK_FORMAT_UNDEFINED;
 	VkMemoryAllocateInfo allocateInfo = {};
-	VkDeviceMemory depthStencilImageMemory = nullptr;
+	VkDeviceMemory depthStencilImageMemory = VK_NULL_HANDLE;
+	VkExtent2D swapExtent = {};
+	VkFormat imagesFormat = VK_FORMAT_UNDEFINED;
 
 	uint32_t swapchainImageCount = 2;
 	uint32_t activeImageSwapchainId;

@@ -7,13 +7,9 @@ Swapchain::Swapchain(MainWindow* mainWindow, Renderer* renderer)
 	util = &Util::instance();
 	this->mainWindow = mainWindow;
 	this->renderer = renderer;
+	this->imagesFormat = mainWindow->getSurfaceFormat().format;
 
-	VkExtent2D sizes = mainWindow->getSurfaceSize();
-	this->sizeX = sizes.width;
-	this->sizeY = sizes.height;
-	this->isWSISupported = mainWindow->getIsWSISupported();
-	this->surfaceFormat = mainWindow->getSurfaceFormat();
-	this->surfaceCapatibilities = mainWindow->getSurfaceCapatibilities();
+	setupSwapExtent();
 
 	initSwapchain();
 	initSwapchainImgs();
@@ -32,29 +28,57 @@ Swapchain::~Swapchain()
 	destroySwapchain();
 }
 
-void Swapchain::initSwapchain() {
-	if (swapchainImageCount > surfaceCapatibilities.maxImageCount) {
-		swapchainImageCount = surfaceCapatibilities.maxImageCount;
+void Swapchain::setupSwapExtent() {
+	VkSurfaceCapabilitiesKHR capabilities = mainWindow->getSurfaceCapatibilities();			//Ovo ce nam reci koja je maksimalna rezolucija slike za povrsinu
+	VkExtent2D actualSizes = mainWindow->getSurfaceSize();
+	this->isWSISupported = mainWindow->getIsWSISupported();
+
+	if (capabilities.currentExtent.width != UINT32_MAX) {									//Ako je true, automatski se bira rezolucija najbolja za povrsinu
+		this->swapExtent = capabilities.currentExtent;
 	}
-	if (swapchainImageCount < surfaceCapatibilities.minImageCount) {
-		swapchainImageCount = surfaceCapatibilities.minImageCount + 1;
+	else {
+		actualSizes.width = std::clamp(actualSizes.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+		actualSizes.height = std::clamp(actualSizes.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+		this->swapExtent = actualSizes;
 	}
 
-	VkPresentModeKHR presentMode = getAvaiablePresentMode();					//Ako nista drugo ne radi, Vulkan garantuje da je ovaj prez. mode dostupan
+	this->sizeX = swapExtent.width;
+	this->sizeY = swapExtent.height;
+
+	this->swapchainImageCount = capabilities.minImageCount + 1;								//Koliko slika ce biti u redu swapchaina?
+	if (capabilities.maxImageCount > 0 && this->swapchainImageCount > capabilities.maxImageCount) {
+		this->swapchainImageCount = capabilities.maxImageCount;
+	}
+}
+
+void Swapchain::initSwapchain() {
+	VkPresentModeKHR presentMode = getAvaiablePresentMode();
+	QueueFamilyIndices indices = *mainWindow->getRenderer()->getQueueIndices();
+
 
 	swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	swapchainCreateInfo.surface = this->surfaceKHR;
-	swapchainCreateInfo.minImageCount = swapchainImageCount;					//Double buffering (Bufferovanje slika display buffera)
-	swapchainCreateInfo.imageFormat = this->surfaceFormat.format;
-	swapchainCreateInfo.imageColorSpace = this->surfaceFormat.colorSpace;
-	swapchainCreateInfo.imageExtent.width = this->sizeX;
-	swapchainCreateInfo.imageExtent.height = this->sizeY;
+	swapchainCreateInfo.surface = this->mainWindow->getSurface();
+	swapchainCreateInfo.minImageCount = swapchainImageCount;					//Bufferovanje slika display buffera, koliko slika odjednom moze biti u redu
+	swapchainCreateInfo.imageFormat = this->mainWindow->getSurfaceFormat().format;
+	swapchainCreateInfo.imageColorSpace = this->mainWindow->getSurfaceFormat().colorSpace;
+	swapchainCreateInfo.imageExtent = this->swapExtent;
 	swapchainCreateInfo.imageArrayLayers = 1;									//Koliko slojeva ima slika (1 je obicno renderovanje, 2 je stetoskopsko)
-	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;		//Za koju vrstu operacija koristimo slike? Renderujemo ih, sto znaci da su oni COLOR ATTACHMENTS
 	swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;			//NE delimo slike izmedju Queue-ova. Paralel znaci da hocemo da delimo.
-	swapchainCreateInfo.queueFamilyIndexCount = 0;								//Za exclusive je uvek 0
-	swapchainCreateInfo.pQueueFamilyIndices = nullptr;							//Isto ignorisemo za Exclusive
-	swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+
+	if (indices.getGraphicsFamilyIndex() == indices.getPresentationFamilyIndex()) {
+		uint32_t queueIndices[] = { indices.getGraphicsFamilyIndex(), indices.getPresentationFamilyIndex() };
+		swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;		//Slika moze da se koristi paralelno, bez transfera vlasnistva nad slikom.
+		swapchainCreateInfo.queueFamilyIndexCount = 2;
+		swapchainCreateInfo.pQueueFamilyIndices = queueIndices;
+	}
+	else {
+		swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;		//Slika je u vlasnistvu jednog reda u jedno vreme, i vlasnistvo mora biti prebaceno na drugi da bi taj drugi mogao da ga koristi.
+		swapchainCreateInfo.queueFamilyIndexCount = 0;							//Za exclusive je uvek 0
+		swapchainCreateInfo.pQueueFamilyIndices = nullptr;						//Ignorisemo za Exclusive
+	}
+
+	swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;	//mainWindow->getCapabilities().currentTransform ako necemo transformaciju.
 	swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;		//Alfa kanal SURFACE-a, da li je ona transparentna
 	swapchainCreateInfo.presentMode = presentMode;								//Vertical Sync
 	swapchainCreateInfo.clipped = VK_TRUE;										//Ukljucujemo clipping, jako bitno za telefone
@@ -87,7 +111,7 @@ void Swapchain::initSwapchainImgs()
 		imgCreateInfo.subresourceRange.levelCount = 1;
 		imgCreateInfo.subresourceRange.baseArrayLayer = 0;
 		imgCreateInfo.subresourceRange.layerCount = 1;
-		imgCreateInfo.format = surfaceFormat.format;
+		imgCreateInfo.format = this->mainWindow->getSurfaceFormat().format;
 		imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imgCreateInfo.image = images[i];
 		imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -170,12 +194,12 @@ void Swapchain::destroyDepthStencilImage()
 }
 
 VkPresentModeKHR Swapchain::getAvaiablePresentMode() {
-	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;	//Neki drajveri ne podrzavaju Mailbox. FIFO je zagarantovano podrzan kako pise u specifikaciji Vulkan API-a. 
 
 	uint32_t presentModeCount = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(renderer->getGpu(), this->surfaceKHR, &presentModeCount, nullptr);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(renderer->getGpu(), this->mainWindow->getSurface(), &presentModeCount, nullptr);
 	std::vector<VkPresentModeKHR> presentModeList(presentModeCount);
-	vkGetPhysicalDeviceSurfacePresentModesKHR(renderer->getGpu(), this->surfaceKHR, &presentModeCount, presentModeList.data());
+	vkGetPhysicalDeviceSurfacePresentModesKHR(renderer->getGpu(), this->mainWindow->getSurface(), &presentModeCount, presentModeList.data());
 
 	if (std::find(presentModeList.begin(), presentModeList.end(), VK_PRESENT_MODE_MAILBOX_KHR) != presentModeList.end()) {
 		presentMode = VK_PRESENT_MODE_MAILBOX_KHR;

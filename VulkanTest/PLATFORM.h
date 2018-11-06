@@ -10,6 +10,7 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #define GLFW_EXPOSE_NATIVE_WGL
 #define GLFW_INCLUDE_VULKAN
+#define NOMINMAX
 #include <windows.h>
 
 #endif

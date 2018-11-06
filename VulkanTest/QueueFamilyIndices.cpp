@@ -53,8 +53,19 @@ uint32_t QueueFamilyIndices::getGraphicsFamilyIndex()
 {
 	uint32_t ret = NULL;
 
-	if (this->isComplete()) {
+	if (this->graphicsFamilyIndex.has_value()) {
 		ret = graphicsFamilyIndex.value();
+	}
+
+	return ret;
+}
+
+uint32_t QueueFamilyIndices::getPresentationFamilyIndex()
+{
+	uint32_t ret = NULL;
+
+	if (this->presentFamily.has_value()) {
+		ret = presentFamily.value();
 	}
 
 	return ret;
