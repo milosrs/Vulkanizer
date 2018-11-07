@@ -124,11 +124,5 @@
     <None Include="shader.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\frag.spv">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\vert.spv">
-      <Filter>Shaders</Filter>
-    </None>
   </ItemGroup>
 </Project>

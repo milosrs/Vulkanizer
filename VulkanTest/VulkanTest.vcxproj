@@ -208,8 +208,6 @@
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\frag.spv" />
-    <None Include="..\vert.spv" />
     <None Include="shader.frag" />
     <None Include="shader.vert" />
   </ItemGroup>
