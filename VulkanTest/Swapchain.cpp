@@ -66,7 +66,7 @@ void Swapchain::initSwapchain() {
 	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;		//Za koju vrstu operacija koristimo slike? Renderujemo ih, sto znaci da su oni COLOR ATTACHMENTS
 	swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;			//NE delimo slike izmedju Queue-ova. Paralel znaci da hocemo da delimo.
 
-	if (indices.getGraphicsFamilyIndex() == indices.getPresentationFamilyIndex()) {
+	if (indices.getGraphicsFamilyIndex() != indices.getPresentationFamilyIndex()) {
 		uint32_t queueIndices[] = { indices.getGraphicsFamilyIndex(), indices.getPresentationFamilyIndex() };
 		swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;		//Slika moze da se koristi paralelno, bez transfera vlasnistva nad slikom.
 		swapchainCreateInfo.queueFamilyIndexCount = 2;
@@ -111,8 +111,8 @@ void Swapchain::initSwapchainImgs()
 		imgCreateInfo.subresourceRange.levelCount = 1;
 		imgCreateInfo.subresourceRange.baseArrayLayer = 0;
 		imgCreateInfo.subresourceRange.layerCount = 1;
-		imgCreateInfo.format = this->mainWindow->getSurfaceFormat().format;
-		imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imgCreateInfo.format = this->imagesFormat;
+		imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		imgCreateInfo.image = images[i];
 		imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 

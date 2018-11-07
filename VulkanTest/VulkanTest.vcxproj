@@ -175,10 +175,12 @@
     <ClInclude Include="FrameBuffer.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Pipeline.h" />
     <ClInclude Include="PLATFORM.h" />
     <ClInclude Include="QueueFamilyIndices.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderPass.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Semaphore.h" />
     <ClInclude Include="Swapchain.h" />
     <ClInclude Include="Util.h" />
@@ -196,6 +198,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="QueueFamilyIndices.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -203,6 +206,12 @@
     <ClCompile Include="Semaphore.cpp" />
     <ClCompile Include="Swapchain.cpp" />
     <ClCompile Include="Util.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\frag.spv" />
+    <None Include="..\vert.spv" />
+    <None Include="shader.frag" />
+    <None Include="shader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
