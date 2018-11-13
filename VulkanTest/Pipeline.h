@@ -9,7 +9,7 @@
 class Pipeline
 {
 public:
-	Pipeline(VkDevice device);
+	Pipeline(VkDevice* device, VkRenderPass* renderPass));
 	~Pipeline();
 
 	void createPipeline(); 
@@ -19,14 +19,32 @@ public:
 	std::array<VkPipelineShaderStageCreateInfo, 2> getShaderCreationInfo();
 private:
 	std::vector<char> loadShader(const std::string filename);
-	VkShaderModule createShaderModule(const std::vector<char> code, VkShaderModule* shaderHandle);			//Da, ovde ide kod iz shadera.
+	VkShaderModule createShaderModule(const std::vector<char> code);			//Da, ovde ide kod iz shadera.
+
+	void setupDynamicState();
+	void setupColorBlending();
+	void setupRasterizer();
+	void createMultisamplingInformation();
+	void createInputAssemblyInformation();
+	void createVertexInformation();
 
 	std::array<VkPipelineShaderStageCreateInfo, 2> shaderCreationInfo;
 
 	VkShaderModule vertexShader = VK_NULL_HANDLE;
 	VkShaderModule fragmentShader = VK_NULL_HANDLE;
+
+	VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{}; 
+	VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo{};
+	VkPipelineMultisampleStateCreateInfo multisampleCreateInfo{};
+	VkPipelineRasterizationStateCreateInfo rasterCreateInfo{};
+	VkPipelineColorBlendStateCreateInfo colorBlendCreateInfo{};
+	VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = {};
+
 	VkDevice device = VK_NULL_HANDLE;
-	VkPipelineLayout pipeline;
+	VkPipelineLayout pipelineLayout;
+	VkPipeline pipeline;
+	VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
+	VkShaderModule shaderHandle = {};
 	bool viewportCreated = false;
 
 	Util* util = nullptr;

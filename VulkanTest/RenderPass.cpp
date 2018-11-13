@@ -7,7 +7,7 @@ RenderPass::RenderPass(Renderer* renderer, VkFormat depthStencilFormat, VkSurfac
 	util = &Util::instance();
 	this->renderer = renderer;
 	
-	initRenderPass(depthStencilFormat, surfaceFormat);
+	initRenderPass();
 }
 
 RenderPass::RenderPass()
@@ -17,16 +17,50 @@ RenderPass::RenderPass()
 
 RenderPass::~RenderPass()
 {
-	destroyRenderPass();
+	vkDestroyRenderPass(renderer->getDevice(), renderPass, nullptr);
 }
 
-VkRenderPass RenderPass::getRenderPass()
+void RenderPass::initRenderPass()
 {
-	return this->renderPass;
+	createDepthStencil();
+	//createColor();
 }
 
-void RenderPass::initRenderPass(VkFormat depthStencilFormat, VkSurfaceFormatKHR surfaceFormat)
-{
+///Prvo pravimo subpass attachment, referenciramo attachment koristeci VkAttachmentReference, pa tek onda pravimo subpass.
+void RenderPass::createColor() {
+	VkAttachmentDescription attachment = {};
+	VkAttachmentReference reference = {};
+	VkSubpassDescription subpass = {};
+	VkRenderPassCreateInfo info = {};
+
+	attachment.format = surfaceFormat.format;					//Mora da se poklapa sa formatom slika iz swapchaina
+	attachment.samples = VK_SAMPLE_COUNT_1_BIT;					//Odnosi se na multisampling
+	attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;			//Operacija koju render pass attachment treba da obavi pri ucitavanju
+	attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;			//Operacija koju treba odraditi posle rendera
+	attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;		//Nije nam bitno kog je formata bila prosla slika, to ovo znaci.
+	attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;	//Slike koje treba da budu predstavljene u swapchainu
+
+	reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;//Layout slike u ovom subpassu
+	reference.attachment = 0;									//Index attachmenta koji referenciramo ovim subpassom
+
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.colorAttachmentCount = 1;
+	subpass.pColorAttachments = &reference;						//REFERENCIRAN JE IZ FRAGMENT SHADERA
+
+	info.attachmentCount = 1;
+	info.dependencyCount = 0;
+	info.pAttachments = &attachment;
+	info.pDependencies = nullptr;
+	info.subpassCount = 1;
+	info.pSubpasses = &subpass;
+	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+
+	util->ErrorCheck(vkCreateRenderPass(this->renderer->getDevice(), &info, nullptr, &this->renderPass));
+}
+
+void RenderPass::createDepthStencil() {
 	std::array<VkAttachmentDescription, 2> attachments{};
 	std::array<VkSubpassDescription, 1> subpasses{};
 	std::array<VkAttachmentReference, 1> subpassAttachments{};
@@ -70,11 +104,10 @@ void RenderPass::initRenderPass(VkFormat depthStencilFormat, VkSurfaceFormatKHR 
 	renderPassInfo.subpassCount = subpasses.size();
 	renderPassInfo.pSubpasses = subpasses.data();
 
-
 	util->ErrorCheck(vkCreateRenderPass(renderer->getDevice(), &renderPassInfo, nullptr, &renderPass));
 }
 
-void RenderPass::destroyRenderPass()
+VkRenderPass RenderPass::getRenderPass()
 {
-	vkDestroyRenderPass(renderer->getDevice(), renderPass, nullptr);
+	return this->renderPass;
 }

@@ -1,17 +1,21 @@
 #include "pch.h"
 #include "FrameBuffer.h"
 
-
 FrameBuffer::FrameBuffer(
 	Renderer* renderer,
 	uint32_t swapchainImageCount,
-	VkImageView depthStencilImageView,
 	std::vector<VkImageView> imageViews,
 	VkRenderPass renderPass,
-	VkExtent2D surfaceSize)
+	VkExtent2D surfaceSize,
+	std::vector<VkImageView> attachments)
 {
 	util = &Util::instance();
 	renderer = renderer;
+
+	for (VkImageView imageView : imageViews) {
+		initFrameBuffer(swapchainImageCount, imageViews, renderPass, attachments, surfaceSize);
+	}
+	
 }
 
 FrameBuffer::FrameBuffer()
@@ -26,28 +30,28 @@ FrameBuffer::~FrameBuffer()
 
 void FrameBuffer::initFrameBuffer(
 	uint32_t swapchainImageCount,
-	VkImageView depthStencilImageView,
 	std::vector<VkImageView> imageViews,
 	VkRenderPass renderPass,
+	std::vector<VkImageView> attachments,
 	VkExtent2D surfaceSize
 )
 {
 	frameBuffers.resize(swapchainImageCount);
 
 	for (uint32_t i = 0; i < swapchainImageCount; ++i) {
+		const int attachmentsArraySize = attachments.size() + 1;
 		VkFramebufferCreateInfo frameBufferCreateInfo{};
-		std::array<VkImageView, 2> attachments{};
+		std::vector<VkImageView> allAttachments(attachmentsArraySize);
 
-		attachments[0] = depthStencilImageView;
-		attachments[1] = imageViews[i];
+		allAttachments.insert(allAttachments.begin(), attachments.begin(), attachments.end());
 
 		frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		frameBufferCreateInfo.renderPass = renderPass;
 		frameBufferCreateInfo.width = surfaceSize.width;
 		frameBufferCreateInfo.height = surfaceSize.height;
 		frameBufferCreateInfo.layers = 1;
-		frameBufferCreateInfo.pAttachments = attachments.data();
-		frameBufferCreateInfo.attachmentCount = attachments.size();
+		frameBufferCreateInfo.pAttachments = allAttachments.data();
+		frameBufferCreateInfo.attachmentCount = allAttachments.size();
 
 		util->ErrorCheck(vkCreateFramebuffer(renderer->getDevice(), &frameBufferCreateInfo, nullptr, &frameBuffers[i]));
 	}

@@ -16,12 +16,20 @@ public:
 
 	VkRenderPass getRenderPass();
 private:
-	void initRenderPass(VkFormat depthStencilFormat, VkSurfaceFormatKHR surfaceFormat);
-	void destroyRenderPass();
+	void initRenderPass();
+
+	void createDepthStencil();
+	void createColor();
 
 	Util* util = nullptr;
 	Renderer* renderer = nullptr;
 
 	VkRenderPass renderPass = nullptr;
+	
+	VkFormat depthStencilFormat;
+	VkFormat colorFormat;
+	VkSurfaceFormatKHR surfaceFormat;
+
+
 };
 
