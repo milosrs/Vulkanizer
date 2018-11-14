@@ -376,6 +376,11 @@ const VkDevice Renderer::getDevice() {
 	return this->device;
 }
 
+VkDevice * Renderer::getDevicePTR()
+{
+	return &this->device;
+}
+
 const VkPhysicalDeviceProperties* Renderer::getGpuProperties()
 {
 	return &this->gpuProperties;

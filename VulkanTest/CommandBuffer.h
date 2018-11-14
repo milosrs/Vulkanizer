@@ -1,5 +1,5 @@
 #pragma once
-#include <vulkan/vulkan.h>
+#include <vector>
 #include "Util.h"
 #include "CommandBufferSemaphoreInfo.h"
 
@@ -9,10 +9,10 @@
 class CommandBuffer
 {
 public:
-	CommandBuffer(VkCommandPool);
+	CommandBuffer(VkCommandPool, VkDevice);
 	~CommandBuffer();
 
-	void doSomeWork(VkQueue);
+	void doSomeWork(VkQueue queue, VkViewport* viewport);
 	void createFence();
 	bool submitQueue(VkQueue, VkPipelineStageFlags*, CommandBufferSemaphoreInfo*);
 
@@ -21,12 +21,14 @@ public:
 
 	VkFence getFence();
 	VkCommandBuffer getCommandBuffer();
-
 private:
 	VkCommandBuffer commandBuffer = nullptr;
 	VkCommandBufferAllocateInfo allocateInfo = {};
 	VkCommandBufferBeginInfo beginInfo = {};
 	VkFence fence = nullptr;
 	VkFenceCreateInfo fenceCreateInfo = {};
+	VkDevice device;
+
+	Util* util;
 };
 

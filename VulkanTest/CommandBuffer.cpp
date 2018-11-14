@@ -2,10 +2,11 @@
 #include "CommandBuffer.h"
 
 
-CommandBuffer::CommandBuffer(VkCommandPool commandPool)
+CommandBuffer::CommandBuffer(VkCommandPool commandPool, VkDevice device)
 {
-	Util& util = Util::instance();
+	util = &Util::instance();
 
+	this->device = device;
 	this->allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	this->allocateInfo.commandPool = commandPool;
 	this->allocateInfo.commandBufferCount = 1;
@@ -18,27 +19,19 @@ CommandBuffer::CommandBuffer(VkCommandPool commandPool)
 
 void CommandBuffer::startRecording() {
 	Util& util = Util::instance();
-	vkAllocateCommandBuffers(util.getDevice(), &this->allocateInfo, &this->commandBuffer);
+	vkAllocateCommandBuffers(device, &this->allocateInfo, &this->commandBuffer);
 }
 
 void CommandBuffer::endRecording() {
 	vkEndCommandBuffer(this->commandBuffer);
 }
 
-void CommandBuffer::doSomeWork(VkQueue queue) {
-	vkBeginCommandBuffer(this->commandBuffer, &this->beginInfo);
+void CommandBuffer::doSomeWork(VkQueue queue, VkViewport* viewport) {
+	util->ErrorCheck(vkBeginCommandBuffer(this->commandBuffer, &this->beginInfo));
 
-	VkViewport viewport = {};
-	viewport.height = 320;
-	viewport.width = 640;
-	viewport.maxDepth = 1.0f;
-	viewport.minDepth = 0.0f;
-	viewport.x = 0;
-	viewport.y = 0;
+	vkCmdSetViewport(this->commandBuffer, 0, 0, viewport);
 
-	vkCmdSetViewport(this->commandBuffer, 0, 0, &viewport);
-
-	vkEndCommandBuffer(this->commandBuffer);						//Pretvara command buffer u executable koji GPU izvrsava1
+	util->ErrorCheck(vkEndCommandBuffer(this->commandBuffer));						//Pretvara command buffer u executable koji GPU izvrsava1
 }
 
 /*VkQueue - U koji red bi trebalo da se submituje posao bafera.
@@ -71,7 +64,7 @@ void CommandBuffer::createFence() {
 	Util& util = Util::instance();
 
 	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	vkCreateFence(util.getDevice(), &fenceCreateInfo, nullptr, &fence);
+	vkCreateFence(device, &fenceCreateInfo, nullptr, &fence);
 }
 
 VkFence CommandBuffer::getFence() {
@@ -84,6 +77,5 @@ VkCommandBuffer CommandBuffer::getCommandBuffer() {
 
 CommandBuffer::~CommandBuffer()
 {
-	Util& util = Util::instance();
-	vkDestroyFence(util.getDevice(), this->fence, nullptr);
+	vkDestroyFence(device, this->fence, nullptr);
 }

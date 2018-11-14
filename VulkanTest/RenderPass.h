@@ -15,6 +15,9 @@ public:
 	~RenderPass();
 
 	VkRenderPass getRenderPass();
+
+	void beginRenderPass(VkFramebuffer frameBuffer, VkExtent2D extent, VkCommandBuffer commandBuffer);
+	void endRenderPass(VkCommandBuffer commandBuffer);
 private:
 	void initRenderPass();
 

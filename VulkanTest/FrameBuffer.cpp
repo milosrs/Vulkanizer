@@ -25,7 +25,11 @@ FrameBuffer::FrameBuffer()
 
 FrameBuffer::~FrameBuffer()
 {
-	destroyFrameBuffer();
+	for (const VkFramebuffer& frameBuffer : frameBuffers) {
+		vkDestroyFramebuffer(renderer->getDevice(), frameBuffer, nullptr);
+	}
+
+	frameBuffers.clear();
 }
 
 void FrameBuffer::initFrameBuffer(
@@ -55,15 +59,6 @@ void FrameBuffer::initFrameBuffer(
 
 		util->ErrorCheck(vkCreateFramebuffer(renderer->getDevice(), &frameBufferCreateInfo, nullptr, &frameBuffers[i]));
 	}
-}
-
-void FrameBuffer::destroyFrameBuffer()
-{
-	for (const VkFramebuffer& frameBuffer : frameBuffers) {
-		vkDestroyFramebuffer(renderer->getDevice(), frameBuffer, nullptr);
-	}
-
-	frameBuffers.clear();
 }
 
 VkFramebuffer FrameBuffer::getActiveFrameBuffer(uint32_t activeImageSwapchainId)

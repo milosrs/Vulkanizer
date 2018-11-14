@@ -4,7 +4,7 @@
 
 Pipeline::Pipeline(VkDevice* device, VkRenderPass* renderPass)
 {
-	this->device = device;
+	this->device = *device;
 	util = &Util::instance();
 
 	auto vertexShaderCode = loadShader("shader.vert");
@@ -95,6 +95,16 @@ void Pipeline::setupViewport(float width, float height, VkExtent2D extent) {
 	viewportCreated = true;
 }
 
+void Pipeline::bindPipeline(VkCommandBuffer commandBuffer)
+{
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+}
+
+void Pipeline::draw(VkCommandBuffer commandBuffer)
+{
+	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+}
+
 std::array<VkPipelineShaderStageCreateInfo, 2> Pipeline::getShaderCreationInfo()
 {
 	return this->shaderCreationInfo;
@@ -118,7 +128,7 @@ std::vector<char> Pipeline::loadShader(const std::string filename)
 	return buffer;
 }
 
-VkShaderModule Pipeline::createShaderModule(const std::vector<char> code) {
+void Pipeline::createShaderModule(const std::vector<char> code) {
 	VkShaderModuleCreateInfo shaderInfo = {};
 
 	shaderInfo.codeSize = code.size();

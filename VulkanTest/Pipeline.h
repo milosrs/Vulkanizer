@@ -9,17 +9,19 @@
 class Pipeline
 {
 public:
-	Pipeline(VkDevice* device, VkRenderPass* renderPass));
+	Pipeline(VkDevice* device, VkRenderPass* renderPass);
 	~Pipeline();
 
 	void createPipeline(); 
 	void setupViewport(float width, float height, VkExtent2D extent);
 
+	void bindPipeline(VkCommandBuffer commandBuffer);
+	void draw(VkCommandBuffer commandBuffer);
 
 	std::array<VkPipelineShaderStageCreateInfo, 2> getShaderCreationInfo();
 private:
 	std::vector<char> loadShader(const std::string filename);
-	VkShaderModule createShaderModule(const std::vector<char> code);			//Da, ovde ide kod iz shadera.
+	void createShaderModule(const std::vector<char> code);			//Da, ovde ide kod iz shadera.
 
 	void setupDynamicState();
 	void setupColorBlending();

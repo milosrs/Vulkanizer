@@ -32,6 +32,7 @@ public:
 	const VkInstance getInstance();
 	const VkPhysicalDevice getGpu();
 	const VkDevice getDevice();
+	VkDevice* getDevicePTR();
 	const VkPhysicalDeviceProperties* getGpuProperties();
 	const VkDebugReportCallbackEXT getDebugReportHandle();
 	const VkDebugReportCallbackCreateInfoEXT& getDebugCallbackCreateInfo();

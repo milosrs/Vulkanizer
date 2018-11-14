@@ -33,7 +33,6 @@ private:
 		std::vector<VkImageView> attachments,
 		VkExtent2D surfaceSize
 	);
-	void destroyFrameBuffer();
 
 	std::vector<VkFramebuffer> frameBuffers;
 	VkFence activeImageAvaiableFence = nullptr;
