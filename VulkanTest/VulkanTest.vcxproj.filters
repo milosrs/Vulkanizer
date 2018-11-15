@@ -16,6 +16,12 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{0a4c682d-ba73-44ef-afd8-1b86ea6a9990}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderings Headers">
+      <UniqueIdentifier>{73b6e461-dc17-4a4e-b1cb-860c4adaa0a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderings Source">
+      <UniqueIdentifier>{8dba0a55-b737-46ee-8d60-f08aeaf71544}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -48,9 +54,6 @@
     <ClInclude Include="MainWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="EpilepsyWarning.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Swapchain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -68,6 +71,12 @@
     </ClInclude>
     <ClInclude Include="Pipeline.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EpilepsyWarning.h">
+      <Filter>Renderings Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Triangle.h">
+      <Filter>Renderings Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -98,9 +107,6 @@
     <ClCompile Include="MainWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EpilepsyWarning.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Swapchain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -115,6 +121,12 @@
     </ClCompile>
     <ClCompile Include="Pipeline.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EpilepsyWarning.cpp">
+      <Filter>Renderings Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Triangle.cpp">
+      <Filter>Renderings Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

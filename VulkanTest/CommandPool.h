@@ -6,6 +6,7 @@
 class CommandPool
 {
 public:
+	CommandPool();
 	CommandPool(uint32_t graphicsFamilyIndex, VkDevice* device);
 	~CommandPool();
 

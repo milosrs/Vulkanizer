@@ -2,6 +2,10 @@
 #include "CommandBuffer.h"
 
 
+CommandBuffer::CommandBuffer()
+{
+}
+
 CommandBuffer::CommandBuffer(VkCommandPool commandPool, VkDevice device)
 {
 	util = &Util::instance();

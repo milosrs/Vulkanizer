@@ -14,12 +14,16 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 }
 
 void MainWindow::continueInitialization(Renderer* renderer) {
+	std::vector<VkImageView> attachments = { swapchain.getDepthStencilImageView() };
+
 	this->renderer = renderer;
+
 	InitSurface();
+
 	swapchain = Swapchain(this, renderer);
 	renderPass = RenderPass(renderer, swapchain.getDepthStencilFormat(), this->surfaceFormat);
-	frameBuffer = FrameBuffer(renderer, swapchain.getSwapchainImageCount(), swapchain.getDepthStencilImageView(), swapchain.getImageViews(),
-		renderPass.getRenderPass(), this->getSurfaceSize());
+	frameBuffer = FrameBuffer(renderer, swapchain.getSwapchainImageCount(), swapchain.getImageViews(),
+		renderPass.getRenderPass(), this->getSurfaceSize(), attachments);
 
 	initSync();
 }

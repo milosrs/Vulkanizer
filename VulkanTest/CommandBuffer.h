@@ -9,6 +9,7 @@
 class CommandBuffer
 {
 public:
+	CommandBuffer();
 	CommandBuffer(VkCommandPool, VkDevice);
 	~CommandBuffer();
 

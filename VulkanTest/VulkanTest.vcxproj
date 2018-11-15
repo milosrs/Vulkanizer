@@ -183,6 +183,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Semaphore.h" />
     <ClInclude Include="Swapchain.h" />
+    <ClInclude Include="Triangle.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
@@ -205,6 +206,7 @@
     <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="Semaphore.cpp" />
     <ClCompile Include="Swapchain.cpp" />
+    <ClCompile Include="Triangle.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>

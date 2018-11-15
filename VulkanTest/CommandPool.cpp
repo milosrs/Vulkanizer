@@ -2,6 +2,10 @@
 #include "CommandPool.h"
 
 
+CommandPool::CommandPool()
+{
+}
+
 CommandPool::CommandPool(uint32_t graphicsFamilyIndex, VkDevice* device)
 {
 	this->util = &Util::instance();
