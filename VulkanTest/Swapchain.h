@@ -61,7 +61,7 @@ private:
 
 	uint32_t swapchainImageCount = 2;
 	uint32_t activeImageSwapchainId;
-	uint32_t sizeX = 512;
-	uint32_t sizeY = 512;
+	uint32_t sizeX;
+	uint32_t sizeY;
 };
 

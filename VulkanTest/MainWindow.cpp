@@ -13,17 +13,22 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 	InitOSSurface();
 }
 
-void MainWindow::continueInitialization(Renderer* renderer) {
-	std::vector<VkImageView> attachments = { swapchain.getDepthStencilImageView() };
+MainWindow::MainWindow(const MainWindow &)
+{
+}
 
+void MainWindow::continueInitialization(Renderer* renderer) {
 	this->renderer = renderer;
 
 	InitSurface();
 
-	swapchain = Swapchain(this, renderer);
-	renderPass = RenderPass(renderer, swapchain.getDepthStencilFormat(), this->surfaceFormat);
-	frameBuffer = FrameBuffer(renderer, swapchain.getSwapchainImageCount(), swapchain.getImageViews(),
-		renderPass.getRenderPass(), this->getSurfaceSize(), attachments);
+	swapchain = std::make_unique<Swapchain>(this, renderer);
+
+	std::vector<VkImageView> attachments = { swapchain->getDepthStencilImageView() };
+
+	renderPass = std::make_unique<RenderPass>(renderer, swapchain->getDepthStencilFormat(), this->surfaceFormat);
+	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), swapchain->getImageViews(),
+		renderPass->getRenderPass(), this->getSurfaceSize());
 
 	initSync();
 }
@@ -32,9 +37,16 @@ MainWindow::~MainWindow()
 {
 	vkQueueWaitIdle(renderer->getQueue());
 	destroySync();
-	frameBuffer.~FrameBuffer();
-	renderPass.~RenderPass();
-	swapchain.~Swapchain();
+
+	FrameBuffer* fbptr = frameBuffer.release();
+	fbptr->~FrameBuffer();
+	
+	RenderPass* rpptr = renderPass.release();
+	rpptr->~RenderPass();
+
+	Swapchain* sptr = swapchain.release();
+	sptr->~Swapchain();
+
 	DestroySurface();
 	renderer->_DeinitInstance();
 	DeinitOSWindow();
@@ -64,8 +76,8 @@ void MainWindow::InitSurface() {
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, this->surfaceKHR, &surfaceCapatibilities);
 
 	if (surfaceCapatibilities.currentExtent.width < UINT32_MAX) {											//Ako je > exception
-		surfaceX = surfaceCapatibilities.currentExtent.width;
-		surfaceY = surfaceCapatibilities.currentExtent.height;
+		sizeX = surfaceCapatibilities.currentExtent.width;
+		sizeY = surfaceCapatibilities.currentExtent.height;
 	}
 
 	choosePreferedFormat();
@@ -108,17 +120,17 @@ void MainWindow::choosePreferedFormat() {
 void MainWindow::beginRender()
 {
 	//Kada funkcija vrati sliku, moze da bude koriscena od strane prezentacionog endzina. Semafor i/ili Ograda ce nam reci kada je prez.endz. gotov sa poslom. Nesto kao mutex.
-	vkAcquireNextImageKHR(renderer->getDevice(), this->swapchain.getSwapchain(), 
-		UINT64_MAX, nullptr, frameBuffer.getActiveImageFence(), this->swapchain.getActiveImageSwapchainPTR());
+	vkAcquireNextImageKHR(renderer->getDevice(), this->swapchain->getSwapchain(), 
+		UINT64_MAX, nullptr, frameBuffer->getActiveImageFence(), this->swapchain->getActiveImageSwapchainPTR());
 
 	//Koji uredjaj (ili graficka) ceka, koliko ograda, lista ograda (ili samo jedna ograda), da li sve ograde cekamo, koliko dugo cekamo da ograda vrati signal (ns) (Kod nas je zauvek, dok ne dodje signal)
-	vkWaitForFences(renderer->getDevice(), 1, frameBuffer.getActiveImageFencePTR(), VK_TRUE, UINT64_MAX);	
+	vkWaitForFences(renderer->getDevice(), 1, frameBuffer->getActiveImageFencePTR(), VK_TRUE, UINT64_MAX);	
 
 	//Resetujemo ograde kad vrate signal
-	vkResetFences(renderer->getDevice(), 1, frameBuffer.getActiveImageFencePTR());
+	vkResetFences(renderer->getDevice(), 1, frameBuffer->getActiveImageFencePTR());
 
 	//Ako imamo potrebu da uredjaj postane besposlen (tj neki red koji puni graficku u nasem slucaju), koristimo zakomentarisanu funkcju
-	vkQueueWaitIdle(renderer->getQueue());
+	vkQueueWaitIdle(renderer->getQueueIndices()->getQueue());
 }
 
 void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
@@ -128,10 +140,10 @@ void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pWaitSemaphores = waitSemaphores.data();
-	presentInfo.waitSemaphoreCount = waitSemaphores.size();
+	presentInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
 	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = this->swapchain.getSwapchainPTR();
-	presentInfo.pImageIndices = this->swapchain.getActiveImageSwapchainPTR();
+	presentInfo.pSwapchains = this->swapchain->getSwapchainPTR();
+	presentInfo.pImageIndices = this->swapchain->getActiveImageSwapchainPTR();
 	presentInfo.pResults = &presentResult;
 
 	util->ErrorCheck(vkQueuePresentKHR(renderer->getQueue(), &presentInfo));
@@ -149,19 +161,24 @@ Renderer* MainWindow::getRenderer()
 	return this->renderer;
 }
 
-RenderPass MainWindow::getRenderPass()
+RenderPass* MainWindow::getRenderPass()
 {
-	return this->renderPass;
+	return this->renderPass.get();
 }
 
-FrameBuffer MainWindow::getActiveFrameBuffer()
+FrameBuffer* MainWindow::getActiveFrameBuffer()
 {
-	return this->frameBuffer;
+	return this->frameBuffer.get();
 }
 
-Swapchain MainWindow::getSwapchain()
+Swapchain* MainWindow::getSwapchain()
 {
-	return this->swapchain;
+	return this->swapchain.get();
+}
+
+GLFWwindow * MainWindow::getWindowPTR()
+{
+	return this->window;
 }
 
 VkSurfaceKHR MainWindow::getSurface()
@@ -176,7 +193,7 @@ VkSurfaceKHR * MainWindow::getSurfacePTR()
 
 VkExtent2D MainWindow::getSurfaceSize()
 {
-	return { surfaceX, surfaceY };
+	return { sizeX, sizeY };
 }
 
 VkSurfaceCapabilitiesKHR MainWindow::getSurfaceCapatibilities()
@@ -199,12 +216,12 @@ void MainWindow::initSync()
 	VkFenceCreateInfo fenceInfo = {};
 	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
-	util->ErrorCheck(vkCreateFence(renderer->getDevice(), &fenceInfo, nullptr, this->frameBuffer.getActiveImageFencePTR()));
+	util->ErrorCheck(vkCreateFence(renderer->getDevice(), &fenceInfo, nullptr, this->frameBuffer->getActiveImageFencePTR()));
 }
 
 void MainWindow::destroySync()
 {
-	vkDestroyFence(renderer->getDevice(), frameBuffer.getActiveImageFence(), nullptr);
+	vkDestroyFence(renderer->getDevice(), frameBuffer->getActiveImageFence(), nullptr);
 }
 
 void MainWindow::DestroySurface() {

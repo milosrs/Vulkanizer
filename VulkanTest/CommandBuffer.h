@@ -23,6 +23,7 @@ public:
 	VkFence getFence();
 	VkCommandBuffer getCommandBuffer();
 private:
+	VkCommandPool commandPool = nullptr;
 	VkCommandBuffer commandBuffer = nullptr;
 	VkCommandBufferAllocateInfo allocateInfo = {};
 	VkCommandBufferBeginInfo beginInfo = {};

@@ -13,6 +13,10 @@ Renderer::Renderer()
 	_InitInstance();
 }
 
+Renderer::Renderer(const Renderer &)
+{
+}
+
 void Renderer::continueInitialization() {
 	_InitDevice();
 	InitDebug();
@@ -24,7 +28,8 @@ Renderer::~Renderer()
 	DeinitDebug();
 	_DeinitInstance();
 	_DeinitDevice();
-	delete this->window;
+	MainWindow* windowPtr = this->window.release();
+	delete windowPtr;
 }
 
 void Renderer::_InitInstance() {
@@ -72,7 +77,7 @@ void Renderer::_DeinitDevice() {
 void Renderer::_InitDevice() {
 	this->createPhysicalDevices();
 
-	queueFamilyIndices = QueueFamilyIndices(&this->gpu, this->window->getSurfacePTR());
+	queueFamilyIndices = std::make_unique<QueueFamilyIndices> (&this->gpu, this->window->getSurfacePTR());
 	VkDeviceCreateInfo deviceCreateInfo{};
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfo;
 	bool layersAvaiable = this->enumerateInstanceLayers();
@@ -81,22 +86,22 @@ void Renderer::_InitDevice() {
 	if (layersAvaiable) {
 		this->enumerateDeviceLayers();
 
-		queueFamilyIndices.createQueueCreateInfos();
-		queueCreateInfo = queueFamilyIndices.getQueueCreateInfos();
+		queueFamilyIndices->createQueueCreateInfos();
+		queueCreateInfo = queueFamilyIndices->getQueueCreateInfos();
 
 		setupDeviceExtensions();
 
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfo.size());
 		deviceCreateInfo.pEnabledFeatures = &gpuFeatures;										//Ako smo samo uradili enumerate pa se referenciramo na stvorenu strukturu, ukljucicemo sve mogucnosti kartice 
-		deviceCreateInfo.enabledLayerCount = instanceLayers.size();
+		deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(instanceLayers.size());
 		deviceCreateInfo.ppEnabledLayerNames = instanceLayers.data();
 		deviceCreateInfo.pQueueCreateInfos = queueCreateInfo.data();
 		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 		deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
 		util->ErrorCheck(vkCreateDevice(this->gpu, &deviceCreateInfo, nullptr, &device));		//Napravimo uredjaj
-		queueFamilyIndices.createQueues(&this->device);											//Napravimo queue za uredjaj
+		queueFamilyIndices->createQueues(&this->device);											//Napravimo queue za uredjaj
 		this->supportedProperties.clear();														//Sprecimo memory leak
 	}
 	else {
@@ -196,13 +201,12 @@ bool Renderer::enumerateInstanceLayers() {
 	return layerFound;
 }
 
-MainWindow* Renderer::createWindow(uint32_t sizeX, uint32_t sizeY, std::string windowName) {
-	this->window = new MainWindow(this, sizeX, sizeY, windowName);
-	return this->window;
+void Renderer::createWindow(uint32_t sizeX, uint32_t sizeY, std::string windowName) {
+	this->window = std::make_unique<MainWindow>(this, sizeX, sizeY, windowName);
 }
 
 bool Renderer::run() {
-	if (this->window != nullptr) {
+	if (!glfwWindowShouldClose(this->window.get()->getWindowPTR())) {
 		return this->window->update();
 	}
 
@@ -407,5 +411,10 @@ const VkPhysicalDeviceMemoryProperties & Renderer::getPhysicalDeviceMemoryProper
 
 QueueFamilyIndices* Renderer::getQueueIndices()
 {
-	return &this->queueFamilyIndices;
+	return this->queueFamilyIndices.get();
+}
+
+MainWindow * Renderer::getMainWindowPTR()
+{
+	return this->window.get();
 }

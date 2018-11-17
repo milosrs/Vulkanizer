@@ -72,10 +72,13 @@
     <ClInclude Include="Pipeline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="EpilepsyWarning.h">
+    <ClInclude Include="Triangle.h">
       <Filter>Renderings Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Triangle.h">
+    <ClInclude Include="ColorChanger.h">
+      <Filter>Renderings Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
       <Filter>Renderings Headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -122,10 +125,13 @@
     <ClCompile Include="Pipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EpilepsyWarning.cpp">
+    <ClCompile Include="Triangle.cpp">
       <Filter>Renderings Source</Filter>
     </ClCompile>
-    <ClCompile Include="Triangle.cpp">
+    <ClCompile Include="ColorChanger.cpp">
+      <Filter>Renderings Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
       <Filter>Renderings Source</Filter>
     </ClCompile>
   </ItemGroup>

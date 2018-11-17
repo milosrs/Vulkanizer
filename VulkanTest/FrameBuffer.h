@@ -16,7 +16,7 @@ public:
 		std::vector<VkImageView> imageViews,
 		VkRenderPass renderPass,
 		VkExtent2D surfaceSize,
-		std::vector<VkImageView> attachments
+		std::vector<VkImageView> attachments = {}
 	);
 	FrameBuffer();
 	~FrameBuffer();
@@ -30,8 +30,8 @@ private:
 		uint32_t swapchainImageCount,
 		std::vector<VkImageView> imageViews,
 		VkRenderPass renderPass,
-		std::vector<VkImageView> attachments,
-		VkExtent2D surfaceSize
+		VkExtent2D surfaceSize,
+		std::vector<VkImageView> attachments = {}
 	);
 
 	std::vector<VkFramebuffer> frameBuffers;

@@ -11,6 +11,8 @@ CommandBuffer::CommandBuffer(VkCommandPool commandPool, VkDevice device)
 	util = &Util::instance();
 
 	this->device = device;
+	this->commandPool = commandPool;
+
 	this->allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	this->allocateInfo.commandPool = commandPool;
 	this->allocateInfo.commandBufferCount = 1;
@@ -27,15 +29,12 @@ void CommandBuffer::startRecording() {
 }
 
 void CommandBuffer::endRecording() {
-	vkEndCommandBuffer(this->commandBuffer);
+	vkEndCommandBuffer(this->commandBuffer);//Pretvara command buffer u executable koji GPU izvrsava1
 }
 
 void CommandBuffer::doSomeWork(VkQueue queue, VkViewport* viewport) {
 	util->ErrorCheck(vkBeginCommandBuffer(this->commandBuffer, &this->beginInfo));
-
 	vkCmdSetViewport(this->commandBuffer, 0, 0, viewport);
-
-	util->ErrorCheck(vkEndCommandBuffer(this->commandBuffer));						//Pretvara command buffer u executable koji GPU izvrsava1
 }
 
 /*VkQueue - U koji red bi trebalo da se submituje posao bafera.

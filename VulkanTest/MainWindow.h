@@ -24,6 +24,7 @@ class MainWindow
 {
 public:
 	MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::string windowName);
+	MainWindow(const MainWindow&);
 	~MainWindow();
 
 	void close();
@@ -35,9 +36,10 @@ public:
 	void mainLoop();
 
 	Renderer* getRenderer();
-	RenderPass getRenderPass();
-	FrameBuffer getActiveFrameBuffer();
-	Swapchain getSwapchain();
+	RenderPass* getRenderPass();
+	FrameBuffer* getActiveFrameBuffer();
+	Swapchain* getSwapchain();
+	GLFWwindow* getWindowPTR();
 
 	VkSurfaceKHR getSurface();
 	VkSurfaceKHR* getSurfacePTR();
@@ -59,29 +61,23 @@ private:
 
 	void choosePreferedFormat();
 
-	Swapchain swapchain;
-	RenderPass renderPass;
-	FrameBuffer frameBuffer;
+	std::unique_ptr<Swapchain> swapchain = nullptr;
+	std::unique_ptr<RenderPass> renderPass = nullptr;
+	std::unique_ptr<FrameBuffer> frameBuffer = nullptr;
 
 	Renderer* renderer = nullptr;
 	GLFWwindow* window = nullptr;
+	Util* util = nullptr;
 
-	VkSurfaceKHR surfaceKHR = nullptr;
+	VkSurfaceKHR surfaceKHR = VK_NULL_HANDLE;
 	VkSurfaceCapabilitiesKHR surfaceCapatibilities = {};
 	VkBool32 isWSISupported = false;
 	VkSurfaceFormatKHR surfaceFormat = {};
 	
-	uint32_t sizeX = 512;
-	uint32_t sizeY = 512;
+	uint32_t sizeX;
+	uint32_t sizeY;
 	std::string name = "MainWindow";
 
 	bool window_should_run = true;
-	uint32_t							surfaceX = 512;
-	uint32_t							surfaceY = 512;
-	std::string							_window_name;
-
-	Util* util = nullptr;
-
-
 };
 

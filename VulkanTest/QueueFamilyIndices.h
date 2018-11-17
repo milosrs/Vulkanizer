@@ -24,10 +24,13 @@ public:
 	std::vector<VkDeviceQueueCreateInfo> getQueueCreateInfos();
 private:
 	VkBool32 isPresentationSupported = false;
-	std::vector<VkQueue> queues;						//[0] render, [1] presentation
+	
 	std::optional<uint32_t> graphicsFamilyIndex;
 	std::optional<uint32_t> presentFamily;
+
 	uint32_t familyCount = 0;
+
+	std::vector<VkQueue> queues;						//[0] render, [1] presentation
 	std::vector<VkQueueFamilyProperties> queueFamilyProperties;
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 

@@ -1,6 +1,11 @@
 #pragma once
 #include <array>
 #include "PLATFORM.h"
+#include "MainWindow.h"
+#include "Renderer.h"
+#include "CommandBuffer.h"
+#include "CommandPool.h"
+#include "Scene.h"
 
 #define PI 3.14159265389786351235489
 #define CIRCLE_RAD PI*2
@@ -11,13 +16,16 @@
 
 static double colorRotator = 0;
 
-class EpilepsyWarning
+class ColorChanger : public Scene
 {
 public:
-	EpilepsyWarning();
-	~EpilepsyWarning();
+	ColorChanger(MainWindow*, Renderer*, CommandBuffer*, CommandPool*);
+	~ColorChanger();
 
 	std::array<VkClearValue, 2> getNewClearValues();
+
+	void render() override;
+	void recordFrameBuffer(CommandBuffer*, MainWindow*) override;
 
 private:
 	std::array<VkClearValue, 2> clearValues{};
@@ -25,5 +33,7 @@ private:
 	double getColor(float circleNo) {
 		return std::sin(colorRotator + circleNo) * 0.5 + 0.5;
 	}
+
+	Util* util;
 };
 

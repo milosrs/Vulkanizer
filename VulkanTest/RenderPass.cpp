@@ -6,6 +6,8 @@ RenderPass::RenderPass(Renderer* renderer, VkFormat depthStencilFormat, VkSurfac
 {
 	util = &Util::instance();
 	this->renderer = renderer;
+	this->depthStencilFormat = depthStencilFormat;
+	this->surfaceFormat = surfaceFormat;
 	
 	initRenderPass();
 }
@@ -22,8 +24,8 @@ RenderPass::~RenderPass()
 
 void RenderPass::initRenderPass()
 {
-	createDepthStencil();
-	//createColor();
+	//createDepthStencil();
+	createColor();
 }
 
 ///Prvo pravimo subpass attachment, referenciramo attachment koristeci VkAttachmentReference, pa tek onda pravimo subpass.
@@ -111,7 +113,7 @@ void RenderPass::createDepthStencil() {
 	subpassAttachments[0].attachment = 1;
 	subpassAttachments[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-	subpasses[0].colorAttachmentCount = subpassAttachments.size();
+	subpasses[0].colorAttachmentCount = static_cast<uint32_t>(subpassAttachments.size());
 	subpasses[0].pColorAttachments = subpassAttachments.data();
 	subpasses[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpasses[0].inputAttachmentCount = 0;
@@ -120,9 +122,9 @@ void RenderPass::createDepthStencil() {
 
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassInfo.attachmentCount = attachments.size();
+	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 	renderPassInfo.pAttachments = attachments.data();
-	renderPassInfo.subpassCount = subpasses.size();
+	renderPassInfo.subpassCount = static_cast<uint32_t>(subpasses.size());
 	renderPassInfo.pSubpasses = subpasses.data();
 
 	util->ErrorCheck(vkCreateRenderPass(renderer->getDevice(), &renderPassInfo, nullptr, &renderPass));

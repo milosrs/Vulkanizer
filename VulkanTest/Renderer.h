@@ -24,9 +24,10 @@ class Renderer
 {
 public:
 	Renderer();
+	Renderer(const Renderer&);
 	~Renderer();
 
-	MainWindow* createWindow(uint32_t, uint32_t, std::string);
+	void createWindow(uint32_t, uint32_t, std::string);
 	bool run();
 
 	const VkInstance getInstance();
@@ -40,6 +41,7 @@ public:
 	const VkPhysicalDeviceMemoryProperties& getPhysicalDeviceMemoryProperties();
 	void _DeinitInstance();
 	QueueFamilyIndices* getQueueIndices();
+	MainWindow* getMainWindowPTR();
 
 	void continueInitialization();
 private:
@@ -71,7 +73,6 @@ private:
 	VkPhysicalDeviceMemoryProperties gpuMemoryProperties = {};
 	VkPhysicalDeviceFeatures gpuFeatures = {};
 	
-
 	PFN_vkCreateDebugReportCallbackEXT fvkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
 	PFN_vkDestroyDebugReportCallbackEXT fvkDestroyDebugReportCallbackEXT = VK_NULL_HANDLE;
 
@@ -84,12 +85,12 @@ private:
 	std::vector<const char*> deviceExtensions;
 
 	uint32_t glfwInstanceExtensionsCount = 0;
+	uint32_t graphicsFamilyIndex = 0;
 	const char** glfwInstanceExtensions;
 
-
 	Util* util = nullptr;
-	MainWindow* window = nullptr;
-	uint32_t graphicsFamilyIndex = 0;
-	QueueFamilyIndices queueFamilyIndices = nullptr;
+
+	std::unique_ptr<QueueFamilyIndices> queueFamilyIndices = nullptr;
+	std::unique_ptr<MainWindow> window = nullptr;
 };
 

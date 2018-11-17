@@ -2,11 +2,20 @@
 #include "Triangle.h"
 
 
-Triangle::Triangle()
+Triangle::Triangle(MainWindow* window, Renderer* renderer, CommandBuffer* cmdBuffer, CommandPool* cmdPool) : Scene(window, renderer, cmdBuffer, cmdPool)
 {
 }
 
 
 Triangle::~Triangle()
 {
+}
+
+void Triangle::render() {
+
+}
+
+void Triangle::recordFrameBuffer(CommandBuffer *, MainWindow *)
+{
+	std::cout << "Recording..." << std::endl;
 }
