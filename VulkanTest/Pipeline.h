@@ -9,23 +9,26 @@
 class Pipeline
 {
 public:
-	Pipeline(VkDevice* device, VkRenderPass* renderPass);
+	Pipeline(VkDevice* device, VkRenderPass* renderPass, float width, float height, VkExtent2D extent);
 	~Pipeline();
 
-	void createPipeline(); 
+	void createPipelineLayout(); 
 	void setupViewport(float width, float height, VkExtent2D extent);
 
 	void bindPipeline(VkCommandBuffer commandBuffer);
 	void draw(VkCommandBuffer commandBuffer);
+
+	VkViewport getViewport();
+	VkViewport* getViewportPTR();
 
 	std::array<VkPipelineShaderStageCreateInfo, 2> getShaderCreationInfo();
 private:
 	std::vector<char> loadShader(const std::string filename);
 	void createShaderModule(const std::vector<char> code);			//Da, ovde ide kod iz shadera.
 
-	void setupDynamicState();
-	void setupColorBlending();
-	void setupRasterizer();
+	void createDynamicState();
+	void createColorBlending();
+	void createRasterizer();
 	void createMultisamplingInformation();
 	void createInputAssemblyInformation();
 	void createVertexInformation();
@@ -35,12 +38,16 @@ private:
 	VkShaderModule vertexShader = VK_NULL_HANDLE;
 	VkShaderModule fragmentShader = VK_NULL_HANDLE;
 
+	VkViewport viewport = {};
+	VkRect2D scissors = {};
+
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{}; 
 	VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo{};
 	VkPipelineMultisampleStateCreateInfo multisampleCreateInfo{};
 	VkPipelineRasterizationStateCreateInfo rasterCreateInfo{};
 	VkPipelineColorBlendStateCreateInfo colorBlendCreateInfo{};
 	VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = {};
+	VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {};
 
 	VkDevice device = VK_NULL_HANDLE;
 	VkPipelineLayout pipelineLayout;

@@ -30,21 +30,13 @@ void ColorChanger::render() {
 
 	CommandBufferSemaphoreInfo semaphoreInfo(true, renderSemaphore, NULL);
 
-	while (renderer->run()) {
-		//Ispisi FPS
+	while (!glfwWindowShouldClose(window->getWindowPTR())) {
+		glfwPollEvents();
 		util->printFPS();
-
-		//Pocni renderovanje
 		window->beginRender();
-
-		//Snimimo cmdBuffer (Sve do cmdBuffer.endRecording() je snimanje sadrzaja bafera)
 		recordFrameBuffer(cmdBuffer, window);
-
-		//Submitujemo command buffer
 		cmdBuffer->submitQueue(renderer->getQueue(), NULL, &semaphoreInfo);
-
 		vkCreateSemaphore(renderer->getDevice(), &semaphoreCreateInfo, nullptr, &renderSemaphore);
-		//Zavrsi renderovanje, tj prezentuj sliku na povrsini
 		window->endRender({ renderSemaphore });
 	}
 

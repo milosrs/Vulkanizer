@@ -213,6 +213,8 @@
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\..\..\VulkanSDK\1.1.85.0\Bin\frag.spv" />
+    <None Include="..\..\..\..\..\..\VulkanSDK\1.1.85.0\Bin\vert.spv" />
     <None Include="shader.frag" />
     <None Include="shader.vert" />
   </ItemGroup>

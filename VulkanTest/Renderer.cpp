@@ -205,14 +205,6 @@ void Renderer::createWindow(uint32_t sizeX, uint32_t sizeY, std::string windowNa
 	this->window = std::make_unique<MainWindow>(this, sizeX, sizeY, windowName);
 }
 
-bool Renderer::run() {
-	if (!glfwWindowShouldClose(this->window.get()->getWindowPTR())) {
-		return this->window->update();
-	}
-
-	return true;
-}
-
 const VkInstance Renderer::getInstance()
 {
 	return this->instance;

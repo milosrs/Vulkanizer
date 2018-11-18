@@ -28,7 +28,6 @@ public:
 	~Renderer();
 
 	void createWindow(uint32_t, uint32_t, std::string);
-	bool run();
 
 	const VkInstance getInstance();
 	const VkPhysicalDevice getGpu();

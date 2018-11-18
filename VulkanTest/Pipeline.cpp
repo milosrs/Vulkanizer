@@ -2,16 +2,25 @@
 #include "Pipeline.h"
 
 
-Pipeline::Pipeline(VkDevice* device, VkRenderPass* renderPass)
+Pipeline::Pipeline(VkDevice* device, VkRenderPass* renderPass, float width, float height, VkExtent2D extent)
 {
 	this->device = *device;
 	util = &Util::instance();
 
-	auto vertexShaderCode = loadShader("shader.vert");
-	auto fragmentShaderCode = loadShader("shader.frag");
+	auto vertexShaderCode = loadShader("vert.spv");
+	auto fragmentShaderCode = loadShader("frag.spv");
 
 	this->createShaderModule(vertexShaderCode);
 	this->createShaderModule(fragmentShaderCode);
+
+	this->setupViewport(width, height, extent);
+	this->createInputAssemblyInformation();
+	this->createMultisamplingInformation();
+	this->createVertexInformation();
+	this->createColorBlending();
+	this->createDynamicState();
+	this->createRasterizer();
+	this->createPipelineLayout();
 
 	pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	pipelineCreateInfo.stageCount = 2;
@@ -26,6 +35,7 @@ Pipeline::Pipeline(VkDevice* device, VkRenderPass* renderPass)
 	pipelineCreateInfo.renderPass = *renderPass;
 	pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 	pipelineCreateInfo.basePipelineIndex = -1;
+	pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
 
 	util->ErrorCheck(vkCreateGraphicsPipelines(*device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline));
 }
@@ -39,7 +49,7 @@ Pipeline::~Pipeline()
 	vkDestroyPipeline(this->device, this->pipeline, nullptr);
 }
 
-void Pipeline::createPipeline() {
+void Pipeline::createPipelineLayout() {
 	VkPipelineShaderStageCreateInfo vsCreateInfo{};
 	VkPipelineShaderStageCreateInfo fsCreateInfo{};
 
@@ -72,10 +82,6 @@ void Pipeline::createPipeline() {
 }
 
 void Pipeline::setupViewport(float width, float height, VkExtent2D extent) {
-	VkViewport viewport;
-	VkRect2D scissors;
-	VkPipelineViewportStateCreateInfo createInfo{};
-
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
 	viewport.width = width;
@@ -86,11 +92,11 @@ void Pipeline::setupViewport(float width, float height, VkExtent2D extent) {
 	scissors.offset = { 0,0 };
 	scissors.extent = extent;
 
-	createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	createInfo.pScissors = &scissors;
-	createInfo.pViewports = &viewport;
-	createInfo.scissorCount = 1;
-	createInfo.viewportCount = 1;
+	viewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewportStateCreateInfo.pScissors = &scissors;
+	viewportStateCreateInfo.pViewports = &viewport;
+	viewportStateCreateInfo.scissorCount = 1;
+	viewportStateCreateInfo.viewportCount = 1;
 
 	viewportCreated = true;
 }
@@ -103,11 +109,6 @@ void Pipeline::bindPipeline(VkCommandBuffer commandBuffer)
 void Pipeline::draw(VkCommandBuffer commandBuffer)
 {
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-}
-
-std::array<VkPipelineShaderStageCreateInfo, 2> Pipeline::getShaderCreationInfo()
-{
-	return this->shaderCreationInfo;
 }
 
 std::vector<char> Pipeline::loadShader(const std::string filename)
@@ -162,7 +163,7 @@ void Pipeline::createMultisamplingInformation() {
 	multisampleCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 }
 
-void Pipeline::setupRasterizer() {
+void Pipeline::createRasterizer() {
 	rasterCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	rasterCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
 	rasterCreateInfo.depthBiasClamp = 0.0f;
@@ -176,7 +177,7 @@ void Pipeline::setupRasterizer() {
 	rasterCreateInfo.rasterizerDiscardEnable = VK_FALSE;
 }
 
-void Pipeline::setupColorBlending() {
+void Pipeline::createColorBlending() {
 	VkPipelineColorBlendAttachmentState attachment{};
 	
 
@@ -200,7 +201,7 @@ void Pipeline::setupColorBlending() {
 	colorBlendCreateInfo.blendConstants[3] = 0.0f; // Optional
 }
 
-void Pipeline::setupDynamicState() {
+void Pipeline::createDynamicState() {
 	VkDynamicState dynamicStates[] = {
 		VK_DYNAMIC_STATE_VIEWPORT,
 		VK_DYNAMIC_STATE_LINE_WIDTH
@@ -209,4 +210,19 @@ void Pipeline::setupDynamicState() {
 	dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 	dynamicStateCreateInfo.dynamicStateCount = 2;
 	dynamicStateCreateInfo.pDynamicStates = dynamicStates;
+}
+
+VkViewport Pipeline::getViewport()
+{
+	return this->viewport;
+}
+
+VkViewport * Pipeline::getViewportPTR()
+{
+	return &this->viewport;
+}
+
+std::array<VkPipelineShaderStageCreateInfo, 2> Pipeline::getShaderCreationInfo()
+{
+	return this->shaderCreationInfo;
 }

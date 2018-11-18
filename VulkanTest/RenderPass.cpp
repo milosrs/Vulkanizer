@@ -134,3 +134,8 @@ VkRenderPass RenderPass::getRenderPass()
 {
 	return this->renderPass;
 }
+
+VkRenderPass * RenderPass::getRenderPassPTR()
+{
+	return &this->renderPass;
+}

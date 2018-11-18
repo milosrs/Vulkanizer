@@ -28,7 +28,6 @@ public:
 	~MainWindow();
 
 	void close();
-	bool update();
 	void continueInitialization(Renderer* renderer);
 
 	void beginRender();
@@ -50,7 +49,6 @@ public:
 private:
 	void InitOSWindow();
 	void DeinitOSWindow();
-	void UpdateOSWindow();
 	void InitOSSurface();
 
 	void InitSurface();

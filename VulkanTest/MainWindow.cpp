@@ -57,12 +57,6 @@ void MainWindow::close()
 	window_should_run = false;
 }
 
-bool MainWindow::update()
-{
-	UpdateOSWindow();
-	return window_should_run;
-}
-
 void MainWindow::InitSurface() {
 	VkPhysicalDevice device = renderer->getGpu();
 	
@@ -239,10 +233,6 @@ void MainWindow::DeinitOSWindow()
 {
 	glfwDestroyWindow(this->window);
 	glfwTerminate();
-}
-
-void MainWindow::UpdateOSWindow()
-{
 }
 
 void MainWindow::InitOSSurface()

@@ -142,5 +142,11 @@
     <None Include="shader.frag">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\..\..\..\..\..\VulkanSDK\1.1.85.0\Bin\vert.spv">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\VulkanSDK\1.1.85.0\Bin\frag.spv">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
