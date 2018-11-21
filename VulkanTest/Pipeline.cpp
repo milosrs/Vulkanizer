@@ -10,8 +10,8 @@ Pipeline::Pipeline(VkDevice* device, VkRenderPass* renderPass, float width, floa
 	auto vertexShaderCode = loadShader("vert.spv");
 	auto fragmentShaderCode = loadShader("frag.spv");
 
-	this->createShaderModule(vertexShaderCode);
-	this->createShaderModule(fragmentShaderCode);
+	this->createShaderModule(vertexShaderCode, &vertexShader);
+	this->createShaderModule(fragmentShaderCode, &fragmentShader);
 
 	this->setupViewport(width, height, extent);
 	this->createInputAssemblyInformation();
@@ -50,9 +50,6 @@ Pipeline::~Pipeline()
 }
 
 void Pipeline::createPipelineLayout() {
-	VkPipelineShaderStageCreateInfo vsCreateInfo{};
-	VkPipelineShaderStageCreateInfo fsCreateInfo{};
-
 	vsCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	vsCreateInfo.module = this->vertexShader;										//Pokazivac na sam kod sejdera
 	vsCreateInfo.pName = "main";													//Koju funkciju u kodu shadera da pozovem?
@@ -66,7 +63,6 @@ void Pipeline::createPipelineLayout() {
 	this->shaderCreationInfo[0] = vsCreateInfo;
 	this->shaderCreationInfo[1] = fsCreateInfo;
 
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = 0; // Optional
 	pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
@@ -129,14 +125,14 @@ std::vector<char> Pipeline::loadShader(const std::string filename)
 	return buffer;
 }
 
-void Pipeline::createShaderModule(const std::vector<char> code) {
+void Pipeline::createShaderModule(const std::vector<char> code, VkShaderModule* shaderHandle) {
 	VkShaderModuleCreateInfo shaderInfo = {};
 
 	shaderInfo.codeSize = code.size();
 	shaderInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	shaderInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
-	util->ErrorCheck(vkCreateShaderModule(this->device, &shaderInfo, nullptr, &shaderHandle));
+	util->ErrorCheck(vkCreateShaderModule(this->device, &shaderInfo, nullptr, shaderHandle));
 }
 
 void Pipeline::createVertexInformation() {
@@ -178,9 +174,6 @@ void Pipeline::createRasterizer() {
 }
 
 void Pipeline::createColorBlending() {
-	VkPipelineColorBlendAttachmentState attachment{};
-	
-
 	attachment.colorWriteMask = VK_COLOR_COMPONENT_A_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_R_BIT;
 	attachment.blendEnable = VK_FALSE;
 	attachment.colorBlendOp = VK_BLEND_OP_ADD;
@@ -202,11 +195,6 @@ void Pipeline::createColorBlending() {
 }
 
 void Pipeline::createDynamicState() {
-	VkDynamicState dynamicStates[] = {
-		VK_DYNAMIC_STATE_VIEWPORT,
-		VK_DYNAMIC_STATE_LINE_WIDTH
-	};
-
 	dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 	dynamicStateCreateInfo.dynamicStateCount = 2;
 	dynamicStateCreateInfo.pDynamicStates = dynamicStates;

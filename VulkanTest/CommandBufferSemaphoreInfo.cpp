@@ -15,10 +15,16 @@ CommandBufferSemaphoreInfo::CommandBufferSemaphoreInfo(bool shouldWaitForSignali
 	this->shouldWaitForSignalization = shouldWaitForSignalization;
 	this->semaphore = semaphore;
 	this->pipelineStages = pipelineStages;
+	util = &Util::instance();
 }
 
 VkSemaphore CommandBufferSemaphoreInfo::getSemaphore() {
 	return this->semaphore;
+}
+
+VkSemaphore * CommandBufferSemaphoreInfo::getSemaphorePTR()
+{
+	return &this->semaphore;
 }
 
 bool CommandBufferSemaphoreInfo::getShouldWaitForSignalization() {

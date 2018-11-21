@@ -62,7 +62,7 @@ void RenderPass::createColor() {
 	util->ErrorCheck(vkCreateRenderPass(this->renderer->getDevice(), &info, nullptr, &this->renderPass));
 }
 
-void RenderPass::beginRenderPass(VkFramebuffer frameBuffer, VkExtent2D extent, VkCommandBuffer commandBuffer)
+void RenderPass::beginRenderPass(VkFramebuffer frameBuffer, VkExtent2D extent, VkCommandBuffer commandBuffer, std::array<VkClearValue, 2> clearValues)
 {
 	VkRenderPassBeginInfo renderPassInfo = {};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -71,11 +71,12 @@ void RenderPass::beginRenderPass(VkFramebuffer frameBuffer, VkExtent2D extent, V
 	renderPassInfo.renderArea.offset = { 0, 0 };
 	renderPassInfo.renderArea.extent = extent;
 
-	VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };		//Odnosi se na LOAD_OP_CLEAR 
-	renderPassInfo.clearValueCount = 1;
-	renderPassInfo.pClearValues = &clearColor;
+	
+	renderPassInfo.clearValueCount = clearValues.size();
+	renderPassInfo.pClearValues = clearValues.data();
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdEndRenderPass(commandBuffer);
 }
 
 void RenderPass::endRenderPass(VkCommandBuffer commandBuffer)

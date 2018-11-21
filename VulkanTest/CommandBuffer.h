@@ -13,12 +13,12 @@ public:
 	CommandBuffer(VkCommandPool, VkDevice);
 	~CommandBuffer();
 
-	void doSomeWork(VkQueue queue, VkViewport* viewport);
+	void startCommandBuffer(VkViewport* viewport);
 	void createFence();
-	bool submitQueue(VkQueue, VkPipelineStageFlags*, CommandBufferSemaphoreInfo*);
+	bool submitQueue(VkQueue, VkSemaphore, CommandBufferSemaphoreInfo*);
 
-	void startRecording();
-	void endRecording();
+	void allocateCommandBuffer();
+	void endCommandBuffer();
 
 	VkFence getFence();
 	VkCommandBuffer getCommandBuffer();

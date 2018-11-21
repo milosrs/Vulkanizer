@@ -113,25 +113,23 @@ void MainWindow::choosePreferedFormat() {
 
 void MainWindow::beginRender()
 {
+	if (imageAcquiredSemaphore == VK_NULL_HANDLE) {
+		VkSemaphoreCreateInfo semaphoreInfo = {};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+		util->ErrorCheck(vkCreateSemaphore(renderer->getDevice(), &semaphoreInfo, nullptr, &imageAcquiredSemaphore));
+	}
+
 	//Kada funkcija vrati sliku, moze da bude koriscena od strane prezentacionog endzina. Semafor i/ili Ograda ce nam reci kada je prez.endz. gotov sa poslom. Nesto kao mutex.
 	vkAcquireNextImageKHR(renderer->getDevice(), this->swapchain->getSwapchain(), 
-		UINT64_MAX, nullptr, frameBuffer->getActiveImageFence(), this->swapchain->getActiveImageSwapchainPTR());
-
-	//Koji uredjaj (ili graficka) ceka, koliko ograda, lista ograda (ili samo jedna ograda), da li sve ograde cekamo, koliko dugo cekamo da ograda vrati signal (ns) (Kod nas je zauvek, dok ne dodje signal)
-	vkWaitForFences(renderer->getDevice(), 1, frameBuffer->getActiveImageFencePTR(), VK_TRUE, UINT64_MAX);	
-
-	//Resetujemo ograde kad vrate signal
-	vkResetFences(renderer->getDevice(), 1, frameBuffer->getActiveImageFencePTR());
-
-	//Ako imamo potrebu da uredjaj postane besposlen (tj neki red koji puni graficku u nasem slucaju), koristimo zakomentarisanu funkcju
-	vkQueueWaitIdle(renderer->getQueueIndices()->getQueue());
+		std::numeric_limits<uint64_t>::max(), imageAcquiredSemaphore, 
+		VK_NULL_HANDLE, this->swapchain->getActiveImageSwapchainPTR());
 }
 
 void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
 {
 	VkResult presentResult = VkResult::VK_RESULT_MAX_ENUM;
 
-	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pWaitSemaphores = waitSemaphores.data();
 	presentInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
@@ -140,14 +138,7 @@ void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
 	presentInfo.pImageIndices = this->swapchain->getActiveImageSwapchainPTR();
 	presentInfo.pResults = &presentResult;
 
-	util->ErrorCheck(vkQueuePresentKHR(renderer->getQueue(), &presentInfo));
-}
-
-void MainWindow::mainLoop()
-{
-	while (!glfwWindowShouldClose(window)) {
-		glfwPollEvents();
-	}
+	util->ErrorCheck(vkQueuePresentKHR(renderer->getQueueIndices()->getQueue(), &presentInfo));
 }
 
 Renderer* MainWindow::getRenderer()
@@ -173,6 +164,16 @@ Swapchain* MainWindow::getSwapchain()
 GLFWwindow * MainWindow::getWindowPTR()
 {
 	return this->window;
+}
+
+VkSemaphore MainWindow::getImageAcquiredSemaphore()
+{
+	return this->imageAcquiredSemaphore;
+}
+
+VkSemaphore * MainWindow::getImageAcquiredSemaphorePTR()
+{
+	return &this->imageAcquiredSemaphore;
 }
 
 VkSurfaceKHR MainWindow::getSurface()

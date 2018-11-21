@@ -23,49 +23,57 @@ CommandBuffer::CommandBuffer(VkCommandPool commandPool, VkDevice device)
 	//this->beginInfo.pInheritanceInfo = KORISTI SE ZA SEKUNDARNE I OSTALE REDOVE 
 }
 
-void CommandBuffer::startRecording() {
-	Util& util = Util::instance();
+void CommandBuffer::allocateCommandBuffer() {
 	vkAllocateCommandBuffers(device, &this->allocateInfo, &this->commandBuffer);
 }
 
-void CommandBuffer::endRecording() {
+void CommandBuffer::endCommandBuffer() {
 	vkEndCommandBuffer(this->commandBuffer);//Pretvara command buffer u executable koji GPU izvrsava1
 }
 
-void CommandBuffer::doSomeWork(VkQueue queue, VkViewport* viewport) {
+void CommandBuffer::startCommandBuffer(VkViewport* viewport) {
 	util->ErrorCheck(vkBeginCommandBuffer(this->commandBuffer, &this->beginInfo));
-	vkCmdSetViewport(this->commandBuffer, 0, 0, viewport);
+	vkCmdSetViewport(this->commandBuffer, 0, 1, viewport);
 }
 
 /*VkQueue - U koji red bi trebalo da se submituje posao bafera.
   VkPipelineStageFlags - U kom trenutku u pipeline-u Vulkan Core-a bi semafori trebalo da reaguju na ovaj submit
   ComandBufferSemaphoreInfo - informacije koje su potrebne za reagovanje nad semaforima*/
-bool CommandBuffer::submitQueue(VkQueue queue, VkPipelineStageFlags* flags, CommandBufferSemaphoreInfo* semaphoreInfo){
+bool CommandBuffer::submitQueue(VkQueue queue, VkSemaphore imageAcquiredSemaphore, CommandBufferSemaphoreInfo* semaphoreInfo){
 	VkSubmitInfo submitInfo = {};
+
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &this->commandBuffer;
 
-	if (&semaphoreInfo != NULL) {
+	if (&imageAcquiredSemaphore != nullptr) {
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &imageAcquiredSemaphore;
+		submitInfo.pWaitDstStageMask = semaphoreInfo->getPipelineStages();
+	}
+
+	if (&semaphoreInfo != nullptr) {
 		VkSemaphore sem = semaphoreInfo->getSemaphore();
 		
-		if (&semaphoreInfo != NULL && semaphoreInfo->getShouldWaitForSignalization()) {
+		if (&sem != nullptr && semaphoreInfo->getShouldWaitForSignalization()) {
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &sem;
 		}
-		else if (&semaphoreInfo != NULL) {
+		else if (&sem != nullptr) {
 			submitInfo.waitSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &sem;
 			submitInfo.pWaitDstStageMask = semaphoreInfo->getPipelineStages();
 		}
 	}
 
-	return VK_SUCCESS == vkQueueSubmit(queue, 1, &submitInfo, this->fence);
+	VkResult result = vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+
+	util->ErrorCheck(result);
+
+	return result == VK_SUCCESS;
 }
 
 void CommandBuffer::createFence() {
-	Util& util = Util::instance();
-
 	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	vkCreateFence(device, &fenceCreateInfo, nullptr, &fence);
 }

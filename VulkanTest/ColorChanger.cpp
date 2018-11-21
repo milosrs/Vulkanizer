@@ -23,20 +23,30 @@ ColorChanger::~ColorChanger()
 {
 }
 
-void ColorChanger::render() {
+void ColorChanger::render(VkViewport* viewport) {
 	VkSemaphore renderSemaphore = nullptr;
 	VkSemaphoreCreateInfo semaphoreCreateInfo{};
 	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-	CommandBufferSemaphoreInfo semaphoreInfo(true, renderSemaphore, NULL);
+	VkPipelineStageFlags stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 	while (!glfwWindowShouldClose(window->getWindowPTR())) {
 		glfwPollEvents();
 		util->printFPS();
 		window->beginRender();
-		recordFrameBuffer(cmdBuffer, window);
-		cmdBuffer->submitQueue(renderer->getQueue(), NULL, &semaphoreInfo);
+
 		vkCreateSemaphore(renderer->getDevice(), &semaphoreCreateInfo, nullptr, &renderSemaphore);
+		CommandBufferSemaphoreInfo semaphoreInfo(true, renderSemaphore, &stage);
+
+		cmdBuffer->allocateCommandBuffer();
+		cmdBuffer->startCommandBuffer(viewport);
+
+		recordFrameBuffer(cmdBuffer, window);
+
+		cmdBuffer->endCommandBuffer();
+		cmdBuffer->submitQueue(renderer->getQueueIndices()->getQueue(), window->getImageAcquiredSemaphore(), &semaphoreInfo);
+		
+
 		window->endRender({ renderSemaphore });
 	}
 
@@ -45,8 +55,6 @@ void ColorChanger::render() {
 }
 
 void ColorChanger::recordFrameBuffer(CommandBuffer* cmdBuffer, MainWindow* window) {
-	cmdBuffer->startRecording();
-
 	VkRect2D renderArea{};
 	renderArea.offset.x = 0;
 	renderArea.offset.y = 0;
@@ -63,9 +71,6 @@ void ColorChanger::recordFrameBuffer(CommandBuffer* cmdBuffer, MainWindow* windo
 	renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 	renderPassBeginInfo.pClearValues = clearValues.data();
 
-	//Zapocni render pass
-	vkCmdBeginRenderPass(cmdBuffer->getCommandBuffer(), &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-	vkCmdEndRenderPass(cmdBuffer->getCommandBuffer());
-
-	cmdBuffer->endRecording();
+	window->getRenderPass()->beginRenderPass(window->getActiveFrameBuffer()->getActiveFrameBuffer(window->getSwapchain()->getActiveImageSwapchain()), 
+		window->getSurfaceSize(), cmdBuffer->getCommandBuffer(), clearValues);
 }

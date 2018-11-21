@@ -7,7 +7,7 @@ public:
 	Triangle(MainWindow*, Renderer*, CommandBuffer*, CommandPool*);
 	~Triangle();
 
-	void render() override;
+	void render(VkViewport*) override;
 	void recordFrameBuffer(CommandBuffer*, MainWindow*) override;
 private:
 	

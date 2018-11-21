@@ -1,5 +1,7 @@
 #pragma once
-#include <vulkan/vulkan.h>
+#include "PLATFORM.h"
+#include "Util.h"
+
 class CommandBufferSemaphoreInfo
 {
 public:
@@ -9,6 +11,7 @@ public:
 
 	bool getShouldWaitForSignalization();
 	VkSemaphore getSemaphore();
+	VkSemaphore* getSemaphorePTR();
 	VkPipelineStageFlags* getPipelineStages();
 
 	void setShouldWaitForSignalization(bool);
@@ -18,5 +21,7 @@ private:
 	bool shouldWaitForSignalization;
 	VkSemaphore semaphore;
 	VkPipelineStageFlags* pipelineStages;
+	
+	Util* util;
 };
 

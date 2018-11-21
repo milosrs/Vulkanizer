@@ -9,7 +9,7 @@ class Scene {
 public:
 	Scene(MainWindow*, Renderer*, CommandBuffer*, CommandPool*);
 
-	virtual void render() = 0;
+	virtual void render(VkViewport*) = 0;
 	virtual void recordFrameBuffer(CommandBuffer*, MainWindow*) = 0;
 protected:
 	MainWindow* window = nullptr;

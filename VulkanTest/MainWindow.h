@@ -32,14 +32,14 @@ public:
 
 	void beginRender();
 	void endRender(std::vector<VkSemaphore>);
-	void mainLoop();
 
 	Renderer* getRenderer();
 	RenderPass* getRenderPass();
 	FrameBuffer* getActiveFrameBuffer();
 	Swapchain* getSwapchain();
 	GLFWwindow* getWindowPTR();
-
+	VkSemaphore getImageAcquiredSemaphore();
+	VkSemaphore* getImageAcquiredSemaphorePTR();
 	VkSurfaceKHR getSurface();
 	VkSurfaceKHR* getSurfacePTR();
 	VkExtent2D getSurfaceSize();
@@ -71,7 +71,9 @@ private:
 	VkSurfaceCapabilitiesKHR surfaceCapatibilities = {};
 	VkBool32 isWSISupported = false;
 	VkSurfaceFormatKHR surfaceFormat = {};
-	
+	VkPresentInfoKHR presentInfo{};
+	VkSemaphore imageAcquiredSemaphore = VK_NULL_HANDLE;
+
 	uint32_t sizeX;
 	uint32_t sizeY;
 	std::string name = "MainWindow";

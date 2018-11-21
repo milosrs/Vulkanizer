@@ -11,7 +11,7 @@ Triangle::~Triangle()
 {
 }
 
-void Triangle::render() {
+void Triangle::render(VkViewport* viewport) {
 
 }
 
