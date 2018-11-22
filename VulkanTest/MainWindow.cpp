@@ -155,7 +155,7 @@ void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
 
 void MainWindow::recreateSwapchain()
 {
-	int width = 0, height = 0;
+	int width = 0, height = 0;									//Minimizacija, pauziramo render dok se ne vrati slika na povrsinu ekrana.
 	while (width == 0 || height == 0) {
 		glfwGetFramebufferSize(window, &width, &height);
 		glfwWaitEvents();
@@ -255,11 +255,17 @@ void MainWindow::DestroySurface() {
 	vkDestroySurfaceKHR(renderer->getInstance(), this->surfaceKHR, nullptr);
 }
 
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+	auto app = reinterpret_cast<MainWindow*>(glfwGetWindowUserPointer(window));
+	app->windowResized = true;
+}
+
 void MainWindow::InitOSWindow()
 {
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);													//Ovo kaze biblioteci da aplikacija nije pisana u OpenGL/ES
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);														//Za sada, promena velicine prozora nije moguca
 	this->window = glfwCreateWindow(this->sizeX, this->sizeY, "Hello world!", nullptr, nullptr);	//4-i param: Koji monitor je u pitanju (sada je default)  5-i param: Samo za OpenGL aplikacije
+	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
 void MainWindow::DeinitOSWindow()

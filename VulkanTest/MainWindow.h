@@ -52,6 +52,7 @@ public:
 	VkSurfaceCapabilitiesKHR getSurfaceCapatibilities();
 	VkBool32 getIsWSISupported();
 	VkSurfaceFormatKHR getSurfaceFormat();
+	bool windowResized = true;
 private:
 	void InitOSWindow();
 	void DeinitOSWindow();
@@ -83,7 +84,5 @@ private:
 	uint32_t sizeX;
 	uint32_t sizeY;
 	std::string name = "MainWindow";
-
-	bool window_should_run = true;
 };
 
