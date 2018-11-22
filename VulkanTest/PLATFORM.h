@@ -11,6 +11,7 @@
 #define GLFW_EXPOSE_NATIVE_WGL
 #define GLFW_INCLUDE_VULKAN
 #define NOMINMAX
+#define MAX_FRAMES_IN_FLIGHT 2
 #include <windows.h>
 
 #endif

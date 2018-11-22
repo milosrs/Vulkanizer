@@ -33,7 +33,6 @@ public:
 	uint32_t findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties*, const VkMemoryRequirements*, const VkMemoryPropertyFlags);
 	wchar_t *convertCharArrayToLPCWSTR(const char* charArray);
 	void printFPS();
-
 private: 
 	Util();
 	Util(Util const&);              // Don't Implement

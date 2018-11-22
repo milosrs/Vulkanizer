@@ -6,11 +6,6 @@ Triangle::Triangle(MainWindow* window, Renderer* renderer, CommandBuffer* cmdBuf
 {
 }
 
-
-Triangle::~Triangle()
-{
-}
-
 void Triangle::render(VkViewport* viewport) {
 
 }

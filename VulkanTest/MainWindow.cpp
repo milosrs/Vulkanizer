@@ -111,24 +111,18 @@ void MainWindow::choosePreferedFormat() {
 	}
 }
 
-void MainWindow::beginRender()
+void MainWindow::beginRender(VkSemaphore semaphoreToWait)
 {
-	if (imageAcquiredSemaphore == VK_NULL_HANDLE) {
-		VkSemaphoreCreateInfo semaphoreInfo = {};
-		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-		util->ErrorCheck(vkCreateSemaphore(renderer->getDevice(), &semaphoreInfo, nullptr, &imageAcquiredSemaphore));
-	}
-
 	//Kada funkcija vrati sliku, moze da bude koriscena od strane prezentacionog endzina. Semafor i/ili Ograda ce nam reci kada je prez.endz. gotov sa poslom. Nesto kao mutex.
 	vkAcquireNextImageKHR(renderer->getDevice(), this->swapchain->getSwapchain(), 
-		std::numeric_limits<uint64_t>::max(), imageAcquiredSemaphore, 
+		std::numeric_limits<uint64_t>::max(), semaphoreToWait, 
 		VK_NULL_HANDLE, this->swapchain->getActiveImageSwapchainPTR());
 }
 
 void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
 {
 	VkResult presentResult = VkResult::VK_RESULT_MAX_ENUM;
+	VkSwapchainKHR swapchains[] = { swapchain->getSwapchain() };
 
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pWaitSemaphores = waitSemaphores.data();
@@ -164,16 +158,6 @@ Swapchain* MainWindow::getSwapchain()
 GLFWwindow * MainWindow::getWindowPTR()
 {
 	return this->window;
-}
-
-VkSemaphore MainWindow::getImageAcquiredSemaphore()
-{
-	return this->imageAcquiredSemaphore;
-}
-
-VkSemaphore * MainWindow::getImageAcquiredSemaphorePTR()
-{
-	return &this->imageAcquiredSemaphore;
 }
 
 VkSurfaceKHR MainWindow::getSurface()

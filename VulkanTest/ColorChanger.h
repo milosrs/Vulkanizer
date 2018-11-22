@@ -20,7 +20,6 @@ class ColorChanger : public Scene
 {
 public:
 	ColorChanger(MainWindow*, Renderer*, CommandBuffer*, CommandPool*);
-	~ColorChanger();
 
 	std::array<VkClearValue, 2> getNewClearValues();
 

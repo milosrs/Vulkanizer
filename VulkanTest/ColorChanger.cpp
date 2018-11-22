@@ -19,24 +19,23 @@ std::array<VkClearValue, 2> ColorChanger::getNewClearValues() {
 	return clearValues;
 }
 
-ColorChanger::~ColorChanger()
-{
-}
-
 void ColorChanger::render(VkViewport* viewport) {
-	VkSemaphore renderSemaphore = nullptr;
-	VkSemaphoreCreateInfo semaphoreCreateInfo{};
-	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
 	VkPipelineStageFlags stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 	while (!glfwWindowShouldClose(window->getWindowPTR())) {
+		vkWaitForFences(renderer->getDevice(), 1, &this->fences[frameCount], VK_TRUE, std::numeric_limits<uint64_t>::max());
+		vkResetFences(renderer->getDevice(), 1, &this->fences[frameCount]);
+
+		VkSemaphore imageAcquiredSemaphore = this->imageAvaiableSemaphores[frameCount];
+		VkSemaphore renderSemaphore = this->renderFinishedSemaphores[frameCount];
+		VkFence fence = this->fences[frameCount];
+
 		glfwPollEvents();
 		util->printFPS();
-		window->beginRender();
+		window->beginRender(imageAcquiredSemaphore);
 
-		vkCreateSemaphore(renderer->getDevice(), &semaphoreCreateInfo, nullptr, &renderSemaphore);
-		CommandBufferSemaphoreInfo semaphoreInfo(true, renderSemaphore, &stage);
+		CommandBufferSemaphoreInfo renderSemaphoreInfo(true, renderSemaphore, &stage);
+		CommandBufferSemaphoreInfo imageSemaphoreInfo(true, imageAcquiredSemaphore, &stage);
 
 		cmdBuffer->allocateCommandBuffer();
 		cmdBuffer->startCommandBuffer(viewport);
@@ -44,14 +43,15 @@ void ColorChanger::render(VkViewport* viewport) {
 		recordFrameBuffer(cmdBuffer, window);
 
 		cmdBuffer->endCommandBuffer();
-		cmdBuffer->submitQueue(renderer->getQueueIndices()->getQueue(), window->getImageAcquiredSemaphore(), &semaphoreInfo);
+		cmdBuffer->submitQueue(renderer->getQueueIndices()->getQueue(), &imageSemaphoreInfo, &renderSemaphoreInfo, fence);
 		
 
 		window->endRender({ renderSemaphore });
+
+		frameCount = (frameCount + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
-	vkQueueWaitIdle(renderer->getQueue());
-	vkDestroySemaphore(renderer->getDevice(), renderSemaphore, nullptr);
+	vkDeviceWaitIdle(renderer->getDevice());
 }
 
 void ColorChanger::recordFrameBuffer(CommandBuffer* cmdBuffer, MainWindow* window) {

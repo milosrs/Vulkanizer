@@ -33,5 +33,7 @@ private:
 	VkFormat depthStencilFormat;
 	VkFormat colorFormat;
 	VkSurfaceFormatKHR surfaceFormat;
+
+	VkSubpassDependency subpassDependency = {};
 };
 

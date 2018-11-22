@@ -39,34 +39,35 @@ void CommandBuffer::startCommandBuffer(VkViewport* viewport) {
 /*VkQueue - U koji red bi trebalo da se submituje posao bafera.
   VkPipelineStageFlags - U kom trenutku u pipeline-u Vulkan Core-a bi semafori trebalo da reaguju na ovaj submit
   ComandBufferSemaphoreInfo - informacije koje su potrebne za reagovanje nad semaforima*/
-bool CommandBuffer::submitQueue(VkQueue queue, VkSemaphore imageAcquiredSemaphore, CommandBufferSemaphoreInfo* semaphoreInfo){
+bool CommandBuffer::submitQueue(VkQueue queue, CommandBufferSemaphoreInfo* waitSemaphoreInfo, CommandBufferSemaphoreInfo* signalSemaphoreInfo,  VkFence fence){
 	VkSubmitInfo submitInfo = {};
+	VkSemaphore* waitSemaphore = waitSemaphoreInfo->getSemaphorePTR();
+	VkSemaphore* signalSemaphore = signalSemaphoreInfo->getSemaphorePTR();
 
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &this->commandBuffer;
 
-	if (&imageAcquiredSemaphore != nullptr) {
+	if (waitSemaphore != nullptr) {
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &imageAcquiredSemaphore;
-		submitInfo.pWaitDstStageMask = semaphoreInfo->getPipelineStages();
+		submitInfo.pWaitSemaphores = waitSemaphore;
+		submitInfo.pWaitDstStageMask = waitSemaphoreInfo->getPipelineStages();
 	}
 
-	if (&semaphoreInfo != nullptr) {
-		VkSemaphore sem = semaphoreInfo->getSemaphore();
+	if (signalSemaphore != nullptr) {
 		
-		if (&sem != nullptr && semaphoreInfo->getShouldWaitForSignalization()) {
+		if (signalSemaphore != nullptr && signalSemaphoreInfo->getShouldWaitForSignalization()) {
 			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &sem;
+			submitInfo.pSignalSemaphores = signalSemaphore;
 		}
-		else if (&sem != nullptr) {
+		else if (signalSemaphore != nullptr) {
 			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &sem;
-			submitInfo.pWaitDstStageMask = semaphoreInfo->getPipelineStages();
+			submitInfo.pSignalSemaphores = signalSemaphore;
+			submitInfo.pWaitDstStageMask = signalSemaphoreInfo->getPipelineStages();
 		}
 	}
 
-	VkResult result = vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+	VkResult result = vkQueueSubmit(queue, 1, &submitInfo, fence);
 
 	util->ErrorCheck(result);
 

@@ -15,7 +15,7 @@ public:
 
 	void startCommandBuffer(VkViewport* viewport);
 	void createFence();
-	bool submitQueue(VkQueue, VkSemaphore, CommandBufferSemaphoreInfo*);
+	bool submitQueue(VkQueue, CommandBufferSemaphoreInfo*, CommandBufferSemaphoreInfo*, VkFence);
 
 	void allocateCommandBuffer();
 	void endCommandBuffer();

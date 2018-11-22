@@ -51,10 +51,17 @@ void RenderPass::createColor() {
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &reference;						//REFERENCIRAN JE IZ FRAGMENT SHADERA
 
+	subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	subpassDependency.dstSubpass = 0;
+	subpassDependency.dstAccessMask = 0;
+	subpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+	
 	info.attachmentCount = 1;
-	info.dependencyCount = 0;
+	info.dependencyCount = 1;
 	info.pAttachments = &attachment;
-	info.pDependencies = nullptr;
+	info.pDependencies = &subpassDependency;
 	info.subpassCount = 1;
 	info.pSubpasses = &subpass;
 	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
