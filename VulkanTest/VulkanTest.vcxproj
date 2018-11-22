@@ -183,7 +183,6 @@
     <ClInclude Include="RenderPass.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Scene.h" />
-    <ClInclude Include="Semaphore.h" />
     <ClInclude Include="Swapchain.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="Util.h" />
@@ -207,7 +206,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="Scene.cpp" />
-    <ClCompile Include="Semaphore.cpp" />
     <ClCompile Include="Swapchain.cpp" />
     <ClCompile Include="Triangle.cpp" />
     <ClCompile Include="Util.cpp" />

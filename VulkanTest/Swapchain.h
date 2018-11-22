@@ -27,15 +27,12 @@ public:
 	std::vector<VkImageView> getImageViews();
 private:
 	void initSwapchain();
-	void destroySwapchain();
-
 	void initSwapchainImgs();
-	void destroySwapchainImgs();
-
 	void initDepthStencilImage();
-	void destroyDepthStencilImage();
 
 	void setupSwapExtent();
+
+	void cleanup();
 
 	VkPresentModeKHR getAvaiablePresentMode();
 	bool isStencilAvaiable();

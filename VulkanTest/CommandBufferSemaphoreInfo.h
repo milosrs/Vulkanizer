@@ -5,7 +5,6 @@
 class CommandBufferSemaphoreInfo
 {
 public:
-	CommandBufferSemaphoreInfo();
 	CommandBufferSemaphoreInfo(bool, VkSemaphore, VkPipelineStageFlags*);
 	~CommandBufferSemaphoreInfo();
 

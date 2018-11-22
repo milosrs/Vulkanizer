@@ -19,7 +19,7 @@ static double colorRotator = 0;
 class ColorChanger : public Scene
 {
 public:
-	ColorChanger(MainWindow*, Renderer*, CommandBuffer*, CommandPool*);
+	ColorChanger(MainWindow*, Renderer*);
 
 	std::array<VkClearValue, 2> getNewClearValues();
 

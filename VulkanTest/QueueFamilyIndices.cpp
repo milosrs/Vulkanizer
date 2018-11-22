@@ -1,11 +1,6 @@
 #include "pch.h"
 #include "QueueFamilyIndices.h"
 
-
-QueueFamilyIndices::QueueFamilyIndices()
-{
-}
-
 QueueFamilyIndices::QueueFamilyIndices(VkPhysicalDevice* physicalDevice, VkSurfaceKHR* surface)
 {
 	if (physicalDevice != VK_NULL_HANDLE && surface != VK_NULL_HANDLE) {

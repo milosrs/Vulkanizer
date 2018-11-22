@@ -39,9 +39,6 @@
     <ClInclude Include="CommandBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Semaphore.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CommandBufferSemaphoreInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -99,9 +96,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CommandBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Semaphore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CommandBufferSemaphoreInfo.cpp">

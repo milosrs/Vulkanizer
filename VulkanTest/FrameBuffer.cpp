@@ -15,11 +15,6 @@ FrameBuffer::FrameBuffer(
 	initFrameBuffer(swapchainImageCount, imageViews, renderPass, surfaceSize, attachments);
 }
 
-FrameBuffer::FrameBuffer()
-{
-}
-
-
 FrameBuffer::~FrameBuffer()
 {
 	for (const VkFramebuffer& frameBuffer : frameBuffers) {
@@ -71,4 +66,9 @@ VkFence FrameBuffer::getActiveImageFence()
 VkFence * FrameBuffer::getActiveImageFencePTR()
 {
 	return &this->activeImageAvaiableFence;
+}
+
+std::vector<VkFramebuffer> FrameBuffer::getFrameBuffers()
+{
+	return this->frameBuffers;
 }

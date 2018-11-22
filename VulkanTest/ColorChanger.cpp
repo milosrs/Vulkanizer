@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "ColorChanger.h"
 
-ColorChanger::ColorChanger(MainWindow* window, Renderer* renderer, CommandBuffer* cmdBuffer, CommandPool* cmdPool) : Scene(window, renderer, cmdBuffer, cmdPool)
+ColorChanger::ColorChanger(MainWindow* window, Renderer* renderer) : Scene(window, renderer)
 {
 	this->clearValues = std::array<VkClearValue, 2> {};
 }
@@ -29,6 +29,7 @@ void ColorChanger::render(VkViewport* viewport) {
 		VkSemaphore imageAcquiredSemaphore = this->imageAvaiableSemaphores[frameCount];
 		VkSemaphore renderSemaphore = this->renderFinishedSemaphores[frameCount];
 		VkFence fence = this->fences[frameCount];
+		CommandBuffer* cmdBuffer = window->getCommandBuffers()[window->getSwapchain()->getActiveImageSwapchain()];
 
 		glfwPollEvents();
 		util->printFPS();
@@ -43,12 +44,19 @@ void ColorChanger::render(VkViewport* viewport) {
 		recordFrameBuffer(cmdBuffer, window);
 
 		cmdBuffer->endCommandBuffer();
-		cmdBuffer->submitQueue(renderer->getQueueIndices()->getQueue(), &imageSemaphoreInfo, &renderSemaphoreInfo, fence);
-		
+		bool isSubmitted = cmdBuffer->submitQueue(renderer->getDevice(), renderer->getQueueIndices()->getQueue(), 
+								&imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
+
+		if (!isSubmitted) {
+			window->recreateSwapchain();
+			continue;
+		}
 
 		window->endRender({ renderSemaphore });
 
 		frameCount = (frameCount + 1) % MAX_FRAMES_IN_FLIGHT;
+
+		vkQueueWaitIdle(renderer->getQueueIndices()->getQueue());
 	}
 
 	vkDeviceWaitIdle(renderer->getDevice());
@@ -71,6 +79,7 @@ void ColorChanger::recordFrameBuffer(CommandBuffer* cmdBuffer, MainWindow* windo
 	renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 	renderPassBeginInfo.pClearValues = clearValues.data();
 
-	window->getRenderPass()->beginRenderPass(window->getActiveFrameBuffer()->getActiveFrameBuffer(window->getSwapchain()->getActiveImageSwapchain()), 
-		window->getSurfaceSize(), cmdBuffer->getCommandBuffer(), clearValues);
+	VkFramebuffer frameBuffer = window->getActiveFrameBuffer()->getActiveFrameBuffer(window->getSwapchain()->getActiveImageSwapchain());
+
+	window->getRenderPass()->beginRenderPass(frameBuffer, window->getSurfaceSize(), cmdBuffer->getCommandBuffer(), clearValues);
 }

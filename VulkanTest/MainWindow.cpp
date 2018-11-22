@@ -30,31 +30,40 @@ void MainWindow::continueInitialization(Renderer* renderer) {
 	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), swapchain->getImageViews(),
 		renderPass->getRenderPass(), this->getSurfaceSize());
 
-	initSync();
+	float viewportWidth = surfaceCapatibilities.currentExtent.width;
+	float viewportHeight = surfaceCapatibilities.currentExtent.height;
+	VkExtent2D scissorsExtent = surfaceCapatibilities.currentExtent;
+
+	pipeline = std::make_unique<Pipeline>(renderer->getDevicePTR(), renderPass->getRenderPassPTR(), 
+											viewportWidth, viewportHeight, scissorsExtent);
+
+	cmdPool = std::make_unique<CommandPool>(renderer->getQueueIndices()->getGraphicsFamilyIndex(), renderer->getDevicePTR());
+
+	for (size_t i = 0; i < frameBuffer->getFrameBuffers().size(); i++) {
+		cmdBuffers.push_back(new CommandBuffer(cmdPool->getCommandPool(), renderer->getDevice()));
+	}
 }
 
 MainWindow::~MainWindow()
 {
-	vkQueueWaitIdle(renderer->getQueue());
-	destroySync();
-
-	FrameBuffer* fbptr = frameBuffer.release();
-	fbptr->~FrameBuffer();
-	
-	RenderPass* rpptr = renderPass.release();
-	rpptr->~RenderPass();
-
-	Swapchain* sptr = swapchain.release();
-	sptr->~Swapchain();
+	destroySwapchainDependencies();
 
 	DestroySurface();
 	renderer->_DeinitInstance();
 	DeinitOSWindow();
 }
 
-void MainWindow::close()
-{
-	window_should_run = false;
+void MainWindow::destroySwapchainDependencies() {
+	vkQueueWaitIdle(renderer->getQueue());
+
+	FrameBuffer* fbptr = frameBuffer.release();
+	fbptr->~FrameBuffer();
+
+	RenderPass* rpptr = renderPass.release();
+	rpptr->~RenderPass();
+
+	Swapchain* sptr = swapchain.release();
+	sptr->~Swapchain();
 }
 
 void MainWindow::InitSurface() {
@@ -113,10 +122,19 @@ void MainWindow::choosePreferedFormat() {
 
 void MainWindow::beginRender(VkSemaphore semaphoreToWait)
 {
+	VkResult result;
+
 	//Kada funkcija vrati sliku, moze da bude koriscena od strane prezentacionog endzina. Semafor i/ili Ograda ce nam reci kada je prez.endz. gotov sa poslom. Nesto kao mutex.
-	vkAcquireNextImageKHR(renderer->getDevice(), this->swapchain->getSwapchain(), 
+	result = vkAcquireNextImageKHR(renderer->getDevice(), this->swapchain->getSwapchain(), 
 		std::numeric_limits<uint64_t>::max(), semaphoreToWait, 
 		VK_NULL_HANDLE, this->swapchain->getActiveImageSwapchainPTR());
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+		recreateSwapchain();
+	}
+	else if (result != VK_SUCCESS) {
+		util->ErrorCheck(result);
+	}
 }
 
 void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
@@ -133,6 +151,34 @@ void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
 	presentInfo.pResults = &presentResult;
 
 	util->ErrorCheck(vkQueuePresentKHR(renderer->getQueueIndices()->getQueue(), &presentInfo));
+}
+
+void MainWindow::recreateSwapchain()
+{
+	int width = 0, height = 0;
+	while (width == 0 || height == 0) {
+		glfwGetFramebufferSize(window, &width, &height);
+		glfwWaitEvents();
+	}
+
+	destroySwapchainDependencies();
+
+	swapchain = std::make_unique<Swapchain>(this, renderer);
+
+	std::vector<VkImageView> attachments = { swapchain->getDepthStencilImageView() };
+
+	renderPass = std::make_unique<RenderPass>(renderer, swapchain->getDepthStencilFormat(), this->surfaceFormat);
+	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), swapchain->getImageViews(),
+		renderPass->getRenderPass(), this->getSurfaceSize());
+
+	VkExtent2D scissorsExtent = surfaceCapatibilities.currentExtent;
+
+	pipeline = std::make_unique<Pipeline>(renderer->getDevicePTR(), renderPass->getRenderPassPTR(),
+		width, height, scissorsExtent);
+
+	for (size_t i = 0; i < frameBuffer->getFrameBuffers().size(); i++) {
+		cmdBuffers.push_back(new CommandBuffer(cmdPool->getCommandPool(), renderer->getDevice()));
+	}
 }
 
 Renderer* MainWindow::getRenderer()
@@ -158,6 +204,21 @@ Swapchain* MainWindow::getSwapchain()
 GLFWwindow * MainWindow::getWindowPTR()
 {
 	return this->window;
+}
+
+Pipeline * MainWindow::getPipelinePTR()
+{
+	return this->pipeline.get();
+}
+
+std::vector< CommandBuffer*> MainWindow::getCommandBuffers()
+{
+	return this->cmdBuffers;
+}
+
+CommandPool * MainWindow::getCommandPoolPTR()
+{
+	return this->cmdPool.get();
 }
 
 VkSurfaceKHR MainWindow::getSurface()
@@ -188,19 +249,6 @@ VkBool32 MainWindow::getIsWSISupported()
 VkSurfaceFormatKHR MainWindow::getSurfaceFormat()
 {
 	return this->surfaceFormat;
-}
-
-void MainWindow::initSync()
-{
-	VkFenceCreateInfo fenceInfo = {};
-	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-
-	util->ErrorCheck(vkCreateFence(renderer->getDevice(), &fenceInfo, nullptr, this->frameBuffer->getActiveImageFencePTR()));
-}
-
-void MainWindow::destroySync()
-{
-	vkDestroyFence(renderer->getDevice(), frameBuffer->getActiveImageFence(), nullptr);
 }
 
 void MainWindow::DestroySurface() {

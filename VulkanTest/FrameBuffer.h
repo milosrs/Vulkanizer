@@ -18,12 +18,12 @@ public:
 		VkExtent2D surfaceSize,
 		std::vector<VkImageView> attachments = {}
 	);
-	FrameBuffer();
 	~FrameBuffer();
 
 	VkFramebuffer getActiveFrameBuffer(uint32_t activeImageSwapchainId);
 	VkFence getActiveImageFence();
 	VkFence* getActiveImageFencePTR();
+	std::vector<VkFramebuffer> getFrameBuffers();
 private:
 	void initFrameBuffer
 	(

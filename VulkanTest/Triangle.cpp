@@ -2,7 +2,7 @@
 #include "Triangle.h"
 
 
-Triangle::Triangle(MainWindow* window, Renderer* renderer, CommandBuffer* cmdBuffer, CommandPool* cmdPool) : Scene(window, renderer, cmdBuffer, cmdPool)
+Triangle::Triangle(MainWindow* window, Renderer* renderer) : Scene(window, renderer)
 {
 }
 

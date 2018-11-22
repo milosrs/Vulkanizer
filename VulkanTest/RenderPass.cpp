@@ -12,11 +12,6 @@ RenderPass::RenderPass(Renderer* renderer, VkFormat depthStencilFormat, VkSurfac
 	initRenderPass();
 }
 
-RenderPass::RenderPass()
-{
-}
-
-
 RenderPass::~RenderPass()
 {
 	vkDestroyRenderPass(renderer->getDevice(), renderPass, nullptr);
@@ -84,6 +79,11 @@ void RenderPass::beginRenderPass(VkFramebuffer frameBuffer, VkExtent2D extent, V
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	vkCmdEndRenderPass(commandBuffer);
+}
+
+void RenderPass::beginRenderPass(VkFramebuffer framebuffer, VkCommandBuffer cmdBuffer, VkRenderPassBeginInfo beginInfo) {
+	vkCmdBeginRenderPass(cmdBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdEndRenderPass(cmdBuffer);
 }
 
 void RenderPass::endRenderPass(VkCommandBuffer commandBuffer)

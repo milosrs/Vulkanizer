@@ -4,7 +4,7 @@
 class Triangle : public Scene
 {
 public:
-	Triangle(MainWindow*, Renderer*, CommandBuffer*, CommandPool*);
+	Triangle(MainWindow*, Renderer*);
 
 	void render(VkViewport*) override;
 	void recordFrameBuffer(CommandBuffer*, MainWindow*) override;

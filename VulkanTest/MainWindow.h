@@ -10,7 +10,10 @@
 #include "Swapchain.h"
 #include "RenderPass.h"
 #include "FrameBuffer.h"
+#include "Pipeline.h"
 #include "QueueFamilyIndices.h"
+#include "CommandPool.h"
+#include "CommandBuffer.h"
 #include <vector>
 #include <string>
 #include <assert.h>
@@ -27,17 +30,22 @@ public:
 	MainWindow(const MainWindow&);
 	~MainWindow();
 
-	void close();
 	void continueInitialization(Renderer* renderer);
 
 	void beginRender(VkSemaphore semaphoreToWait);
 	void endRender(std::vector<VkSemaphore>);
+
+	void recreateSwapchain();
 
 	Renderer* getRenderer();
 	RenderPass* getRenderPass();
 	FrameBuffer* getActiveFrameBuffer();
 	Swapchain* getSwapchain();
 	GLFWwindow* getWindowPTR();
+	Pipeline* getPipelinePTR();
+	std::vector< CommandBuffer*> getCommandBuffers();
+	CommandPool* getCommandPoolPTR();
+
 	VkSurfaceKHR getSurface();
 	VkSurfaceKHR* getSurfacePTR();
 	VkExtent2D getSurfaceSize();
@@ -52,14 +60,15 @@ private:
 	void InitSurface();
 	void DestroySurface();
 
-	void initSync();
-	void destroySync();
-
 	void choosePreferedFormat();
+	void destroySwapchainDependencies();
 
 	std::unique_ptr<Swapchain> swapchain = nullptr;
 	std::unique_ptr<RenderPass> renderPass = nullptr;
 	std::unique_ptr<FrameBuffer> frameBuffer = nullptr;
+	std::unique_ptr<Pipeline> pipeline = nullptr;
+	std::unique_ptr<CommandPool> cmdPool = nullptr;
+	std::vector<CommandBuffer*> cmdBuffers;
 
 	Renderer* renderer = nullptr;
 	GLFWwindow* window = nullptr;

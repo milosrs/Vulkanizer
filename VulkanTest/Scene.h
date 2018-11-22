@@ -9,7 +9,7 @@
 
 class Scene {
 public:
-	Scene(MainWindow*, Renderer*, CommandBuffer*, CommandPool*);
+	Scene(MainWindow*, Renderer*);
 	virtual ~Scene();
 
 	virtual void render(VkViewport*) = 0;
@@ -23,7 +23,7 @@ protected:
 
 	MainWindow* window = nullptr;
 	Renderer* renderer = nullptr;
-	CommandBuffer* cmdBuffer = nullptr;
+	std::vector<CommandBuffer*> cmdBuffers;
 	CommandPool* cmdPool = nullptr;
 	Util* util = nullptr;
 

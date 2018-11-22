@@ -1,11 +1,6 @@
 #include "pch.h"
 #include "CommandBuffer.h"
 
-
-CommandBuffer::CommandBuffer()
-{
-}
-
 CommandBuffer::CommandBuffer(VkCommandPool commandPool, VkDevice device)
 {
 	util = &Util::instance();
@@ -21,6 +16,10 @@ CommandBuffer::CommandBuffer(VkCommandPool commandPool, VkDevice device)
 	this->beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	this->beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;	//Submitovacemo ovaj command buffer samo jednom u red. Dovoljno da se izrenderuje.
 	//this->beginInfo.pInheritanceInfo = KORISTI SE ZA SEKUNDARNE I OSTALE REDOVE 
+}
+
+CommandBuffer::CommandBuffer(const CommandBuffer &)
+{
 }
 
 void CommandBuffer::allocateCommandBuffer() {
@@ -39,7 +38,7 @@ void CommandBuffer::startCommandBuffer(VkViewport* viewport) {
 /*VkQueue - U koji red bi trebalo da se submituje posao bafera.
   VkPipelineStageFlags - U kom trenutku u pipeline-u Vulkan Core-a bi semafori trebalo da reaguju na ovaj submit
   ComandBufferSemaphoreInfo - informacije koje su potrebne za reagovanje nad semaforima*/
-bool CommandBuffer::submitQueue(VkQueue queue, CommandBufferSemaphoreInfo* waitSemaphoreInfo, CommandBufferSemaphoreInfo* signalSemaphoreInfo,  VkFence fence){
+bool CommandBuffer::submitQueue(VkDevice device, VkQueue queue, CommandBufferSemaphoreInfo* waitSemaphoreInfo, CommandBufferSemaphoreInfo* signalSemaphoreInfo,  VkFence* fence){
 	VkSubmitInfo submitInfo = {};
 	VkSemaphore* waitSemaphore = waitSemaphoreInfo->getSemaphorePTR();
 	VkSemaphore* signalSemaphore = signalSemaphoreInfo->getSemaphorePTR();
@@ -67,20 +66,20 @@ bool CommandBuffer::submitQueue(VkQueue queue, CommandBufferSemaphoreInfo* waitS
 		}
 	}
 
-	VkResult result = vkQueueSubmit(queue, 1, &submitInfo, fence);
+	vkResetFences(device, 1, fence);
 
-	util->ErrorCheck(result);
+	VkResult result = vkQueueSubmit(queue, 1, &submitInfo, *fence);
 
-	return result == VK_SUCCESS;
-}
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		return false;
+	}
 
-void CommandBuffer::createFence() {
-	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	vkCreateFence(device, &fenceCreateInfo, nullptr, &fence);
-}
+	if (result != VK_SUCCESS) {
+		util->ErrorCheck(result);
+		return false;
+	}
 
-VkFence CommandBuffer::getFence() {
-	return this->fence;
+	return true;
 }
 
 VkCommandBuffer CommandBuffer::getCommandBuffer() {
@@ -89,5 +88,4 @@ VkCommandBuffer CommandBuffer::getCommandBuffer() {
 
 CommandBuffer::~CommandBuffer()
 {
-	vkDestroyFence(device, this->fence, nullptr);
 }

@@ -23,9 +23,7 @@ Swapchain::Swapchain()
 
 Swapchain::~Swapchain()
 {
-	destroyDepthStencilImage();
-	destroySwapchainImgs();
-	destroySwapchain();
+	cleanup();
 }
 
 void Swapchain::setupSwapExtent() {
@@ -50,6 +48,7 @@ void Swapchain::setupSwapExtent() {
 		this->swapchainImageCount = capabilities.maxImageCount;
 	}
 }
+
 
 void Swapchain::initSwapchain() {
 	VkPresentModeKHR presentMode = getAvaiablePresentMode();
@@ -85,11 +84,6 @@ void Swapchain::initSwapchain() {
 	util->ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, nullptr));
 }
 
-void Swapchain::destroySwapchain()
-{
-	vkDestroySwapchainKHR(renderer->getDevice(), swapchain, nullptr);
-}
-
 void Swapchain::initSwapchainImgs()
 {
 	images.resize(swapchainImageCount);
@@ -115,13 +109,6 @@ void Swapchain::initSwapchainImgs()
 
 
 		util->ErrorCheck(vkCreateImageView(renderer->getDevice(), &imgCreateInfo, nullptr, &imageViews[i]));
-	}
-}
-
-void Swapchain::destroySwapchainImgs()
-{
-	for (int i = 0; i < imageViews.size(); i++) {
-		vkDestroyImageView(renderer->getDevice(), imageViews[i], nullptr);
 	}
 }
 
@@ -154,7 +141,6 @@ void Swapchain::initDepthStencilImage()
 
 		VkPhysicalDeviceMemoryProperties memoryProps = renderer->getPhysicalDeviceMemoryProperties();
 
-
 		uint32_t memoryIndex = this->util->findMemoryTypeIndex(&memoryProps, &memoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 		this->allocateInfo.allocationSize = memoryRequirements.size;
 		this->allocateInfo.memoryTypeIndex = memoryIndex;
@@ -181,13 +167,6 @@ void Swapchain::initDepthStencilImage()
 
 		vkCreateImageView(renderer->getDevice(), &imgCreateInfo, nullptr, &depthStencilImageView);
 	}
-}
-
-void Swapchain::destroyDepthStencilImage()
-{
-	vkDestroyImageView(renderer->getDevice(), depthStencilImageView, nullptr);
-	vkFreeMemory(renderer->getDevice(), depthStencilImageMemory, nullptr);
-	vkDestroyImage(renderer->getDevice(), depthStencilImage, nullptr);
 }
 
 VkPresentModeKHR Swapchain::getAvaiablePresentMode() {
@@ -276,4 +255,21 @@ VkImageView Swapchain::getDepthStencilImageView()
 std::vector<VkImageView> Swapchain::getImageViews()
 {
 	return this->imageViews;
+}
+
+void Swapchain::cleanup()
+{
+	for (VkImageView view : imageViews) {
+		vkDestroyImageView(renderer->getDevice(), view, nullptr);
+	}
+
+	for (VkImage image : images) {
+		vkDestroyImage(renderer->getDevice(), image, nullptr);
+	}
+
+	vkDestroyImageView(renderer->getDevice(), depthStencilImageView, nullptr);
+	vkFreeMemory(renderer->getDevice(), this->depthStencilImageMemory, nullptr);
+	vkDestroyImage(renderer->getDevice(), depthStencilImage, nullptr);
+
+	vkDestroySwapchainKHR(renderer->getDevice(), swapchain, nullptr);
 }

@@ -9,7 +9,6 @@
 class QueueFamilyIndices
 {
 public:
-	QueueFamilyIndices();
 	QueueFamilyIndices(VkPhysicalDevice*, VkSurfaceKHR*  = VK_NULL_HANDLE);
 	~QueueFamilyIndices();
 

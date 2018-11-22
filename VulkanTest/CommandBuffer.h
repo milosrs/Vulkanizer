@@ -9,25 +9,22 @@
 class CommandBuffer
 {
 public:
-	CommandBuffer();
 	CommandBuffer(VkCommandPool, VkDevice);
+	CommandBuffer(const CommandBuffer&);
 	~CommandBuffer();
 
 	void startCommandBuffer(VkViewport* viewport);
-	void createFence();
-	bool submitQueue(VkQueue, CommandBufferSemaphoreInfo*, CommandBufferSemaphoreInfo*, VkFence);
+	bool submitQueue(VkDevice, VkQueue, CommandBufferSemaphoreInfo*, CommandBufferSemaphoreInfo*, VkFence*);
 
 	void allocateCommandBuffer();
 	void endCommandBuffer();
 
-	VkFence getFence();
 	VkCommandBuffer getCommandBuffer();
 private:
 	VkCommandPool commandPool = nullptr;
 	VkCommandBuffer commandBuffer = nullptr;
 	VkCommandBufferAllocateInfo allocateInfo = {};
 	VkCommandBufferBeginInfo beginInfo = {};
-	VkFence fence = nullptr;
 	VkFenceCreateInfo fenceCreateInfo = {};
 	VkDevice device;
 

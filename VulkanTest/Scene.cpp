@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "Scene.h"
 
-Scene::Scene(MainWindow* window, Renderer* renderer, CommandBuffer* cmdBuffer, CommandPool* cmdPool)
+Scene::Scene(MainWindow* window, Renderer* renderer)
 {
 	this->window = window;
 	this->renderer = renderer;
-	this->cmdBuffer = cmdBuffer;
-	this->cmdPool = cmdPool;
+	this->cmdBuffers = window->getCommandBuffers();
+	this->cmdPool = window->getCommandPoolPTR();
 	this->util = &Util::instance();
 
 	createSyncObjects();

@@ -1,21 +1,15 @@
 #include "pch.h"
 #include "CommandBufferSemaphoreInfo.h"
 
-
-CommandBufferSemaphoreInfo::CommandBufferSemaphoreInfo()
-{
-}
-
-
-CommandBufferSemaphoreInfo::~CommandBufferSemaphoreInfo()
-{
-}
-
 CommandBufferSemaphoreInfo::CommandBufferSemaphoreInfo(bool shouldWaitForSignalization, VkSemaphore semaphore, VkPipelineStageFlags* pipelineStages) {
 	this->shouldWaitForSignalization = shouldWaitForSignalization;
 	this->semaphore = semaphore;
 	this->pipelineStages = pipelineStages;
 	util = &Util::instance();
+}
+
+CommandBufferSemaphoreInfo::~CommandBufferSemaphoreInfo()
+{
 }
 
 VkSemaphore CommandBufferSemaphoreInfo::getSemaphore() {
