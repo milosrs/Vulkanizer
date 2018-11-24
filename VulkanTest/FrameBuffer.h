@@ -35,7 +35,7 @@ private:
 	);
 
 	std::vector<VkFramebuffer> frameBuffers;
-	VkFence activeImageAvaiableFence = nullptr;
+	VkFence activeImageAvaiableFence = VK_NULL_HANDLE;
 
 	Renderer* renderer = nullptr;
 	Util* util = nullptr;

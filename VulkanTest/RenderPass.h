@@ -16,7 +16,7 @@ public:
 	VkRenderPass getRenderPass();
 	VkRenderPass* getRenderPassPTR();
 
-	void beginRenderPass(VkFramebuffer frameBuffer, VkExtent2D extent, VkCommandBuffer commandBuffer, std::array<VkClearValue, 2> clearValues);
+	void beginRenderPass(VkCommandBuffer, VkRenderPassBeginInfo*);
 	void beginRenderPass(VkFramebuffer, VkCommandBuffer, VkRenderPassBeginInfo);
 	void endRenderPass(VkCommandBuffer commandBuffer);
 private:

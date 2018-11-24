@@ -18,8 +18,8 @@ public:
 	void setPipelineStages(VkPipelineStageFlags*);
 private:
 	bool shouldWaitForSignalization;
-	VkSemaphore semaphore;
-	VkPipelineStageFlags* pipelineStages;
+	VkSemaphore semaphore = VK_NULL_HANDLE;
+	VkPipelineStageFlags* pipelineStages = nullptr;
 	
 	Util* util;
 };

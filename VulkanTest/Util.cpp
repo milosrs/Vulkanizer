@@ -66,30 +66,6 @@ wchar_t* Util::convertCharArrayToLPCWSTR(const char* charArray)
 	return wString;
 }
 
-VkDevice Util::getDevice() {
-	return device;
-}
-
-uint32_t Util::getGraphicsFamilyIndex() {
-	return graphicsFamilyIndex;
-}
-
-VkCommandPool Util::getCommandPool() {
-	return commandPool;
-}
-
-void Util::setDevice(VkDevice device) {
-	this->device = device;
-}
-
-void Util::setGraphicsFamilyIndex(uint32_t gfi) {
-	this->graphicsFamilyIndex = gfi;
-}
-
-void Util::setCommandPool(VkCommandPool pool) {
-	this->commandPool = pool;
-}
-
 uint32_t Util::findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties * memoryProps, const VkMemoryRequirements * memoryRequirements, const VkMemoryPropertyFlags memoryFlags)
 {
 	uint32_t ret = NULL;

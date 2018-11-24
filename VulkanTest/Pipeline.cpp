@@ -28,7 +28,8 @@ Pipeline::Pipeline(VkDevice* device, VkRenderPass* renderPass, float width, floa
 	pipelineCreateInfo.pVertexInputState = &this->vertexInputCreateInfo;
 	pipelineCreateInfo.pInputAssemblyState = &this->inputAssemblyCreateInfo;
 	pipelineCreateInfo.pMultisampleState = &this->multisampleCreateInfo;
-	pipelineCreateInfo.pDynamicState = &this->dynamicStateCreateInfo;
+	//pipelineCreateInfo.pDynamicState = &this->dynamicStateCreateInfo;
+	pipelineCreateInfo.pDynamicState = nullptr;
 	pipelineCreateInfo.pColorBlendState = &this->colorBlendCreateInfo;
 	pipelineCreateInfo.pRasterizationState = &this->rasterCreateInfo;
 	pipelineCreateInfo.layout = this->pipelineLayout;
@@ -102,10 +103,6 @@ void Pipeline::bindPipeline(VkCommandBuffer commandBuffer)
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 }
 
-void Pipeline::draw(VkCommandBuffer commandBuffer)
-{
-	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-}
 
 std::vector<char> Pipeline::loadShader(const std::string filename)
 {

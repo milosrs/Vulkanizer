@@ -29,9 +29,7 @@ public:
 private:
 	std::array<VkClearValue, 2> clearValues{};
 
-	double getColor(float circleNo) {
-		return std::sin(colorRotator + circleNo) * 0.5 + 0.5;
-	}
+	float getColor(float circleNo);
 
 	Util* util;
 };

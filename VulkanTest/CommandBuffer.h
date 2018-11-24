@@ -13,7 +13,7 @@ public:
 	CommandBuffer(const CommandBuffer&);
 	~CommandBuffer();
 
-	void startCommandBuffer(VkViewport* viewport);
+	void startCommandBuffer(VkViewport* viewport, bool);
 	bool submitQueue(VkDevice, VkQueue, CommandBufferSemaphoreInfo*, CommandBufferSemaphoreInfo*, VkFence*);
 
 	void allocateCommandBuffer();
@@ -21,12 +21,12 @@ public:
 
 	VkCommandBuffer getCommandBuffer();
 private:
-	VkCommandPool commandPool = nullptr;
-	VkCommandBuffer commandBuffer = nullptr;
+	VkCommandPool commandPool = VK_NULL_HANDLE;
+	VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
 	VkCommandBufferAllocateInfo allocateInfo = {};
 	VkCommandBufferBeginInfo beginInfo = {};
 	VkFenceCreateInfo fenceCreateInfo = {};
-	VkDevice device;
+	VkDevice device = VK_NULL_HANDLE;;
 
 	Util* util;
 };

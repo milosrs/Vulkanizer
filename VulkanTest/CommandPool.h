@@ -12,9 +12,9 @@ public:
 
 	VkCommandPool getCommandPool();
 private:
-	VkCommandPool cmdPool;
+	VkCommandPool cmdPool = VK_NULL_HANDLE;
 	VkCommandPoolCreateInfo cmdPoolCreateInfo{};
-	VkDevice device;
+	VkDevice device = VK_NULL_HANDLE;;
 
 	Util* util;
 };

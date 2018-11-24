@@ -112,7 +112,8 @@ void QueueFamilyIndices::createQueues(VkDevice* device) {
 
 	for (uint32_t i = 0; i < uniqueQueueFamilies.size(); i++) {
 		VkQueue queue = VK_NULL_HANDLE;
+		vkGetDeviceQueue(*device, this->graphicsFamilyIndex.value(), 0, &queue);			//Iz kog reda hocemo da fetchujemo? Mozemo imati vise queue...
+
 		queues.push_back(queue);
-		vkGetDeviceQueue(*device, this->graphicsFamilyIndex.value(), 0, &queues[i]);			//Iz kog reda hocemo da fetchujemo? Mozemo imati vise queue...
 	}
 }

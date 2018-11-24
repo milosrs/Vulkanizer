@@ -22,14 +22,6 @@ public:
 		return ins;
 	}
 
-	/* Getters and Setters */
-	VkDevice getDevice();
-	uint32_t getGraphicsFamilyIndex();
-	VkCommandPool getCommandPool();
-
-	void setDevice(VkDevice);
-	void setGraphicsFamilyIndex(uint32_t);
-	void setCommandPool(VkCommandPool);
 	uint32_t findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties*, const VkMemoryRequirements*, const VkMemoryPropertyFlags);
 	wchar_t *convertCharArrayToLPCWSTR(const char* charArray);
 	void printFPS();

@@ -14,7 +14,7 @@ CommandBuffer::CommandBuffer(VkCommandPool commandPool, VkDevice device)
 	this->allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;				//Moze da bude submitovan u Queue, ostali moraju da budu pozivani iz primarnog.
 	
 	this->beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	this->beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;	//Submitovacemo ovaj command buffer samo jednom u red. Dovoljno da se izrenderuje.
+	this->beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;	//Submitovacemo ovaj command buffer samo jednom u red. Dovoljno da se izrenderuje.
 	//this->beginInfo.pInheritanceInfo = KORISTI SE ZA SEKUNDARNE I OSTALE REDOVE 
 }
 
@@ -30,9 +30,12 @@ void CommandBuffer::endCommandBuffer() {
 	vkEndCommandBuffer(this->commandBuffer);//Pretvara command buffer u executable koji GPU izvrsava1
 }
 
-void CommandBuffer::startCommandBuffer(VkViewport* viewport) {
+void CommandBuffer::startCommandBuffer(VkViewport* viewport, bool shouldSetViewport) {
 	util->ErrorCheck(vkBeginCommandBuffer(this->commandBuffer, &this->beginInfo));
-	vkCmdSetViewport(this->commandBuffer, 0, 1, viewport);
+	
+	if (shouldSetViewport) {
+		vkCmdSetViewport(this->commandBuffer, 0, 1, viewport);
+	}
 }
 
 /*VkQueue - U koji red bi trebalo da se submituje posao bafera.

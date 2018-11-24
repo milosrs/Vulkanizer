@@ -51,7 +51,7 @@ void RenderPass::createColor() {
 	subpassDependency.dstSubpass = 0;
 	subpassDependency.dstAccessMask = 0;
 	subpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+	subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 	
 	info.attachmentCount = 1;
 	info.dependencyCount = 1;
@@ -64,26 +64,8 @@ void RenderPass::createColor() {
 	util->ErrorCheck(vkCreateRenderPass(this->renderer->getDevice(), &info, nullptr, &this->renderPass));
 }
 
-void RenderPass::beginRenderPass(VkFramebuffer frameBuffer, VkExtent2D extent, VkCommandBuffer commandBuffer, std::array<VkClearValue, 2> clearValues)
-{
-	VkRenderPassBeginInfo renderPassInfo = {};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = renderPass;
-	renderPassInfo.framebuffer = frameBuffer;
-	renderPassInfo.renderArea.offset = { 0, 0 };
-	renderPassInfo.renderArea.extent = extent;
-
-	
-	renderPassInfo.clearValueCount = clearValues.size();
-	renderPassInfo.pClearValues = clearValues.data();
-
-	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-	vkCmdEndRenderPass(commandBuffer);
-}
-
-void RenderPass::beginRenderPass(VkFramebuffer framebuffer, VkCommandBuffer cmdBuffer, VkRenderPassBeginInfo beginInfo) {
-	vkCmdBeginRenderPass(cmdBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
-	vkCmdEndRenderPass(cmdBuffer);
+void RenderPass::beginRenderPass(VkCommandBuffer cmdBuffer, VkRenderPassBeginInfo* beginInfo) {
+	vkCmdBeginRenderPass(cmdBuffer, beginInfo, VK_SUBPASS_CONTENTS_INLINE);		//Sadrzaj subpass-a ce biti snimljen u primarni cmd buffer. Sekundarni NE SMEJU da se pokrecu unutar ovog subpassa.
 }
 
 void RenderPass::endRenderPass(VkCommandBuffer commandBuffer)

@@ -40,7 +40,7 @@ void Renderer::_InitInstance() {
 
 	if (areExtensionsSupported) {
 		application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		application_info.apiVersion = VK_MAKE_VERSION(1, 1, 0);
+		application_info.apiVersion = VK_MAKE_VERSION(1, 1, 85);
 		application_info.applicationVersion = VK_MAKE_VERSION(1, 1, 0);
 		application_info.pApplicationName = "Hello world by Riki";
 

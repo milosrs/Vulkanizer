@@ -16,7 +16,6 @@ public:
 	void setupViewport(float width, float height, VkExtent2D extent);
 
 	void bindPipeline(VkCommandBuffer commandBuffer);
-	void draw(VkCommandBuffer commandBuffer);
 
 	VkViewport getViewport();
 	VkViewport* getViewportPTR();
@@ -59,8 +58,8 @@ private:
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
 
 	VkDevice device = VK_NULL_HANDLE;
-	VkPipelineLayout pipelineLayout;
-	VkPipeline pipeline;
+	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+	VkPipeline pipeline = VK_NULL_HANDLE;
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
 	bool viewportCreated = false;
 

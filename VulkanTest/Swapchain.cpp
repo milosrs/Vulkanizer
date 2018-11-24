@@ -81,14 +81,13 @@ void Swapchain::initSwapchain() {
 	swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;											//Ako rekonstruisemo swapchain, pokazivac na stari
 
 	util->ErrorCheck(vkCreateSwapchainKHR(renderer->getDevice(), &swapchainCreateInfo, nullptr, &swapchain));
-	util->ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, nullptr));
 }
 
 void Swapchain::initSwapchainImgs()
 {
+	util->ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, nullptr));
 	images.resize(swapchainImageCount);
 	imageViews.resize(swapchainImageCount);
-
 	util->ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, images.data()));
 
 	for (uint32_t i = 0; i < swapchainImageCount; i++) {

@@ -30,12 +30,14 @@ public:
 	MainWindow(const MainWindow&);
 	~MainWindow();
 
-	void continueInitialization(Renderer* renderer);
+	void continueInitialization(Renderer*, bool);
 
+	///Koji semafor cekamo da signalizira dobavljenu sliku, viewport koji treba postaviti. NULL ako ne treba viewport.
 	void beginRender(VkSemaphore semaphoreToWait);
 	void endRender(std::vector<VkSemaphore>);
 
 	void recreateSwapchain();
+	void draw(VkCommandBuffer commandBuffer);
 
 	Renderer* getRenderer();
 	RenderPass* getRenderPass();
@@ -63,6 +65,7 @@ private:
 
 	void choosePreferedFormat();
 	void destroySwapchainDependencies();
+	void createData();
 
 	std::unique_ptr<Swapchain> swapchain = nullptr;
 	std::unique_ptr<RenderPass> renderPass = nullptr;
@@ -84,5 +87,6 @@ private:
 	uint32_t sizeX;
 	uint32_t sizeY;
 	std::string name = "MainWindow";
+	bool shouldCreatePipeline;
 };
 

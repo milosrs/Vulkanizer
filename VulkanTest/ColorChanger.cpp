@@ -11,12 +11,17 @@ std::array<VkClearValue, 2> ColorChanger::getNewClearValues() {
 
 	clearValues[0].depthStencil.depth = 0.0f;
 	clearValues[0].depthStencil.stencil = 0;
-	clearValues[1].color.float32[0] = getColor(CIRCLE_THIRD_1);
-	clearValues[1].color.float32[1] = getColor(CIRCLE_THIRD_2);
-	clearValues[1].color.float32[2] = getColor(CIRCLE_THIRD_3);
-	clearValues[1].color.float32[3] = 0.0f;
+	clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	clearValues[1].depthStencil.depth = 0.0f;
+	clearValues[1].depthStencil.stencil = 0.0f;
+	clearValues[1].color = { getColor(CIRCLE_THIRD_1), getColor(CIRCLE_THIRD_2), getColor(CIRCLE_THIRD_3), 0.0f };
 
 	return clearValues;
+}
+
+float ColorChanger::getColor(float circleNo) {
+	return std::sin(colorRotator + circleNo) * 0.5 + 0.5;
 }
 
 void ColorChanger::render(VkViewport* viewport) {
@@ -30,22 +35,24 @@ void ColorChanger::render(VkViewport* viewport) {
 		VkSemaphore renderSemaphore = this->renderFinishedSemaphores[frameCount];
 		VkFence fence = this->fences[frameCount];
 		CommandBuffer* cmdBuffer = window->getCommandBuffers()[window->getSwapchain()->getActiveImageSwapchain()];
+		CommandBufferSemaphoreInfo renderSemaphoreInfo(true, renderSemaphore, &stage);
+		CommandBufferSemaphoreInfo imageSemaphoreInfo(true, imageAcquiredSemaphore, &stage);
+		bool isSubmitted = false;
 
 		glfwPollEvents();
 		util->printFPS();
 		window->beginRender(imageAcquiredSemaphore);
+		
+		for (CommandBuffer* cmdBuf : window->getCommandBuffers()) {
+			if (cmdBuffer == cmdBuf) {
+				recordFrameBuffer(cmdBuf, window);
+				cmdBuffer->endCommandBuffer();
 
-		CommandBufferSemaphoreInfo renderSemaphoreInfo(true, renderSemaphore, &stage);
-		CommandBufferSemaphoreInfo imageSemaphoreInfo(true, imageAcquiredSemaphore, &stage);
-
-		cmdBuffer->allocateCommandBuffer();
-		cmdBuffer->startCommandBuffer(viewport);
-
-		recordFrameBuffer(cmdBuffer, window);
-
-		cmdBuffer->endCommandBuffer();
-		bool isSubmitted = cmdBuffer->submitQueue(renderer->getDevice(), renderer->getQueueIndices()->getQueue(), 
-								&imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
+			
+				isSubmitted = cmdBuffer->submitQueue(renderer->getDevice(), renderer->getQueueIndices()->getQueue(),
+													 &imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
+			}
+		}
 
 		if (!isSubmitted) {
 			window->recreateSwapchain();
@@ -79,7 +86,6 @@ void ColorChanger::recordFrameBuffer(CommandBuffer* cmdBuffer, MainWindow* windo
 	renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 	renderPassBeginInfo.pClearValues = clearValues.data();
 
-	VkFramebuffer frameBuffer = window->getActiveFrameBuffer()->getActiveFrameBuffer(window->getSwapchain()->getActiveImageSwapchain());
-
-	window->getRenderPass()->beginRenderPass(frameBuffer, window->getSurfaceSize(), cmdBuffer->getCommandBuffer(), clearValues);
+	window->getRenderPass()->beginRenderPass(cmdBuffer->getCommandBuffer(), &renderPassBeginInfo);
+	window->getRenderPass()->endRenderPass(cmdBuffer->getCommandBuffer());
 }
