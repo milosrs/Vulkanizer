@@ -14,6 +14,7 @@
 #include "QueueFamilyIndices.h"
 #include "CommandPool.h"
 #include "CommandBuffer.h"
+#include "Vertices.h"
 #include <vector>
 #include <string>
 #include <assert.h>
@@ -30,14 +31,16 @@ public:
 	MainWindow(const MainWindow&);
 	~MainWindow();
 
-	void continueInitialization(Renderer*, bool);
+	void continueInitialization(Renderer*);
 
 	///Koji semafor cekamo da signalizira dobavljenu sliku, viewport koji treba postaviti. NULL ako ne treba viewport.
-	void beginRender(VkSemaphore semaphoreToWait);
+	void beginRender(VkSemaphore);
 	void endRender(std::vector<VkSemaphore>);
 
 	void recreateSwapchain();
-	void draw(VkCommandBuffer commandBuffer);
+	void draw(VkCommandBuffer);
+	void setupPipeline(std::shared_ptr<Vertices>);
+	void bindPipeline(VkCommandBuffer);
 
 	Renderer* getRenderer();
 	RenderPass* getRenderPass();
@@ -72,6 +75,7 @@ private:
 	std::unique_ptr<FrameBuffer> frameBuffer = nullptr;
 	std::unique_ptr<Pipeline> pipeline = nullptr;
 	std::unique_ptr<CommandPool> cmdPool = nullptr;
+	std::unique_ptr<VertexBuffer> vertexBuffer = nullptr;
 	std::vector<CommandBuffer*> cmdBuffers;
 
 	Renderer* renderer = nullptr;
@@ -87,6 +91,5 @@ private:
 	uint32_t sizeX;
 	uint32_t sizeY;
 	std::string name = "MainWindow";
-	bool shouldCreatePipeline;
 };
 

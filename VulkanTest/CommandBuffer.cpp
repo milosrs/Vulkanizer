@@ -30,17 +30,12 @@ void CommandBuffer::endCommandBuffer() {
 	vkEndCommandBuffer(this->commandBuffer);//Pretvara command buffer u executable koji GPU izvrsava1
 }
 
-void CommandBuffer::startCommandBuffer(VkViewport* viewport, bool shouldSetViewport) {
+void CommandBuffer::startCommandBuffer(VkViewport* viewport) {
 	util->ErrorCheck(vkBeginCommandBuffer(this->commandBuffer, &this->beginInfo));
 	
-	if (shouldSetViewport) {
-		vkCmdSetViewport(this->commandBuffer, 0, 1, viewport);
-	}
+	vkCmdSetViewport(this->commandBuffer, 0, 1, viewport);
 }
 
-/*VkQueue - U koji red bi trebalo da se submituje posao bafera.
-  VkPipelineStageFlags - U kom trenutku u pipeline-u Vulkan Core-a bi semafori trebalo da reaguju na ovaj submit
-  ComandBufferSemaphoreInfo - informacije koje su potrebne za reagovanje nad semaforima*/
 bool CommandBuffer::submitQueue(VkDevice device, VkQueue queue, CommandBufferSemaphoreInfo* waitSemaphoreInfo, CommandBufferSemaphoreInfo* signalSemaphoreInfo,  VkFence* fence){
 	VkSubmitInfo submitInfo = {};
 	VkSemaphore* waitSemaphore = waitSemaphoreInfo->getSemaphorePTR();

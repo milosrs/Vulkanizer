@@ -5,17 +5,20 @@
 #include <array>
 #include "PLATFORM.h"
 #include "Util.h"
+#include "Vertices.h"
+#include "VertexBuffer.h"
+#include "Renderer.h"
 
 class Pipeline
 {
 public:
-	Pipeline(VkDevice* device, VkRenderPass* renderPass, float width, float height, VkExtent2D extent);
+	Pipeline(VkDevice, VkPhysicalDeviceMemoryProperties, VkRenderPass*, float, float, VkExtent2D);
 	~Pipeline();
 
 	void createPipelineLayout(); 
 	void setupViewport(float width, float height, VkExtent2D extent);
 
-	void bindPipeline(VkCommandBuffer commandBuffer);
+	void bindPipeline(VkCommandBuffer, VertexBuffer*);
 
 	VkViewport getViewport();
 	VkViewport* getViewportPTR();
@@ -36,6 +39,10 @@ private:
 
 	VkShaderModule vertexShader = VK_NULL_HANDLE;
 	VkShaderModule fragmentShader = VK_NULL_HANDLE;
+	VkPhysicalDeviceMemoryProperties memprops;
+
+	VkVertexInputBindingDescription bindingDescription;
+	std::vector<VkVertexInputAttributeDescription> attributeDescription;
 
 	VkViewport viewport = {};
 	VkRect2D scissors = {};

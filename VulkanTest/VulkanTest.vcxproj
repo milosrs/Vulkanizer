@@ -186,6 +186,8 @@
     <ClInclude Include="Swapchain.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="Util.h" />
+    <ClInclude Include="VertexBuffer.h" />
+    <ClInclude Include="Vertices.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CommandBuffer.cpp" />
@@ -209,6 +211,8 @@
     <ClCompile Include="Swapchain.cpp" />
     <ClCompile Include="Triangle.cpp" />
     <ClCompile Include="Util.cpp" />
+    <ClCompile Include="VertexBuffer.cpp" />
+    <ClCompile Include="Vertices.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\..\..\VulkanSDK\1.1.85.0\Bin\frag.spv" />

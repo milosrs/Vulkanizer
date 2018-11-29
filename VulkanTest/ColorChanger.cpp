@@ -45,7 +45,7 @@ void ColorChanger::render(VkViewport* viewport) {
 		
 		for (CommandBuffer* cmdBuf : window->getCommandBuffers()) {
 			if (cmdBuffer == cmdBuf) {
-				recordFrameBuffer(cmdBuf, window);
+				recordFrameBuffer(cmdBuf);
 				cmdBuffer->endCommandBuffer();
 
 			
@@ -69,7 +69,7 @@ void ColorChanger::render(VkViewport* viewport) {
 	vkDeviceWaitIdle(renderer->getDevice());
 }
 
-void ColorChanger::recordFrameBuffer(CommandBuffer* cmdBuffer, MainWindow* window) {
+void ColorChanger::recordFrameBuffer(CommandBuffer* cmdBuffer) {
 	VkRect2D renderArea{};
 	renderArea.offset.x = 0;
 	renderArea.offset.y = 0;

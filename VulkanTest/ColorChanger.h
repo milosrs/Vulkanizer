@@ -24,7 +24,7 @@ public:
 	std::array<VkClearValue, 2> getNewClearValues();
 
 	void render(VkViewport*) override;
-	void recordFrameBuffer(CommandBuffer*, MainWindow*) override;
+	void recordFrameBuffer(CommandBuffer*) override;
 
 private:
 	std::array<VkClearValue, 2> clearValues{};

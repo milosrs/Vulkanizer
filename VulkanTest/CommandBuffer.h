@@ -13,7 +13,13 @@ public:
 	CommandBuffer(const CommandBuffer&);
 	~CommandBuffer();
 
-	void startCommandBuffer(VkViewport* viewport, bool);
+	void startCommandBuffer(VkViewport*);
+
+	///VkQueue - U koji red bi trebalo da se submituje posao bafera.
+	///VkPipelineStageFlags - U kom trenutku u pipeline-u Vulkan Core-a bi semafori trebalo da reaguju na ovaj submit
+	///ComandBufferSemaphoreInfo - koji semafor da cekamo
+	///ComandBufferSemaphoreInfo  - koji semafor da signaliziramo
+	///VkFence - ograda za submit
 	bool submitQueue(VkDevice, VkQueue, CommandBufferSemaphoreInfo*, CommandBufferSemaphoreInfo*, VkFence*);
 
 	void allocateCommandBuffer();

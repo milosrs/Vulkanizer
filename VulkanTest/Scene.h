@@ -13,7 +13,7 @@ public:
 	virtual ~Scene();
 
 	virtual void render(VkViewport*) = 0;
-	virtual void recordFrameBuffer(CommandBuffer*, MainWindow*) = 0;
+	virtual void recordFrameBuffer(CommandBuffer*) = 0;
 	void createSyncObjects();
 	void deleteSyncObjects();
 protected:
