@@ -8,4 +8,5 @@ My unbelievable ultra supersonic Vulkan API engine.
 
 ## List of mini programs that are avaiable in this project
 
-- Epilepsy inducer - swaps colors on OS surface. Nothing too fancy.
+- Color Changer - swaps colors on OS surface. Nothing too fancy.
+- Triangle - Just your regular triangle. Supports Vertex Buffers.
