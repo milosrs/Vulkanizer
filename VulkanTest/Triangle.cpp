@@ -4,10 +4,13 @@
 
 Triangle::Triangle(MainWindow* window, Renderer* renderer) : Scene(window, renderer)
 {
+	this->vertices = std::make_shared<Vertices>();
 }
 
 void Triangle::render(VkViewport* viewport) {
 	VkPipelineStageFlags stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+	window->setupPipeline(vertices);
 
 	while (!glfwWindowShouldClose(window->getWindowPTR())) {
 		vkWaitForFences(renderer->getDevice(), 1, &this->fences[frameCount], VK_TRUE, std::numeric_limits<uint64_t>::max());
@@ -51,6 +54,7 @@ void Triangle::render(VkViewport* viewport) {
 
 void Triangle::recordFrameBuffer(CommandBuffer * cmdBuffer, MainWindow * window)
 {
+	VkCommandBuffer buffer = cmdBuffer->getCommandBuffer();
 	VkRect2D renderArea{};
 	renderArea.offset.x = 0;
 	renderArea.offset.y = 0;
@@ -67,8 +71,10 @@ void Triangle::recordFrameBuffer(CommandBuffer * cmdBuffer, MainWindow * window)
 	renderPassBeginInfo.clearValueCount = 1;
 	renderPassBeginInfo.pClearValues = &clearValues;
 
-	window->getRenderPass()->beginRenderPass(cmdBuffer->getCommandBuffer(), &renderPassBeginInfo);
-	window->getPipelinePTR()->bindPipeline(cmdBuffer->getCommandBuffer());
-	window->draw(cmdBuffer->getCommandBuffer());
-	window->getRenderPass()->endRenderPass(cmdBuffer->getCommandBuffer());
+	window->getRenderPass()->beginRenderPass(buffer, &renderPassBeginInfo);
+
+	window->bindPipeline(buffer);
+	window->draw(buffer);
+
+	window->getRenderPass()->endRenderPass(buffer);
 }

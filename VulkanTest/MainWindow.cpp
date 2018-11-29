@@ -17,12 +17,9 @@ MainWindow::MainWindow(const MainWindow &)
 {
 }
 
-void MainWindow::continueInitialization(Renderer* renderer, bool shouldCreatePipeline) {
+void MainWindow::continueInitialization(Renderer* renderer) {
 	this->renderer = renderer;
-	this->shouldCreatePipeline = shouldCreatePipeline;
 	this->cmdPool = std::make_unique<CommandPool>(renderer->getQueueIndices()->getGraphicsFamilyIndex(), renderer->getDevicePTR());
-
-	InitSurface();
 
 	createData();
 }
@@ -57,6 +54,8 @@ void MainWindow::createData()
 		glfwWaitEvents();
 	}
 
+	InitSurface();
+
 	swapchain = std::make_unique<Swapchain>(this, renderer);
 
 	std::vector<VkImageView> attachments = { swapchain->getDepthStencilImageView() };
@@ -67,14 +66,26 @@ void MainWindow::createData()
 
 	VkExtent2D scissorsExtent = surfaceCapatibilities.currentExtent;
 
-	if (shouldCreatePipeline) {
-		pipeline = std::make_unique<Pipeline>(renderer->getDevicePTR(), renderPass->getRenderPassPTR(),
-			width, height, scissorsExtent);
-	}
+	pipeline = std::make_unique<Pipeline>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
+												renderPass->getRenderPassPTR(), width, height, scissorsExtent);
 	
 	for (size_t i = 0; i < frameBuffer->getFrameBuffers().size(); i++) {
 		cmdBuffers.push_back(new CommandBuffer(cmdPool->getCommandPool(), renderer->getDevice()));
+		cmdBuffers[i]->allocateCommandBuffer();
 	}
+}
+
+
+void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices)
+{
+	this->vertexBuffer = std::make_unique<VertexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties());
+	this->vertexBuffer->initVertexBuffer(vertices);
+	this->vertexBuffer->fillBuffer();
+}
+
+void MainWindow::bindPipeline(VkCommandBuffer cmdBuffer)
+{
+	this->pipeline->bindPipeline(cmdBuffer, this->vertexBuffer.get());
 }
 
 void MainWindow::InitSurface() {
@@ -137,8 +148,7 @@ void MainWindow::beginRender(VkSemaphore semaphoreToWait)
 	VkResult result;
 
 	for (auto i = 0; i < cmdBuffers.size(); ++i) {
-		cmdBuffers[i]->allocateCommandBuffer();
-		cmdBuffers[i]->startCommandBuffer(pipeline->getViewportPTR(), shouldCreatePipeline);
+		cmdBuffers[i]->startCommandBuffer(pipeline->getViewportPTR());
 	}
 
 	//Kada funkcija vrati sliku, moze da bude koriscena od strane prezentacionog endzina. Semafor i/ili Ograda ce nam reci kada je prez.endz. gotov sa poslom. Nesto kao mutex.
@@ -285,7 +295,7 @@ void MainWindow::InitOSSurface()
 
 void MainWindow::draw(VkCommandBuffer commandBuffer)
 {
-	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+	vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertexBuffer->getVertices().size()), 1, 0, 0);
 }
 
 /*AKO HOCES DA SE ZLOPATIS I DA NE KORISTIS GLFW, ODKOMENTARISI KOD ISPOD!*/

@@ -13,7 +13,7 @@ public:
 	CommandBuffer(const CommandBuffer&);
 	~CommandBuffer();
 
-	void startCommandBuffer(VkViewport* viewport, bool);
+	void startCommandBuffer(VkViewport*);
 	bool submitQueue(VkDevice, VkQueue, CommandBufferSemaphoreInfo*, CommandBufferSemaphoreInfo*, VkFence*);
 
 	void allocateCommandBuffer();

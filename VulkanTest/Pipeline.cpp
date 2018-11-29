@@ -2,9 +2,11 @@
 #include "Pipeline.h"
 
 
-Pipeline::Pipeline(VkDevice* device, VkRenderPass* renderPass, float width, float height, VkExtent2D extent)
+Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, VkRenderPass* renderPass, 
+					float width, float height, VkExtent2D extent)
 {
-	this->device = *device;
+	this->device = device;
+	this->memprops = memprops;
 	util = &Util::instance();
 
 	auto vertexShaderCode = loadShader("vert.spv");
@@ -12,23 +14,21 @@ Pipeline::Pipeline(VkDevice* device, VkRenderPass* renderPass, float width, floa
 
 	this->createShaderModule(vertexShaderCode, &vertexShader);
 	this->createShaderModule(fragmentShaderCode, &fragmentShader);
-
-	this->setupViewport(width, height, extent);
 	this->createInputAssemblyInformation();
+	this->setupViewport(width, height, extent);
 	this->createMultisamplingInformation();
 	this->createVertexInformation();
 	this->createColorBlending();
 	this->createDynamicState();
 	this->createRasterizer();
+
 	this->createPipelineLayout();
 
 	pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	pipelineCreateInfo.stageCount = 2;
-	pipelineCreateInfo.pStages = shaderCreationInfo.data();
 	pipelineCreateInfo.pVertexInputState = &this->vertexInputCreateInfo;
-	pipelineCreateInfo.pInputAssemblyState = &this->inputAssemblyCreateInfo;
+	pipelineCreateInfo.pStages = shaderCreationInfo.data();
 	pipelineCreateInfo.pMultisampleState = &this->multisampleCreateInfo;
-	//pipelineCreateInfo.pDynamicState = &this->dynamicStateCreateInfo;
 	pipelineCreateInfo.pDynamicState = nullptr;
 	pipelineCreateInfo.pColorBlendState = &this->colorBlendCreateInfo;
 	pipelineCreateInfo.pRasterizationState = &this->rasterCreateInfo;
@@ -37,10 +37,10 @@ Pipeline::Pipeline(VkDevice* device, VkRenderPass* renderPass, float width, floa
 	pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 	pipelineCreateInfo.basePipelineIndex = -1;
 	pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
+	pipelineCreateInfo.pInputAssemblyState = &this->inputAssemblyCreateInfo;
 
-	util->ErrorCheck(vkCreateGraphicsPipelines(*device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline));
+	util->ErrorCheck(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline));
 }
-
 
 Pipeline::~Pipeline()
 {
@@ -98,9 +98,14 @@ void Pipeline::setupViewport(float width, float height, VkExtent2D extent) {
 	viewportCreated = true;
 }
 
-void Pipeline::bindPipeline(VkCommandBuffer commandBuffer)
+void Pipeline::bindPipeline(VkCommandBuffer commandBuffer, VertexBuffer* vertexBuffer)
 {
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+	VkBuffer vertexBuffers[] = { vertexBuffer->getBuffer() };
+	VkDeviceSize offsets[] = { 0 };
+
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 }
 
 
@@ -133,11 +138,15 @@ void Pipeline::createShaderModule(const std::vector<char> code, VkShaderModule* 
 }
 
 void Pipeline::createVertexInformation() {
+	bindingDescription = Vertex::getBindingDescription();
+	auto attributes = Vertex::getAttributeDescriptions();
+	attributeDescription.insert(attributeDescription.begin(), attributes.begin(), attributes.end());
+
 	vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;			//Posto hardkodujemo podatke o tackama, ova polja su nullptr. Pogledaj svesku i sajt.
-	vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
-	vertexInputCreateInfo.pVertexBindingDescriptions = nullptr;
-	vertexInputCreateInfo.vertexBindingDescriptionCount = 0;
+	vertexInputCreateInfo.pVertexAttributeDescriptions = attributeDescription.data();			//Vise ne hardkodujemo podatke o tackama. Dobijamo ih iz sejdera. --->Deprecated: Posto hardkodujemo podatke o tackama, ova polja su nullptr. Pogledaj svesku i sajt.
+	vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.size());
+	vertexInputCreateInfo.pVertexBindingDescriptions = &bindingDescription;
+	vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
 }
 
 void Pipeline::createInputAssemblyInformation() {
