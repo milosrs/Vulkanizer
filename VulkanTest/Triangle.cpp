@@ -28,13 +28,14 @@ void Triangle::render(VkViewport* viewport) {
 		util->printFPS();
 		window->beginRender(imageAcquiredSemaphore);
 
-		cmdBuffer->allocateCommandBuffer();
-		cmdBuffer->startCommandBuffer(window->getPipelinePTR()->getViewportPTR());
-		recordFrameBuffer(cmdBuffer);
-		cmdBuffer->endCommandBuffer();
-		
-		isSubmitted = cmdBuffer->submitQueue(renderer->getDevice(), renderer->getQueueIndices()->getQueue(),
-			&imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
+		for (CommandBuffer* cmdBuf : window->getCommandBuffers()) {
+			if (cmdBuffer == cmdBuf) {
+				recordFrameBuffer(cmdBuf, window);
+				cmdBuffer->endCommandBuffer();
+				isSubmitted = cmdBuffer->submitQueue(renderer->getDevice(), renderer->getQueueIndices()->getQueue(),
+														&imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
+			}
+		}
 
 		if (!isSubmitted) {
 			window->recreateSwapchain();
@@ -51,7 +52,7 @@ void Triangle::render(VkViewport* viewport) {
 	vkDeviceWaitIdle(renderer->getDevice());
 }
 
-void Triangle::recordFrameBuffer(CommandBuffer * cmdBuffer)
+void Triangle::recordFrameBuffer(CommandBuffer * cmdBuffer, MainWindow * window)
 {
 	VkCommandBuffer buffer = cmdBuffer->getCommandBuffer();
 	VkRect2D renderArea{};
@@ -77,12 +78,3 @@ void Triangle::recordFrameBuffer(CommandBuffer * cmdBuffer)
 
 	window->getRenderPass()->endRenderPass(buffer);
 }
-
-/*for (CommandBuffer* cmdBuf : window->getCommandBuffers()) {
-			if (cmdBuffer == cmdBuf) {
-				recordFrameBuffer(cmdBuf, window);			
-				cmdBuffer->endCommandBuffer();
-				isSubmitted = cmdBuffer->submitQueue(renderer->getDevice(), renderer->getQueueIndices()->getQueue(),
-														&imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
-			}
-		}*/

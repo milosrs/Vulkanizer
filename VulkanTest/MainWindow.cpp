@@ -71,7 +71,21 @@ void MainWindow::createData()
 	
 	for (size_t i = 0; i < frameBuffer->getFrameBuffers().size(); i++) {
 		cmdBuffers.push_back(new CommandBuffer(cmdPool->getCommandPool(), renderer->getDevice()));
+		cmdBuffers[i]->allocateCommandBuffer();
 	}
+}
+
+
+void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices)
+{
+	this->vertexBuffer = std::make_unique<VertexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties());
+	this->vertexBuffer->initVertexBuffer(vertices);
+	this->vertexBuffer->fillBuffer();
+}
+
+void MainWindow::bindPipeline(VkCommandBuffer cmdBuffer)
+{
+	this->pipeline->bindPipeline(cmdBuffer, this->vertexBuffer.get());
 }
 
 

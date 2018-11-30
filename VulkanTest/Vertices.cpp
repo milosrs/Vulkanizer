@@ -4,7 +4,7 @@
 
 Vertices::Vertices()
 {
-	vertices = { {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}}, {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}}, {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}} };
+	vertices = { {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}}, {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}}, {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}} };
 }
 
 Vertices::Vertices(Vertices const & vertices)
