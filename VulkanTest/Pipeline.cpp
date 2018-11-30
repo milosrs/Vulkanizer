@@ -98,14 +98,19 @@ void Pipeline::setupViewport(float width, float height, VkExtent2D extent) {
 	viewportCreated = true;
 }
 
-void Pipeline::bindPipeline(VkCommandBuffer commandBuffer, VertexBuffer* vertexBuffer)
+void Pipeline::bindPipeline(VkCommandBuffer commandBuffer, VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer)
 {
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-	VkBuffer vertexBuffers[] = { vertexBuffer->getBuffer() };
-	VkDeviceSize offsets[] = { 0 };
+	if (vertexBuffer != nullptr) {
+		VkBuffer vertexBuffers[] = { vertexBuffer->getBuffer() };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+	}
 
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+	if (indexBuffer != nullptr) {
+		vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT16);
+	}
 }
 
 

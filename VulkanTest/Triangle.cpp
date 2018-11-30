@@ -5,6 +5,13 @@
 Triangle::Triangle(MainWindow* window, Renderer* renderer) : Scene(window, renderer)
 {
 	this->vertices = std::make_shared<Vertices>();
+	vertices->setVertices({
+		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+		});
+	vertices->setIndices({ 0, 1, 2, 2, 3, 0 });
 }
 
 void Triangle::render(VkViewport* viewport) {
@@ -29,11 +36,13 @@ void Triangle::render(VkViewport* viewport) {
 		window->beginRender(imageAcquiredSemaphore);
 
 		for (CommandBuffer* cmdBuf : window->getCommandBuffers()) {
-			if (cmdBuffer == cmdBuf) {
-				recordFrameBuffer(cmdBuf, window);
+			if (cmdBuf->getType() == CommandBufferType::GRAPHICS && cmdBuf == cmdBuffer) {
+				cmdBuf->allocateCommandBuffer();
+				cmdBuf->startCommandBuffer(window->getPipelinePTR()->getViewportPTR());
+				recordFrameBuffer(cmdBuf);
 				cmdBuffer->endCommandBuffer();
 				isSubmitted = cmdBuffer->submitQueue(renderer->getDevice(), renderer->getQueueIndices()->getQueue(),
-														&imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
+					&imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
 			}
 		}
 
@@ -52,7 +61,7 @@ void Triangle::render(VkViewport* viewport) {
 	vkDeviceWaitIdle(renderer->getDevice());
 }
 
-void Triangle::recordFrameBuffer(CommandBuffer * cmdBuffer, MainWindow * window)
+void Triangle::recordFrameBuffer(CommandBuffer * cmdBuffer)
 {
 	VkCommandBuffer buffer = cmdBuffer->getCommandBuffer();
 	VkRect2D renderArea{};
@@ -60,7 +69,7 @@ void Triangle::recordFrameBuffer(CommandBuffer * cmdBuffer, MainWindow * window)
 	renderArea.offset.y = 0;
 	renderArea.extent = window->getSurfaceSize();
 
-	VkClearValue clearValues = { 0.0f, 0.0f, 0.0f, 1.0f };
+	VkClearValue clearValues = { 0.2f, 0.1f, 0.6f, 1.0f };
 
 	//Napravimo renderPassBeginInfo (ovo u klasu staviti)
 	VkRenderPassBeginInfo renderPassBeginInfo{};
@@ -74,7 +83,7 @@ void Triangle::recordFrameBuffer(CommandBuffer * cmdBuffer, MainWindow * window)
 	window->getRenderPass()->beginRenderPass(buffer, &renderPassBeginInfo);
 
 	window->bindPipeline(buffer);
-	window->draw(buffer);
+	window->draw(buffer, true);
 
 	window->getRenderPass()->endRenderPass(buffer);
 }

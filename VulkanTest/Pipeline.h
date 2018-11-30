@@ -7,6 +7,7 @@
 #include "Util.h"
 #include "Vertices.h"
 #include "VertexBuffer.h"
+#include "IndexBuffer.h"
 #include "Renderer.h"
 
 class Pipeline
@@ -18,7 +19,7 @@ public:
 	void createPipelineLayout(); 
 	void setupViewport(float width, float height, VkExtent2D extent);
 
-	void bindPipeline(VkCommandBuffer, VertexBuffer*);
+	void bindPipeline(VkCommandBuffer, VertexBuffer* = nullptr, IndexBuffer* = nullptr);
 
 	VkViewport getViewport();
 	VkViewport* getViewportPTR();

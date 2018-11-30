@@ -22,6 +22,12 @@
     <Filter Include="Renderings Source">
       <UniqueIdentifier>{8dba0a55-b737-46ee-8d60-f08aeaf71544}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Buffers Source">
+      <UniqueIdentifier>{fb9478b3-d5e1-4f0f-9fae-57bb68ee2397}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Buffers Headers">
+      <UniqueIdentifier>{173f2e1f-8769-49d6-954f-5d2f895ce5e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -81,8 +87,17 @@
     <ClInclude Include="Vertices.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Buffer.h">
+      <Filter>Buffers Headers</Filter>
+    </ClInclude>
     <ClInclude Include="VertexBuffer.h">
-      <Filter>Header Files</Filter>
+      <Filter>Buffers Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="StagingBuffer.h">
+      <Filter>Buffers Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="IndexBuffer.h">
+      <Filter>Buffers Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -137,8 +152,14 @@
     <ClCompile Include="Vertices.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Buffer.cpp">
+      <Filter>Buffers Source</Filter>
+    </ClCompile>
     <ClCompile Include="VertexBuffer.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Buffers Source</Filter>
+    </ClCompile>
+    <ClCompile Include="IndexBuffer.cpp">
+      <Filter>Buffers Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -17,6 +17,8 @@ public:
 
 	uint32_t getGraphicsFamilyIndex();
 	uint32_t getPresentationFamilyIndex();
+	uint32_t getTransferFamilyIndex();
+
 	VkQueue getQueue();
 	VkQueue* getQueuePTR();
 	std::vector<VkQueue> getQueues();
@@ -26,10 +28,11 @@ private:
 	
 	std::optional<uint32_t> graphicsFamilyIndex;
 	std::optional<uint32_t> presentFamily;
+	std::optional<uint32_t> transferFamily;
 
 	uint32_t familyCount = 0;
 
-	std::vector<VkQueue> queues;						//[0] render, [1] presentation
+	std::vector<VkQueue> queues;						//[0] render, [1] presentation, [2] transfer
 	std::vector<VkQueueFamilyProperties> queueFamilyProperties;
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 

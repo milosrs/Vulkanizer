@@ -40,11 +40,16 @@ class Vertices
 {
 private:
 	std::vector<Vertex> vertices;
+	std::vector<uint16_t> indices;
 public:
 	Vertices();
+	Vertices(std::vector<Vertex>);
 	Vertices(Vertices const& vertices);
 	~Vertices();
 
 	std::vector<Vertex> getVertices();
+	std::vector<uint16_t> getIndices();
+	void setVertices(std::vector<Vertex> vertices);
+	void setIndices(std::vector<uint16_t> indices);
 };
 

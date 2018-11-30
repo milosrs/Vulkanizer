@@ -66,6 +66,17 @@ uint32_t QueueFamilyIndices::getPresentationFamilyIndex()
 	return ret;
 }
 
+uint32_t QueueFamilyIndices::getTransferFamilyIndex()
+{
+	uint32_t ret = NULL;
+
+	if (this->transferFamily.has_value()) {
+		ret = transferFamily.value();
+	}
+
+	return ret;
+}
+
 VkQueue QueueFamilyIndices::getQueue()
 {
 	return this->queues[0];

@@ -7,7 +7,7 @@ class CommandPool
 {
 public:
 	CommandPool();
-	CommandPool(uint32_t graphicsFamilyIndex, VkDevice* device);
+	CommandPool(uint32_t graphicsFamilyIndex, VkDevice* device, VkCommandPoolCreateFlags createFlags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
 	~CommandPool();
 
 	VkCommandPool getCommandPool();

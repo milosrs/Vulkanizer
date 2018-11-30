@@ -15,6 +15,10 @@
 #include "CommandPool.h"
 #include "CommandBuffer.h"
 #include "Vertices.h"
+#include "Buffer.h"
+#include "VertexBuffer.h"
+#include "StagingBuffer.h"
+#include "IndexBuffer.h"
 #include <vector>
 #include <string>
 #include <assert.h>
@@ -33,12 +37,15 @@ public:
 
 	void continueInitialization(Renderer*);
 
-	///Koji semafor cekamo da signalizira dobavljenu sliku, viewport koji treba postaviti. NULL ako ne treba viewport.
+	/*Koji semafor cekamo da signalizira dobavljenu sliku, viewport koji treba postaviti. NULL ako ne treba viewport.*/
 	void beginRender(VkSemaphore);
-	void endRender(std::vector<VkSemaphore>);
 
+	void endRender(std::vector<VkSemaphore>);
 	void recreateSwapchain();
-	void draw(VkCommandBuffer);
+
+	/*CommandBuffer: Recording command buffer
+	  bool: Is this drawing using index buffer*/
+	void draw(VkCommandBuffer, bool);
 	void setupPipeline(std::shared_ptr<Vertices>);
 	void bindPipeline(VkCommandBuffer);
 
@@ -75,7 +82,11 @@ private:
 	std::unique_ptr<FrameBuffer> frameBuffer = nullptr;
 	std::unique_ptr<Pipeline> pipeline = nullptr;
 	std::unique_ptr<CommandPool> cmdPool = nullptr;
+	std::unique_ptr<CommandPool> transferCommandPool = nullptr;
+
+	std::unique_ptr<IndexBuffer> indexBuffer = nullptr;
 	std::unique_ptr<VertexBuffer> vertexBuffer = nullptr;
+	
 	std::vector<CommandBuffer*> cmdBuffers;
 
 	Renderer* renderer = nullptr;

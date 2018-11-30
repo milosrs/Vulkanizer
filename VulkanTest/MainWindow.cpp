@@ -20,6 +20,8 @@ MainWindow::MainWindow(const MainWindow &)
 void MainWindow::continueInitialization(Renderer* renderer) {
 	this->renderer = renderer;
 	this->cmdPool = std::make_unique<CommandPool>(renderer->getQueueIndices()->getGraphicsFamilyIndex(), renderer->getDevicePTR());
+	this->transferCommandPool = std::make_unique<CommandPool>(renderer->getQueueIndices()->getGraphicsFamilyIndex(), renderer->getDevicePTR(),
+																VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
 
 	createData();
 }
@@ -70,35 +72,45 @@ void MainWindow::createData()
 												renderPass->getRenderPassPTR(), width, height, scissorsExtent);
 	
 	for (size_t i = 0; i < frameBuffer->getFrameBuffers().size(); i++) {
-		cmdBuffers.push_back(new CommandBuffer(cmdPool->getCommandPool(), renderer->getDevice()));
-		cmdBuffers[i]->allocateCommandBuffer();
+		cmdBuffers.push_back(new CommandBuffer(cmdPool->getCommandPool(), renderer->getDevice(), 
+												VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, CommandBufferType::GRAPHICS));
 	}
+
+	cmdBuffers.push_back(new CommandBuffer(transferCommandPool->getCommandPool(), renderer->getDevice(),
+											VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, CommandBufferType::TRANSFER));
 }
 
 
 void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices)
 {
-	this->vertexBuffer = std::make_unique<VertexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties());
-	this->vertexBuffer->initVertexBuffer(vertices);
-	this->vertexBuffer->fillBuffer();
+	CommandBuffer* transferBuffer = this->cmdBuffers[cmdBuffers.size() - 1];
+	this->indexBuffer = std::make_unique<IndexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
+														vertices->getIndices());
+	this->vertexBuffer = std::make_unique<VertexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
+														vertices);
+	/*Pravimo Vertex Staging buffer*/
+	StagingBuffer<Vertex>* stagingBufferVertex = new StagingBuffer<Vertex>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
+															vertexBuffer->getSize());
+	stagingBufferVertex->fillBuffer(vertexBuffer->getVertices());
+	transferBuffer->copyBuffer(stagingBufferVertex->getBuffer(), vertexBuffer->getBuffer(),
+		vertexBuffer->getSize(), renderer->getQueueIndices()->getQueue());
+
+	stagingBufferVertex->~StagingBuffer();
+
+	/*Pravimo Index Staging buffer*/
+	StagingBuffer<uint16_t>* stagingBufferIndices = new StagingBuffer<uint16_t>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
+											indexBuffer->getSize());
+	stagingBufferIndices->fillBuffer(indexBuffer->getIndices());
+	transferBuffer = new CommandBuffer(transferCommandPool->getCommandPool(), renderer->getDevice(),
+										VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, CommandBufferType::TRANSFER);
+	transferBuffer->copyBuffer(stagingBufferIndices->getBuffer(), indexBuffer->getBuffer(),
+		indexBuffer->getSize(), renderer->getQueueIndices()->getQueue());
+	stagingBufferIndices->~StagingBuffer();
 }
 
 void MainWindow::bindPipeline(VkCommandBuffer cmdBuffer)
 {
-	this->pipeline->bindPipeline(cmdBuffer, this->vertexBuffer.get());
-}
-
-
-void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices)
-{
-	this->vertexBuffer = std::make_unique<VertexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties());
-	this->vertexBuffer->initVertexBuffer(vertices);
-	this->vertexBuffer->fillBuffer();
-}
-
-void MainWindow::bindPipeline(VkCommandBuffer cmdBuffer)
-{
-	this->pipeline->bindPipeline(cmdBuffer, this->vertexBuffer.get());
+	this->pipeline->bindPipeline(cmdBuffer, this->vertexBuffer.get(), this->indexBuffer.get());
 }
 
 void MainWindow::InitSurface() {
@@ -302,9 +314,14 @@ void MainWindow::InitOSSurface()
 }
 
 
-void MainWindow::draw(VkCommandBuffer commandBuffer)
+void MainWindow::draw(VkCommandBuffer commandBuffer, bool isIndexed)
 {
-	vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertexBuffer->getVertices().size()), 1, 0, 0);
+	if (!isIndexed) {
+		vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertexBuffer->getVertices().size()), 1, 0, 0);
+	}
+	else {
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(vertexBuffer->getIndices().size()), 1, 0, 0, 0);
+	}
 }
 
 /*AKO HOCES DA SE ZLOPATIS I DA NE KORISTIS GLFW, ODKOMENTARISI KOD ISPOD!*/
