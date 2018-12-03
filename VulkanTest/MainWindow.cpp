@@ -29,7 +29,6 @@ void MainWindow::continueInitialization(Renderer* renderer) {
 MainWindow::~MainWindow()
 {
 	destroySwapchainDependencies();
-
 	DestroySurface();
 	renderer->_DeinitInstance();
 	DeinitOSWindow();
@@ -81,31 +80,48 @@ void MainWindow::createData()
 }
 
 
-void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices)
+void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
 {
 	CommandBuffer* transferBuffer = this->cmdBuffers[cmdBuffers.size() - 1];
+
 	this->indexBuffer = std::make_unique<IndexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
 														vertices->getIndices());
+
 	this->vertexBuffer = std::make_unique<VertexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
 														vertices);
-	/*Pravimo Vertex Staging buffer*/
-	StagingBuffer<Vertex>* stagingBufferVertex = new StagingBuffer<Vertex>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
-															vertexBuffer->getSize());
-	stagingBufferVertex->fillBuffer(vertexBuffer->getVertices());
-	transferBuffer->copyBuffer(stagingBufferVertex->getBuffer(), vertexBuffer->getBuffer(),
-		vertexBuffer->getSize(), renderer->getQueueIndices()->getQueue());
 
-	stagingBufferVertex->~StagingBuffer();
+	if (uniform) {
+		/*Pravimo Vertex Staging buffer*/
+		StagingBuffer<Vertex>* stagingBufferVertex = new StagingBuffer<Vertex>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
+			vertexBuffer->getSize());
 
-	/*Pravimo Index Staging buffer*/
-	StagingBuffer<uint16_t>* stagingBufferIndices = new StagingBuffer<uint16_t>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
-											indexBuffer->getSize());
-	stagingBufferIndices->fillBuffer(indexBuffer->getIndices());
-	transferBuffer = new CommandBuffer(transferCommandPool->getCommandPool(), renderer->getDevice(),
-										VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, CommandBufferType::TRANSFER);
-	transferBuffer->copyBuffer(stagingBufferIndices->getBuffer(), indexBuffer->getBuffer(),
-		indexBuffer->getSize(), renderer->getQueueIndices()->getQueue());
-	stagingBufferIndices->~StagingBuffer();
+		stagingBufferVertex->fillBuffer(vertexBuffer->getVertices());
+
+		transferBuffer->copyBuffer(stagingBufferVertex->getBuffer(), vertexBuffer->getBuffer(),
+			vertexBuffer->getSize(), renderer->getQueueIndices()->getQueue());
+
+		stagingBufferVertex->~StagingBuffer();
+
+		/*Pravimo Index Staging buffer*/
+		StagingBuffer<uint16_t>* stagingBufferIndices = new StagingBuffer<uint16_t>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
+			indexBuffer->getSize());
+
+		stagingBufferIndices->fillBuffer(indexBuffer->getIndices());
+
+		transferBuffer = new CommandBuffer(transferCommandPool->getCommandPool(), renderer->getDevice(),
+			VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, CommandBufferType::TRANSFER);
+
+		transferBuffer->copyBuffer(stagingBufferIndices->getBuffer(), indexBuffer->getBuffer(),
+			indexBuffer->getSize(), renderer->getQueueIndices()->getQueue());
+
+		stagingBufferIndices->~StagingBuffer();
+	}
+	else {
+		for (auto i = 0; i < swapchain->getImageViews().size(); ++i) {
+			uniformBuffers.push_back(new UniformBuffer(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties()));
+		}
+	}
+	
 }
 
 void MainWindow::bindPipeline(VkCommandBuffer cmdBuffer)
@@ -242,6 +258,11 @@ Pipeline * MainWindow::getPipelinePTR()
 std::vector< CommandBuffer*> MainWindow::getCommandBuffers()
 {
 	return this->cmdBuffers;
+}
+
+std::vector<UniformBuffer*> MainWindow::getUniformBuffers()
+{
+	return this->uniformBuffers;
 }
 
 CommandPool * MainWindow::getCommandPoolPTR()

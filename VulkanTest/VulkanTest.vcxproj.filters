@@ -99,6 +99,9 @@
     <ClInclude Include="IndexBuffer.h">
       <Filter>Buffers Headers</Filter>
     </ClInclude>
+    <ClInclude Include="UniformBuffer.h">
+      <Filter>Buffers Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -159,6 +162,9 @@
       <Filter>Buffers Source</Filter>
     </ClCompile>
     <ClCompile Include="IndexBuffer.cpp">
+      <Filter>Buffers Source</Filter>
+    </ClCompile>
+    <ClCompile Include="UniformBuffer.cpp">
       <Filter>Buffers Source</Filter>
     </ClCompile>
   </ItemGroup>

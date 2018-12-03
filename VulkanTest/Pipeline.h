@@ -29,6 +29,7 @@ private:
 	std::vector<char> loadShader(const std::string filename);
 	void createShaderModule(const std::vector<char> code, VkShaderModule* shaderHandle);			//Oovde ide kod iz shadera, ali ne .frag i .vert nego SPIR assembly kod.
 
+	void createDescriptorLayout();
 	void createDynamicState();
 	void createColorBlending();
 	void createRasterizer();
@@ -36,14 +37,20 @@ private:
 	void createInputAssemblyInformation();
 	void createVertexInformation();
 
+	/*Shaders*/
 	std::array<VkPipelineShaderStageCreateInfo, 2> shaderCreationInfo;
-
 	VkShaderModule vertexShader = VK_NULL_HANDLE;
 	VkShaderModule fragmentShader = VK_NULL_HANDLE;
 	VkPhysicalDeviceMemoryProperties memprops;
 
+	/*Vertex Buffer Binding*/
 	VkVertexInputBindingDescription bindingDescription;
 	std::vector<VkVertexInputAttributeDescription> attributeDescription;
+
+	/*Uniform Buffer Object binding*/
+	VkDescriptorSetLayoutBinding layoutBinding = {};
+	VkDescriptorSetLayout descriptorLayout = {};
+	VkDescriptorSetLayoutCreateInfo descriptorCreateInfo = {};
 
 	VkViewport viewport = {};
 	VkRect2D scissors = {};

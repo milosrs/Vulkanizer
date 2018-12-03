@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Triangle.h"
-
+#define USES_UNIFORM_BUFFER true
 
 Triangle::Triangle(MainWindow* window, Renderer* renderer) : Scene(window, renderer)
 {
@@ -17,7 +17,7 @@ Triangle::Triangle(MainWindow* window, Renderer* renderer) : Scene(window, rende
 void Triangle::render(VkViewport* viewport) {
 	VkPipelineStageFlags stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-	window->setupPipeline(vertices);
+	window->setupPipeline(vertices, USES_UNIFORM_BUFFER);
 
 	while (!glfwWindowShouldClose(window->getWindowPTR())) {
 		vkWaitForFences(renderer->getDevice(), 1, &this->fences[frameCount], VK_TRUE, std::numeric_limits<uint64_t>::max());
@@ -35,12 +35,21 @@ void Triangle::render(VkViewport* viewport) {
 		util->printFPS();
 		window->beginRender(imageAcquiredSemaphore);
 
+		uint32_t activeImageIndex = window->getSwapchain()->getActiveImageSwapchain();
+		float aspect = window->getSurfaceCapatibilities().currentExtent.width / 
+			(float)window->getSurfaceCapatibilities().currentExtent.height;
+		float nearPlane = 0.1f;
+		float farPlane = 10.0f;
+
 		for (CommandBuffer* cmdBuf : window->getCommandBuffers()) {
 			if (cmdBuf->getType() == CommandBufferType::GRAPHICS && cmdBuf == cmdBuffer) {
 				cmdBuf->allocateCommandBuffer();
 				cmdBuf->startCommandBuffer(window->getPipelinePTR()->getViewportPTR());
 				recordFrameBuffer(cmdBuf);
 				cmdBuffer->endCommandBuffer();
+
+				window->getUniformBuffers()[activeImageIndex]->update(activeImageIndex, aspect, nearPlane, farPlane);
+
 				isSubmitted = cmdBuffer->submitQueue(renderer->getDevice(), renderer->getQueueIndices()->getQueue(),
 					&imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
 			}

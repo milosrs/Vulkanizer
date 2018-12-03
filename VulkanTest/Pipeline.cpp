@@ -22,6 +22,7 @@ Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, V
 	this->createDynamicState();
 	this->createRasterizer();
 
+	this->createDescriptorLayout();
 	this->createPipelineLayout();
 
 	pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -46,6 +47,7 @@ Pipeline::~Pipeline()
 {
 	vkDestroyShaderModule(this->device, this->vertexShader, nullptr);
 	vkDestroyShaderModule(this->device, this->fragmentShader, nullptr);
+	vkDestroyDescriptorSetLayout(this->device, descriptorLayout, nullptr);
 	vkDestroyPipelineLayout(this->device, this->pipelineLayout, nullptr);
 	vkDestroyPipeline(this->device, this->pipeline, nullptr);
 }
@@ -65,8 +67,8 @@ void Pipeline::createPipelineLayout() {
 	this->shaderCreationInfo[1] = fsCreateInfo;
 
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 0; // Optional
-	pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
+	pipelineLayoutInfo.setLayoutCount = 1;											//Koliko descriptor layouta imamo
+	pipelineLayoutInfo.pSetLayouts = &descriptorLayout;								//Koji su to layouti
 	pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
 	pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
@@ -76,6 +78,20 @@ void Pipeline::createPipelineLayout() {
 	if (result != VK_SUCCESS) {
 		exit(-1);
 	}
+}
+
+void Pipeline::createDescriptorLayout() {
+	layoutBinding.binding = 0;											//u sejderu location(binding = 0)
+	layoutBinding.descriptorCount = 1;
+	layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;	//Koristimo uniform buffer objekat
+	layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;				//Referenciramo se na vertex shader
+	layoutBinding.pImmutableSamplers = nullptr;
+
+	descriptorCreateInfo.bindingCount = 1;
+	descriptorCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	descriptorCreateInfo.pBindings = &layoutBinding;
+
+	util->ErrorCheck(vkCreateDescriptorSetLayout(device, &descriptorCreateInfo, nullptr, &descriptorLayout));
 }
 
 void Pipeline::setupViewport(float width, float height, VkExtent2D extent) {

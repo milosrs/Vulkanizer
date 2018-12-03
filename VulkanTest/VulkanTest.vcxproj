@@ -187,6 +187,7 @@
     <ClInclude Include="StagingBuffer.h" />
     <ClInclude Include="Swapchain.h" />
     <ClInclude Include="Triangle.h" />
+    <ClInclude Include="UniformBuffer.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="VertexBuffer.h" />
@@ -214,6 +215,7 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Swapchain.cpp" />
     <ClCompile Include="Triangle.cpp" />
+    <ClCompile Include="UniformBuffer.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />

@@ -19,6 +19,7 @@
 #include "VertexBuffer.h"
 #include "StagingBuffer.h"
 #include "IndexBuffer.h"
+#include "UniformBuffer.h"
 #include <vector>
 #include <string>
 #include <assert.h>
@@ -46,7 +47,10 @@ public:
 	/*CommandBuffer: Recording command buffer
 	  bool: Is this drawing using index buffer*/
 	void draw(VkCommandBuffer, bool);
-	void setupPipeline(std::shared_ptr<Vertices>);
+
+	/*Vertices: collection of vertices and indices
+	  Uniform: is this pipeline using uniform buffers*/
+	void setupPipeline(std::shared_ptr<Vertices>, bool);
 	void bindPipeline(VkCommandBuffer);
 
 	Renderer* getRenderer();
@@ -56,6 +60,7 @@ public:
 	GLFWwindow* getWindowPTR();
 	Pipeline* getPipelinePTR();
 	std::vector< CommandBuffer*> getCommandBuffers();
+	std::vector<UniformBuffer*> getUniformBuffers();
 	CommandPool* getCommandPoolPTR();
 
 	VkSurfaceKHR getSurface();
@@ -88,6 +93,7 @@ private:
 	std::unique_ptr<VertexBuffer> vertexBuffer = nullptr;
 	
 	std::vector<CommandBuffer*> cmdBuffers;
+	std::vector<UniformBuffer*> uniformBuffers;
 
 	Renderer* renderer = nullptr;
 	GLFWwindow* window = nullptr;
