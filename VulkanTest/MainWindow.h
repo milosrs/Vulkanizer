@@ -20,6 +20,7 @@
 #include "StagingBuffer.h"
 #include "IndexBuffer.h"
 #include "UniformBuffer.h"
+#include "DescriptorHandler.h"
 #include <vector>
 #include <string>
 #include <assert.h>
@@ -57,6 +58,7 @@ public:
 	RenderPass* getRenderPass();
 	FrameBuffer* getActiveFrameBuffer();
 	Swapchain* getSwapchain();
+	DescriptorHandler* getDescriptorHandler();
 	GLFWwindow* getWindowPTR();
 	Pipeline* getPipelinePTR();
 	std::vector< CommandBuffer*> getCommandBuffers();
@@ -88,6 +90,7 @@ private:
 	std::unique_ptr<Pipeline> pipeline = nullptr;
 	std::unique_ptr<CommandPool> cmdPool = nullptr;
 	std::unique_ptr<CommandPool> transferCommandPool = nullptr;
+	std::unique_ptr<DescriptorHandler> descriptorHandler = nullptr;
 
 	std::unique_ptr<IndexBuffer> indexBuffer = nullptr;
 	std::unique_ptr<VertexBuffer> vertexBuffer = nullptr;

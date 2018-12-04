@@ -70,6 +70,9 @@ void MainWindow::createData()
 	pipeline = std::make_unique<Pipeline>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
 												renderPass->getRenderPassPTR(), width, height, scissorsExtent);
 	
+	descriptorHandler = std::make_unique<DescriptorHandler>(renderer->getDevice(), pipeline->getDescriptorSetLayout(), 
+															swapchain->getImageViews().size());
+
 	for (size_t i = 0; i < frameBuffer->getFrameBuffers().size(); i++) {
 		cmdBuffers.push_back(new CommandBuffer(cmdPool->getCommandPool(), renderer->getDevice(), 
 												VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, CommandBufferType::GRAPHICS));
@@ -120,6 +123,8 @@ void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
 		for (auto i = 0; i < swapchain->getImageViews().size(); ++i) {
 			uniformBuffers.push_back(new UniformBuffer(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties()));
 		}
+
+		descriptorHandler->createDescriptorSets(uniformBuffers);
 	}
 	
 }
@@ -243,6 +248,11 @@ FrameBuffer* MainWindow::getActiveFrameBuffer()
 Swapchain* MainWindow::getSwapchain()
 {
 	return this->swapchain.get();
+}
+
+DescriptorHandler * MainWindow::getDescriptorHandler()
+{
+	return descriptorHandler.get();
 }
 
 GLFWwindow * MainWindow::getWindowPTR()

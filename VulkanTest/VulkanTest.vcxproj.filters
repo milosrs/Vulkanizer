@@ -102,6 +102,9 @@
     <ClInclude Include="UniformBuffer.h">
       <Filter>Buffers Headers</Filter>
     </ClInclude>
+    <ClInclude Include="DescriptorHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -166,6 +169,9 @@
     </ClCompile>
     <ClCompile Include="UniformBuffer.cpp">
       <Filter>Buffers Source</Filter>
+    </ClCompile>
+    <ClCompile Include="DescriptorHandler.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

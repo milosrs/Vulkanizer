@@ -45,6 +45,9 @@ void Triangle::render(VkViewport* viewport) {
 			if (cmdBuf->getType() == CommandBufferType::GRAPHICS && cmdBuf == cmdBuffer) {
 				cmdBuf->allocateCommandBuffer();
 				cmdBuf->startCommandBuffer(window->getPipelinePTR()->getViewportPTR());
+				
+				window->getDescriptorHandler()->updateDescriptorSets();
+
 				recordFrameBuffer(cmdBuf);
 				cmdBuffer->endCommandBuffer();
 
@@ -92,6 +95,7 @@ void Triangle::recordFrameBuffer(CommandBuffer * cmdBuffer)
 	window->getRenderPass()->beginRenderPass(buffer, &renderPassBeginInfo);
 
 	window->bindPipeline(buffer);
+	window->getDescriptorHandler()->bind(cmdBuffer->getCommandBuffer(), window->getPipelinePTR()->getPipelineLayout());
 	window->draw(buffer, true);
 
 	window->getRenderPass()->endRenderPass(buffer);

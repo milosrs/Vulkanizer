@@ -24,6 +24,9 @@ public:
 	VkViewport getViewport();
 	VkViewport* getViewportPTR();
 
+	VkDescriptorSetLayout getDescriptorSetLayout();
+	VkPipelineLayout getPipelineLayout();
+
 	std::array<VkPipelineShaderStageCreateInfo, 2> getShaderCreationInfo();
 private:
 	std::vector<char> loadShader(const std::string filename);

@@ -173,6 +173,7 @@
     <ClInclude Include="CommandBufferSemaphoreInfo.h" />
     <ClInclude Include="CommandPool.h" />
     <ClInclude Include="ColorChanger.h" />
+    <ClInclude Include="DescriptorHandler.h" />
     <ClInclude Include="FrameBuffer.h" />
     <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="MainWindow.h" />
@@ -198,6 +199,7 @@
     <ClCompile Include="CommandBufferSemaphoreInfo.cpp" />
     <ClCompile Include="CommandPool.cpp" />
     <ClCompile Include="ColorChanger.cpp" />
+    <ClCompile Include="DescriptorHandler.cpp" />
     <ClCompile Include="FrameBuffer.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="MainWindow.cpp" />

@@ -194,7 +194,7 @@ void Pipeline::createRasterizer() {
 	rasterCreateInfo.depthBiasEnable = VK_FALSE;
 	rasterCreateInfo.depthBiasSlopeFactor = 0.0f;
 	rasterCreateInfo.depthClampEnable = VK_FALSE;
-	rasterCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterCreateInfo.lineWidth = 1.0f;
 	rasterCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterCreateInfo.rasterizerDiscardEnable = VK_FALSE;
@@ -235,6 +235,16 @@ VkViewport Pipeline::getViewport()
 VkViewport * Pipeline::getViewportPTR()
 {
 	return &this->viewport;
+}
+
+VkDescriptorSetLayout Pipeline::getDescriptorSetLayout()
+{
+	return descriptorLayout;
+}
+
+VkPipelineLayout Pipeline::getPipelineLayout()
+{
+	return pipelineLayout;
 }
 
 std::array<VkPipelineShaderStageCreateInfo, 2> Pipeline::getShaderCreationInfo()
