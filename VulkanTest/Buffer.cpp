@@ -39,6 +39,11 @@ VkBuffer Buffer::getBuffer()
 	return this->buffer;
 }
 
+VkBuffer * Buffer::getBufferPTR()
+{
+	return &this->buffer;
+}
+
 VkDeviceSize Buffer::getSize()
 {
 	return size;

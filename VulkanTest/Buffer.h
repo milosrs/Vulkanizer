@@ -12,6 +12,7 @@ public:
 	void initBuffer(VkBufferUsageFlags, VkDeviceSize, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory);
 
 	VkBuffer getBuffer();
+	VkBuffer* getBufferPTR();
 	VkDeviceSize getSize();
 protected:
 	VkBuffer buffer = VK_NULL_HANDLE;

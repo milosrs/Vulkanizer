@@ -20,7 +20,7 @@ public:
 	void bind(VkCommandBuffer, VkPipelineLayout);
 private:
 
-	VkDescriptorPool pool = VK_NULL_HANDLE;
+	VkDescriptorPool pool;
 	VkDescriptorPoolSize poolSize = {};
 	VkDescriptorPoolCreateInfo poolCreateInfo = {};
 

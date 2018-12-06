@@ -37,37 +37,32 @@ void DescriptorHandler::createDescriptorSets(std::vector<UniformBuffer*> uniform
 	createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	createInfo.pNext = nullptr;
 
+	descriptorSets.resize(uniformBuffers.size());
 	util->ErrorCheck(vkAllocateDescriptorSets(device, &createInfo, descriptorSets.data()));
 
-	for (auto i = 0; i < descriptorCount; ++i) {
-		VkDescriptorBufferInfo bufferInfo{};
-		VkWriteDescriptorSet writeDescriptor{};
+	descriptorUpdaters.resize(descriptorCount);
+	descriptorBufferInfos.resize(descriptorCount);
 
-		bufferInfo.buffer = uniformBuffers[i]->getBuffer();
-		bufferInfo.offset = 0;
-		bufferInfo.range = uniformBuffers[i]->getSize();
+ 	for (auto i = 0; i < descriptorCount; ++i) {
+		descriptorBufferInfos[i].buffer = uniformBuffers[i]->getBuffer();
+		descriptorBufferInfos[i].offset = 0;
+		descriptorBufferInfos[i].range = uniformBuffers[i]->getSize();
 
-		descriptorBufferInfos.push_back(bufferInfo);
-
-		writeDescriptor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		writeDescriptor.dstSet = descriptorSets[i];									//Odredisni deskriptor set
-		writeDescriptor.dstBinding = 0;												//Iz sejdera
-		writeDescriptor.dstArrayElement = 0;										//Prvi index u nizu Deskriptora koji azuriramo. Ne koristimo niz->0
-		writeDescriptor.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;			//Uniform Object Buffer
-		writeDescriptor.descriptorCount = 1;										//Koliko elemenata niza azuriramo
-		writeDescriptor.pBufferInfo = &bufferInfo;
-		writeDescriptor.pImageInfo = nullptr;
-		writeDescriptor.pTexelBufferView = nullptr;
-
-		descriptorUpdaters.push_back(writeDescriptor);
+		descriptorUpdaters[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorUpdaters[i].dstSet = descriptorSets[i];									//Odredisni deskriptor set
+		descriptorUpdaters[i].dstBinding = 0;												//Iz sejdera
+		descriptorUpdaters[i].dstArrayElement = 0;										//Prvi index u nizu Deskriptora koji azuriramo. Ne koristimo niz->0
+		descriptorUpdaters[i].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;			//Uniform Object Buffer
+		descriptorUpdaters[i].descriptorCount = 1;										//Koliko elemenata niza azuriramo
+		descriptorUpdaters[i].pBufferInfo = &descriptorBufferInfos[i];
+		descriptorUpdaters[i].pImageInfo = nullptr;
+		descriptorUpdaters[i].pTexelBufferView = nullptr;
 	}
 }
 
 void DescriptorHandler::updateDescriptorSets()
 {
-	for (auto i = 0; i < descriptorSets.size(); ++i) {
-		vkUpdateDescriptorSets(device, 1, &descriptorUpdaters[i], 0, nullptr);
-	}
+	vkUpdateDescriptorSets(device, 1, descriptorUpdaters.data(), 0, nullptr);
 }
 
 void DescriptorHandler::bind(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout)
