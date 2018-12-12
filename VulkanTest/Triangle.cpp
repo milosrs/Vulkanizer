@@ -20,43 +20,32 @@ void Triangle::render(VkViewport* viewport) {
 	window->setupPipeline(vertices, USES_UNIFORM_BUFFER);
 
 	while (!glfwWindowShouldClose(window->getWindowPTR())) {
+		glfwPollEvents();
 		vkWaitForFences(renderer->getDevice(), 1, &this->fences[frameCount], VK_TRUE, std::numeric_limits<uint64_t>::max());
 		vkResetFences(renderer->getDevice(), 1, &this->fences[frameCount]);
 
 		VkSemaphore imageAcquiredSemaphore = this->imageAvaiableSemaphores[frameCount];
 		VkSemaphore renderSemaphore = this->renderFinishedSemaphores[frameCount];
 		VkFence fence = this->fences[frameCount];
-		CommandBuffer* cmdBuffer = window->getCommandBuffers()[window->getSwapchain()->getActiveImageSwapchain()];
-		CommandBufferSemaphoreInfo renderSemaphoreInfo(true, renderSemaphore, &stage);
-		CommandBufferSemaphoreInfo imageSemaphoreInfo(true, imageAcquiredSemaphore, &stage);
 		bool isSubmitted = false;
-
-		glfwPollEvents();
-		util->printFPS();
-		window->beginRender(imageAcquiredSemaphore);
-
-		uint32_t activeImageIndex = window->getSwapchain()->getActiveImageSwapchain();
-		float aspect = window->getSurfaceCapatibilities().currentExtent.width / 
-			(float)window->getSurfaceCapatibilities().currentExtent.height;
+		
+		float aspect = window->getSurfaceCapatibilities().currentExtent.width / (float)window->getSurfaceCapatibilities().currentExtent.height;
 		float nearPlane = 0.1f;
 		float farPlane = 10.0f;
 
-		for (CommandBuffer* cmdBuf : window->getCommandBuffers()) {
-			if (cmdBuf->getType() == CommandBufferType::GRAPHICS && cmdBuf == cmdBuffer) {
-				cmdBuf->allocateCommandBuffer();
-				cmdBuf->startCommandBuffer(window->getPipelinePTR()->getViewportPTR());
+		window->beginRender(imageAcquiredSemaphore);
+
+		uint32_t activeImageIndex = window->getSwapchain()->getActiveImageSwapchain();
+		CommandBufferSemaphoreInfo renderSemaphoreInfo(true, renderSemaphore, &stage);
+		CommandBufferSemaphoreInfo imageSemaphoreInfo(true, imageAcquiredSemaphore, &stage);
+
 				
-				window->getDescriptorHandler()->updateDescriptorSets();
+		window->getDescriptorHandler()->updateDescriptorSets();
+		window->getUniformBuffers()[activeImageIndex]->update(aspect, nearPlane, farPlane);
 
-				recordFrameBuffer(cmdBuf);
-				cmdBuffer->endCommandBuffer();
 
-				window->getUniformBuffers()[activeImageIndex]->update(activeImageIndex, aspect, nearPlane, farPlane);
-
-				isSubmitted = cmdBuffer->submitQueue(renderer->getDevice(), renderer->getQueueIndices()->getQueue(),
-					&imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
-			}
-		}
+		isSubmitted = window->getCommandHandler()->submitQueue(window->getSwapchain()->getActiveImageSwapchain(),
+			renderer->getQueueIndices()->getQueue(), &imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
 
 		if (!isSubmitted) {
 			window->recreateSwapchain();
@@ -73,30 +62,7 @@ void Triangle::render(VkViewport* viewport) {
 	vkDeviceWaitIdle(renderer->getDevice());
 }
 
-void Triangle::recordFrameBuffer(CommandBuffer * cmdBuffer)
+void Triangle::recordFrameBuffer()
 {
-	VkCommandBuffer buffer = cmdBuffer->getCommandBuffer();
-	VkRect2D renderArea{};
-	renderArea.offset.x = 0;
-	renderArea.offset.y = 0;
-	renderArea.extent = window->getSurfaceSize();
-
-	VkClearValue clearValues = { 0.2f, 0.1f, 0.6f, 1.0f };
-
-	//Napravimo renderPassBeginInfo (ovo u klasu staviti)
-	VkRenderPassBeginInfo renderPassBeginInfo{};
-	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassBeginInfo.renderPass = window->getRenderPass()->getRenderPass();
-	renderPassBeginInfo.framebuffer = window->getActiveFrameBuffer()->getActiveFrameBuffer(window->getSwapchain()->getActiveImageSwapchain());
-	renderPassBeginInfo.renderArea = renderArea;
-	renderPassBeginInfo.clearValueCount = 1;
-	renderPassBeginInfo.pClearValues = &clearValues;
-
-	window->getRenderPass()->beginRenderPass(buffer, &renderPassBeginInfo);
-
-	window->bindPipeline(buffer);
-	window->getDescriptorHandler()->bind(cmdBuffer->getCommandBuffer(), window->getPipelinePTR()->getPipelineLayout());
-	window->draw(buffer, true);
-
-	window->getRenderPass()->endRenderPass(buffer);
+	
 }

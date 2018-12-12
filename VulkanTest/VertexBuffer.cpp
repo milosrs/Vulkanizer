@@ -13,7 +13,7 @@ VertexBuffer::VertexBuffer(VkDevice device, VkPhysicalDeviceMemoryProperties pro
 	VkBufferUsageFlags usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 	VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-	this->initBuffer(usage, size, memoryPropertyFlags, buffer, bufferMemory);
+	this->initBuffer(usage, size, memoryPropertyFlags);
 }
 
 VertexBuffer::~VertexBuffer()

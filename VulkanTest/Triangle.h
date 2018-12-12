@@ -8,7 +8,7 @@ public:
 	Triangle(MainWindow*, Renderer*);
 
 	void render(VkViewport*) override;
-	void recordFrameBuffer(CommandBuffer*) override;
+	void recordFrameBuffer() override;
 private:
 	std::shared_ptr<Vertices> vertices = nullptr;
 };

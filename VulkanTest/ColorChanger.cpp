@@ -34,25 +34,14 @@ void ColorChanger::render(VkViewport* viewport) {
 		VkSemaphore imageAcquiredSemaphore = this->imageAvaiableSemaphores[frameCount];
 		VkSemaphore renderSemaphore = this->renderFinishedSemaphores[frameCount];
 		VkFence fence = this->fences[frameCount];
-		CommandBuffer* cmdBuffer = window->getCommandBuffers()[window->getSwapchain()->getActiveImageSwapchain()];
 		CommandBufferSemaphoreInfo renderSemaphoreInfo(true, renderSemaphore, &stage);
 		CommandBufferSemaphoreInfo imageSemaphoreInfo(true, imageAcquiredSemaphore, &stage);
 		bool isSubmitted = false;
-
 		glfwPollEvents();
 		util->printFPS();
 		window->beginRender(imageAcquiredSemaphore);
 		
-		for (CommandBuffer* cmdBuf : window->getCommandBuffers()) {
-			if (cmdBuffer == cmdBuf) {
-				recordFrameBuffer(cmdBuf);
-				cmdBuffer->endCommandBuffer();
-
-			
-				isSubmitted = cmdBuffer->submitQueue(renderer->getDevice(), renderer->getQueueIndices()->getQueue(),
-													 &imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
-			}
-		}
+		
 
 		if (!isSubmitted) {
 			window->recreateSwapchain();
@@ -69,7 +58,7 @@ void ColorChanger::render(VkViewport* viewport) {
 	vkDeviceWaitIdle(renderer->getDevice());
 }
 
-void ColorChanger::recordFrameBuffer(CommandBuffer* cmdBuffer) {
+void ColorChanger::recordFrameBuffer() {
 	VkRect2D renderArea{};
 	renderArea.offset.x = 0;
 	renderArea.offset.y = 0;
@@ -86,6 +75,4 @@ void ColorChanger::recordFrameBuffer(CommandBuffer* cmdBuffer) {
 	renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 	renderPassBeginInfo.pClearValues = clearValues.data();
 
-	window->getRenderPass()->beginRenderPass(cmdBuffer->getCommandBuffer(), &renderPassBeginInfo);
-	window->getRenderPass()->endRenderPass(cmdBuffer->getCommandBuffer());
 }

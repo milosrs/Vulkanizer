@@ -15,8 +15,6 @@ DescriptorHandler::DescriptorHandler(VkDevice device, VkDescriptorSetLayout desc
 	poolCreateInfo.maxSets = descriptorCount;
 	poolCreateInfo.poolSizeCount = 1;
 	poolCreateInfo.pPoolSizes = &poolSize;
-
-	descriptorLayouts.resize(descriptorCount, descriptorSetLayout);
 	
 	util->ErrorCheck(vkCreateDescriptorPool(device, &poolCreateInfo, nullptr, &pool));
 }
@@ -51,9 +49,9 @@ void DescriptorHandler::createDescriptorSets(std::vector<UniformBuffer*> uniform
 		descriptorUpdaters[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorUpdaters[i].dstSet = descriptorSets[i];									//Odredisni deskriptor set
 		descriptorUpdaters[i].dstBinding = 0;												//Iz sejdera
-		descriptorUpdaters[i].dstArrayElement = 0;										//Prvi index u nizu Deskriptora koji azuriramo. Ne koristimo niz->0
+		descriptorUpdaters[i].dstArrayElement = 0;											//Prvi index u nizu Deskriptora koji azuriramo. Ne koristimo niz->0
 		descriptorUpdaters[i].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;			//Uniform Object Buffer
-		descriptorUpdaters[i].descriptorCount = 1;										//Koliko elemenata niza azuriramo
+		descriptorUpdaters[i].descriptorCount = 1;											//Koliko elemenata niza azuriramo
 		descriptorUpdaters[i].pBufferInfo = &descriptorBufferInfos[i];
 		descriptorUpdaters[i].pImageInfo = nullptr;
 		descriptorUpdaters[i].pTexelBufferView = nullptr;
@@ -62,10 +60,12 @@ void DescriptorHandler::createDescriptorSets(std::vector<UniformBuffer*> uniform
 
 void DescriptorHandler::updateDescriptorSets()
 {
-	vkUpdateDescriptorSets(device, 1, descriptorUpdaters.data(), 0, nullptr);
+	for (VkWriteDescriptorSet updater : descriptorUpdaters) {
+		vkUpdateDescriptorSets(device, 1, &updater, 0, nullptr);
+	}
 }
 
-void DescriptorHandler::bind(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout)
+void DescriptorHandler::bind(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, int index)
 {
-	vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descriptorSets.data(), 0, nullptr);
+	vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[index], 0, nullptr);
 }

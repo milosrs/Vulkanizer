@@ -5,8 +5,6 @@ Scene::Scene(MainWindow* window, Renderer* renderer)
 {
 	this->window = window;
 	this->renderer = renderer;
-	this->cmdBuffers = window->getCommandBuffers();
-	this->cmdPool = window->getCommandPoolPTR();
 	this->util = &Util::instance();
 
 	createSyncObjects();

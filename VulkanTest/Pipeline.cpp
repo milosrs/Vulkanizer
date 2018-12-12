@@ -41,6 +41,9 @@ Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, V
 	pipelineCreateInfo.pInputAssemblyState = &this->inputAssemblyCreateInfo;
 
 	util->ErrorCheck(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline));
+
+	vkDestroyShaderModule(device, fragmentShader, nullptr);
+	vkDestroyShaderModule(device, vertexShader, nullptr);
 }
 
 Pipeline::~Pipeline()

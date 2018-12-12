@@ -12,6 +12,7 @@
 #define GLFW_INCLUDE_VULKAN
 #define NOMINMAX
 #define MAX_FRAMES_IN_FLIGHT 2
+#define GLM_ENABLE_EXPERIMENTAL
 #include <windows.h>
 
 #endif
@@ -21,3 +22,5 @@
 #include <GLFW/glfw3native.h>
 #include <memory>
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
+#include <glm/gtx/string_cast.hpp>

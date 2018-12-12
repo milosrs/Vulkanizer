@@ -12,8 +12,6 @@
 #include "FrameBuffer.h"
 #include "Pipeline.h"
 #include "QueueFamilyIndices.h"
-#include "CommandPool.h"
-#include "CommandBuffer.h"
 #include "Vertices.h"
 #include "Buffer.h"
 #include "VertexBuffer.h"
@@ -29,6 +27,7 @@
 #include <array>
 
 class Renderer;
+class CommandBufferHandler;
 
 class MainWindow
 {
@@ -45,10 +44,6 @@ public:
 	void endRender(std::vector<VkSemaphore>);
 	void recreateSwapchain();
 
-	/*CommandBuffer: Recording command buffer
-	  bool: Is this drawing using index buffer*/
-	void draw(VkCommandBuffer, bool);
-
 	/*Vertices: collection of vertices and indices
 	  Uniform: is this pipeline using uniform buffers*/
 	void setupPipeline(std::shared_ptr<Vertices>, bool);
@@ -61,9 +56,10 @@ public:
 	DescriptorHandler* getDescriptorHandler();
 	GLFWwindow* getWindowPTR();
 	Pipeline* getPipelinePTR();
-	std::vector< CommandBuffer*> getCommandBuffers();
+	IndexBuffer* getIndexBufferPTR();
+	VertexBuffer* getVertexBufferPTR();
+	CommandBufferHandler* getCommandHandler();
 	std::vector<UniformBuffer*> getUniformBuffers();
-	CommandPool* getCommandPoolPTR();
 
 	VkSurfaceKHR getSurface();
 	VkSurfaceKHR* getSurfacePTR();
@@ -88,14 +84,11 @@ private:
 	std::unique_ptr<RenderPass> renderPass = nullptr;
 	std::unique_ptr<FrameBuffer> frameBuffer = nullptr;
 	std::unique_ptr<Pipeline> pipeline = nullptr;
-	std::unique_ptr<CommandPool> cmdPool = nullptr;
-	std::unique_ptr<CommandPool> transferCommandPool = nullptr;
+	std::unique_ptr<CommandBufferHandler> commandBufferHandler = nullptr;
 	std::unique_ptr<DescriptorHandler> descriptorHandler = nullptr;
-
 	std::unique_ptr<IndexBuffer> indexBuffer = nullptr;
 	std::unique_ptr<VertexBuffer> vertexBuffer = nullptr;
 	
-	std::vector<CommandBuffer*> cmdBuffers;
 	std::vector<UniformBuffer*> uniformBuffers;
 
 	Renderer* renderer = nullptr;

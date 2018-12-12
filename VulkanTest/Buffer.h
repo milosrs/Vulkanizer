@@ -9,7 +9,7 @@ public:
 	Buffer(VkDevice, VkPhysicalDeviceMemoryProperties);
 	~Buffer();
 
-	void initBuffer(VkBufferUsageFlags, VkDeviceSize, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory);
+	void initBuffer(VkBufferUsageFlags, VkDeviceSize, VkMemoryPropertyFlags);
 
 	VkBuffer getBuffer();
 	VkBuffer* getBufferPTR();

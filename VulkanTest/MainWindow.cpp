@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "MainWindow.h"
 #include "Renderer.h"
+#include "CommandBufferHandler.h"
 
 MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::string windowName) {
 	this->renderer = renderer;
@@ -19,9 +20,6 @@ MainWindow::MainWindow(const MainWindow &)
 
 void MainWindow::continueInitialization(Renderer* renderer) {
 	this->renderer = renderer;
-	this->cmdPool = std::make_unique<CommandPool>(renderer->getQueueIndices()->getGraphicsFamilyIndex(), renderer->getDevicePTR());
-	this->transferCommandPool = std::make_unique<CommandPool>(renderer->getQueueIndices()->getGraphicsFamilyIndex(), renderer->getDevicePTR(),
-																VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
 
 	createData();
 }
@@ -50,6 +48,8 @@ void MainWindow::destroySwapchainDependencies() {
 void MainWindow::createData()
 {
 	int width = 0, height = 0;									//Minimizacija, pauziramo render dok se ne vrati slika na povrsinu ekrana.
+	VkExtent2D scissorsExtent;
+
 	while (width == 0 || height == 0) {
 		glfwGetFramebufferSize(window, &width, &height);
 		glfwWaitEvents();
@@ -58,40 +58,25 @@ void MainWindow::createData()
 	InitSurface();
 
 	swapchain = std::make_unique<Swapchain>(this, renderer);
-
-	std::vector<VkImageView> attachments = { swapchain->getDepthStencilImageView() };
-
 	renderPass = std::make_unique<RenderPass>(renderer, swapchain->getDepthStencilFormat(), this->surfaceFormat);
+	scissorsExtent = surfaceCapatibilities.currentExtent;
+	pipeline = std::make_unique<Pipeline>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
+		renderPass->getRenderPassPTR(), width, height, scissorsExtent);
 	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), swapchain->getImageViews(),
 		renderPass->getRenderPass(), this->getSurfaceSize());
-
-	VkExtent2D scissorsExtent = surfaceCapatibilities.currentExtent;
-
-	pipeline = std::make_unique<Pipeline>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
-												renderPass->getRenderPassPTR(), width, height, scissorsExtent);
-	
 	descriptorHandler = std::make_unique<DescriptorHandler>(renderer->getDevice(), pipeline->getDescriptorSetLayout(), 
 															swapchain->getImageViews().size());
-
-	for (size_t i = 0; i < frameBuffer->getFrameBuffers().size(); i++) {
-		cmdBuffers.push_back(new CommandBuffer(cmdPool->getCommandPool(), renderer->getDevice(), 
-												VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, CommandBufferType::GRAPHICS));
-	}
-
-	cmdBuffers.push_back(new CommandBuffer(transferCommandPool->getCommandPool(), renderer->getDevice(),
-											VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, CommandBufferType::TRANSFER));
+	commandBufferHandler = std::make_unique<CommandBufferHandler>(renderer->getQueueIndices()->getGraphicsFamilyIndex(),
+		renderer->getDevice(), this);
 }
 
 
 void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
 {
-	CommandBuffer* transferBuffer = this->cmdBuffers[cmdBuffers.size() - 1];
-
 	this->indexBuffer = std::make_unique<IndexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
-														vertices->getIndices());
-
+		vertices->getIndices());
 	this->vertexBuffer = std::make_unique<VertexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
-														vertices);
+		vertices);
 
 	if (!uniform) {
 		/*Pravimo Vertex Staging buffer*/
@@ -100,7 +85,7 @@ void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
 
 		stagingBufferVertex->fillBuffer(vertexBuffer->getVertices());
 
-		transferBuffer->copyBuffer(stagingBufferVertex->getBuffer(), vertexBuffer->getBuffer(),
+		commandBufferHandler->copyBuffer(stagingBufferVertex->getBuffer(), vertexBuffer->getBuffer(),
 			vertexBuffer->getSize(), renderer->getQueueIndices()->getQueue());
 
 		stagingBufferVertex->~StagingBuffer();
@@ -111,10 +96,7 @@ void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
 
 		stagingBufferIndices->fillBuffer(indexBuffer->getIndices());
 
-		transferBuffer = new CommandBuffer(transferCommandPool->getCommandPool(), renderer->getDevice(),
-			VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, CommandBufferType::TRANSFER);
-
-		transferBuffer->copyBuffer(stagingBufferIndices->getBuffer(), indexBuffer->getBuffer(),
+		commandBufferHandler->copyBuffer(stagingBufferIndices->getBuffer(), indexBuffer->getBuffer(),
 			indexBuffer->getSize(), renderer->getQueueIndices()->getQueue());
 
 		stagingBufferIndices->~StagingBuffer();
@@ -127,6 +109,8 @@ void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
 		descriptorHandler->createDescriptorSets(uniformBuffers);
 	}
 	
+	commandBufferHandler->createDrawingCommandBuffers(frameBuffer->getFrameBuffers().size());
+	commandBufferHandler->createTransferCommandBuffers(2);
 }
 
 void MainWindow::bindPipeline(VkCommandBuffer cmdBuffer)
@@ -220,7 +204,6 @@ void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
 	presentInfo.pResults = &presentResult;
 
 	util->ErrorCheck(vkQueuePresentKHR(renderer->getQueueIndices()->getQueue(), &presentInfo));
-	std::cout << presentResult << std::endl;
 }
 
 void MainWindow::recreateSwapchain()
@@ -265,19 +248,24 @@ Pipeline * MainWindow::getPipelinePTR()
 	return this->pipeline.get();
 }
 
-std::vector< CommandBuffer*> MainWindow::getCommandBuffers()
+IndexBuffer * MainWindow::getIndexBufferPTR()
 {
-	return this->cmdBuffers;
+	return indexBuffer.get();
+}
+
+VertexBuffer* MainWindow::getVertexBufferPTR()
+{
+	return vertexBuffer.get();
+}
+
+CommandBufferHandler * MainWindow::getCommandHandler()
+{
+	return this->commandBufferHandler.get();
 }
 
 std::vector<UniformBuffer*> MainWindow::getUniformBuffers()
 {
 	return this->uniformBuffers;
-}
-
-CommandPool * MainWindow::getCommandPoolPTR()
-{
-	return this->cmdPool.get();
 }
 
 VkSurfaceKHR MainWindow::getSurface()
@@ -342,15 +330,4 @@ void MainWindow::InitOSSurface()
 	surfaceCreateInfo.hwnd = glfwGetWin32Window(this->window);
 	VkResult result = glfwCreateWindowSurface(renderer->getInstance(), this->window, nullptr, &surfaceKHR);
 	util->ErrorCheck(result);
-}
-
-
-void MainWindow::draw(VkCommandBuffer commandBuffer, bool isIndexed)
-{
-	if (!isIndexed) {
-		vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertexBuffer->getVertices().size()), 1, 0, 0);
-	}
-	else {
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(vertexBuffer->getIndices().size()), 1, 0, 0, 0);
-	}
 }

@@ -2,9 +2,8 @@
 #include "PLATFORM.h"
 #include "MainWindow.h"
 #include "Util.h"
-#include "CommandBuffer.h"
 #include "CommandBufferSemaphoreInfo.h"
-#include "CommandPool.h"
+#include "CommandBufferHandler.h"
 #include <vector>
 
 class Scene {
@@ -13,7 +12,7 @@ public:
 	virtual ~Scene();
 
 	virtual void render(VkViewport*) = 0;
-	virtual void recordFrameBuffer(CommandBuffer*) = 0;
+	virtual void recordFrameBuffer() = 0;
 	void createSyncObjects();
 	void deleteSyncObjects();
 protected:
@@ -23,8 +22,6 @@ protected:
 
 	MainWindow* window = nullptr;
 	Renderer* renderer = nullptr;
-	std::vector<CommandBuffer*> cmdBuffers;
-	CommandPool* cmdPool = nullptr;
 	Util* util = nullptr;
 
 	size_t frameCount = 0;

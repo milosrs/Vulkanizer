@@ -17,7 +17,7 @@ public:
 
 	void updateDescriptorSets();
 	void createDescriptorSets(std::vector<UniformBuffer*>);
-	void bind(VkCommandBuffer, VkPipelineLayout);
+	void bind(VkCommandBuffer, VkPipelineLayout, int);
 private:
 
 	VkDescriptorPool pool;

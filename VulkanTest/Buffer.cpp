@@ -16,7 +16,7 @@ Buffer::~Buffer()
 }
 
 void Buffer::initBuffer(VkBufferUsageFlags usage, VkDeviceSize size, 
-						VkMemoryPropertyFlags memPropFlags, VkBuffer& buffer, VkDeviceMemory deviceMemory)
+						VkMemoryPropertyFlags memPropFlags)
 {
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferInfo.usage = usage;
@@ -24,14 +24,14 @@ void Buffer::initBuffer(VkBufferUsageFlags usage, VkDeviceSize size,
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	util->ErrorCheck(vkCreateBuffer(device, &bufferInfo, nullptr, &this->buffer));
-	vkGetBufferMemoryRequirements(device, buffer, &memoryRequirements);
+	vkGetBufferMemoryRequirements(device, this->buffer, &memoryRequirements);
 
 	allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocateInfo.allocationSize = memoryRequirements.size;
 	allocateInfo.memoryTypeIndex = util->findMemoryTypeIndex(&this->deviceMemoryProps, &memoryRequirements, memPropFlags);
 
 	util->ErrorCheck(vkAllocateMemory(device, &allocateInfo, nullptr, &bufferMemory));
-	util->ErrorCheck(vkBindBufferMemory(device, buffer, bufferMemory, 0));
+	util->ErrorCheck(vkBindBufferMemory(device, this->buffer, bufferMemory, 0));
 }
 
 VkBuffer Buffer::getBuffer()

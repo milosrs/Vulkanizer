@@ -3,8 +3,6 @@
 #include "PLATFORM.h"
 #include "MainWindow.h"
 #include "Renderer.h"
-#include "CommandBuffer.h"
-#include "CommandPool.h"
 #include "Scene.h"
 
 #define PI 3.14159265389786351235489
@@ -24,7 +22,7 @@ public:
 	std::array<VkClearValue, 2> getNewClearValues();
 
 	void render(VkViewport*) override;
-	void recordFrameBuffer(CommandBuffer*) override;
+	void recordFrameBuffer() override;
 
 private:
 	std::array<VkClearValue, 2> clearValues{};

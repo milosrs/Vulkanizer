@@ -10,8 +10,7 @@ public:
 		this->size = size;
 
 		this->initBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, size,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			buffer, bufferMemory);
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 	};
 
@@ -23,6 +22,14 @@ public:
 		memcpy(data, inputData.data(), (size_t)size);
 		vkUnmapMemory(device, bufferMemory);
 	};
+
+	void fillBuffer(T inputData) {
+		void *data;
+
+		vkMapMemory(device, bufferMemory, 0, size, 0, &data);
+		memcpy(data, &inputData, (size_t)size);
+		vkUnmapMemory(device, bufferMemory);
+	}
 private:
 	VkDeviceSize size = VK_NULL_HANDLE;
 };

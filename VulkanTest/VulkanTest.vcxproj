@@ -169,9 +169,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BUILD_OPTIONS.h" />
-    <ClInclude Include="CommandBuffer.h" />
+    <ClInclude Include="CommandBufferHandler.h" />
     <ClInclude Include="CommandBufferSemaphoreInfo.h" />
-    <ClInclude Include="CommandPool.h" />
     <ClInclude Include="ColorChanger.h" />
     <ClInclude Include="DescriptorHandler.h" />
     <ClInclude Include="FrameBuffer.h" />
@@ -195,9 +194,8 @@
     <ClInclude Include="Vertices.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CommandBuffer.cpp" />
+    <ClCompile Include="CommandBufferHandler.cpp" />
     <ClCompile Include="CommandBufferSemaphoreInfo.cpp" />
-    <ClCompile Include="CommandPool.cpp" />
     <ClCompile Include="ColorChanger.cpp" />
     <ClCompile Include="DescriptorHandler.cpp" />
     <ClCompile Include="FrameBuffer.cpp" />
@@ -224,8 +222,6 @@
     <ClCompile Include="Vertices.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\..\..\VulkanSDK\1.1.85.0\Bin\frag.spv" />
-    <None Include="..\..\..\..\..\..\VulkanSDK\1.1.85.0\Bin\vert.spv" />
     <None Include="shader.frag" />
     <None Include="shader.vert" />
   </ItemGroup>

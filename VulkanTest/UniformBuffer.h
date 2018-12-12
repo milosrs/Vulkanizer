@@ -18,14 +18,13 @@ public:
 	~UniformBuffer();
 
 	/*
-	  Active swapchain image index
 	  Aspect ratio
 	  near plane
 	  far plane
 	*/
-	void update(uint32_t, float, float, float);
-	void copy(UBO*);
+	void update(float, float, float);
+	void copy();
 private:
-	UBO ubo;
+	UBO ubo = {};
 };
 
