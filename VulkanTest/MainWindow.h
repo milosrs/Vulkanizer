@@ -88,7 +88,7 @@ private:
 	std::unique_ptr<DescriptorHandler> descriptorHandler = nullptr;
 	std::unique_ptr<IndexBuffer> indexBuffer = nullptr;
 	std::unique_ptr<VertexBuffer> vertexBuffer = nullptr;
-	
+
 	std::vector<UniformBuffer*> uniformBuffers;
 
 	Renderer* renderer = nullptr;

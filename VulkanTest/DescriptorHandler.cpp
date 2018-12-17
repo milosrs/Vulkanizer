@@ -7,6 +7,7 @@ DescriptorHandler::DescriptorHandler(VkDevice device, VkDescriptorSetLayout desc
 	this->device = device;
 	this->descriptorCount = descriptorCount;
 	this->descriptorSetLayout = descriptorSetLayout;
+	this->descriptorLayouts.resize(descriptorCount, descriptorSetLayout);
 
 	poolSize.descriptorCount = descriptorCount;
 	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -28,6 +29,8 @@ DescriptorHandler::~DescriptorHandler()
 void DescriptorHandler::createDescriptorSets(std::vector<UniformBuffer*> uniformBuffers)
 {
 	VkDescriptorSetAllocateInfo createInfo{};
+	
+	descriptorSets.resize(uniformBuffers.size());
 
 	createInfo.descriptorPool = pool;
 	createInfo.descriptorSetCount = descriptorCount;
@@ -35,7 +38,6 @@ void DescriptorHandler::createDescriptorSets(std::vector<UniformBuffer*> uniform
 	createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	createInfo.pNext = nullptr;
 
-	descriptorSets.resize(uniformBuffers.size());
 	util->ErrorCheck(vkAllocateDescriptorSets(device, &createInfo, descriptorSets.data()));
 
 	descriptorUpdaters.resize(descriptorCount);
@@ -55,13 +57,8 @@ void DescriptorHandler::createDescriptorSets(std::vector<UniformBuffer*> uniform
 		descriptorUpdaters[i].pBufferInfo = &descriptorBufferInfos[i];
 		descriptorUpdaters[i].pImageInfo = nullptr;
 		descriptorUpdaters[i].pTexelBufferView = nullptr;
-	}
-}
 
-void DescriptorHandler::updateDescriptorSets()
-{
-	for (VkWriteDescriptorSet updater : descriptorUpdaters) {
-		vkUpdateDescriptorSets(device, 1, &updater, 0, nullptr);
+		vkUpdateDescriptorSets(device, 1, &descriptorUpdaters[i], 0, nullptr);
 	}
 }
 

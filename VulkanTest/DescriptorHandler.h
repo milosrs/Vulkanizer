@@ -15,7 +15,6 @@ public:
 	DescriptorHandler(VkDevice, VkDescriptorSetLayout, uint32_t);
 	~DescriptorHandler();
 
-	void updateDescriptorSets();
 	void createDescriptorSets(std::vector<UniformBuffer*>);
 	void bind(VkCommandBuffer, VkPipelineLayout, int);
 private:

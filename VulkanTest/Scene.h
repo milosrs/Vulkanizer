@@ -16,6 +16,7 @@ public:
 	void createSyncObjects();
 	void deleteSyncObjects();
 protected:
+	std::shared_ptr<Vertices> vertices = nullptr;
 	std::vector<VkSemaphore> imageAvaiableSemaphores;		//GPU-GPU sync
 	std::vector<VkSemaphore> renderFinishedSemaphores;		//GPU-GPU sinhronizacija
 	std::vector<VkFence> fences;							//CPU-GPU sinhronizacija

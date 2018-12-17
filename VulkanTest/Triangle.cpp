@@ -16,36 +16,33 @@ Triangle::Triangle(MainWindow* window, Renderer* renderer) : Scene(window, rende
 
 void Triangle::render(VkViewport* viewport) {
 	VkPipelineStageFlags stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
 	window->setupPipeline(vertices, USES_UNIFORM_BUFFER);
 
 	while (!glfwWindowShouldClose(window->getWindowPTR())) {
 		glfwPollEvents();
-		vkWaitForFences(renderer->getDevice(), 1, &this->fences[frameCount], VK_TRUE, std::numeric_limits<uint64_t>::max());
-		vkResetFences(renderer->getDevice(), 1, &this->fences[frameCount]);
 
 		VkSemaphore imageAcquiredSemaphore = this->imageAvaiableSemaphores[frameCount];
 		VkSemaphore renderSemaphore = this->renderFinishedSemaphores[frameCount];
 		VkFence fence = this->fences[frameCount];
+		uint32_t activeImageIndex;
 		bool isSubmitted = false;
-		
 		float aspect = window->getSurfaceCapatibilities().currentExtent.width / (float)window->getSurfaceCapatibilities().currentExtent.height;
 		float nearPlane = 0.1f;
 		float farPlane = 10.0f;
 
+		vkWaitForFences(renderer->getDevice(), 1, &this->fences[frameCount], VK_TRUE, std::numeric_limits<uint64_t>::max());
+		
 		window->beginRender(imageAcquiredSemaphore);
+		activeImageIndex = window->getSwapchain()->getActiveImageSwapchain();
+		window->getUniformBuffers()[activeImageIndex]->update(aspect, nearPlane, farPlane);
 
-		uint32_t activeImageIndex = window->getSwapchain()->getActiveImageSwapchain();
 		CommandBufferSemaphoreInfo renderSemaphoreInfo(true, renderSemaphore, &stage);
 		CommandBufferSemaphoreInfo imageSemaphoreInfo(true, imageAcquiredSemaphore, &stage);
 
-				
-		window->getDescriptorHandler()->updateDescriptorSets();
-		window->getUniformBuffers()[activeImageIndex]->update(aspect, nearPlane, farPlane);
+		vkResetFences(renderer->getDevice(), 1, &this->fences[frameCount]);
 
-
-		isSubmitted = window->getCommandHandler()->submitQueue(window->getSwapchain()->getActiveImageSwapchain(),
-			renderer->getQueueIndices()->getQueue(), &imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
+		isSubmitted = window->getCommandHandler()->submitQueue(activeImageIndex, renderer->getQueueIndices()->getQueue(),
+			&imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
 
 		if (!isSubmitted) {
 			window->recreateSwapchain();

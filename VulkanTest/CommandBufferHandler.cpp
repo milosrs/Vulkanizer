@@ -13,7 +13,6 @@ CommandBufferHandler::CommandBufferHandler(uint32_t graphicsFamilyIndex, VkDevic
 
 	cmdPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	cmdPoolCreateInfo.queueFamilyIndex = graphicsFamilyIndex;
-	cmdPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 
 	transferCmdPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	transferCmdPoolCreateInfo.queueFamilyIndex = graphicsFamilyIndex;
@@ -25,13 +24,6 @@ CommandBufferHandler::CommandBufferHandler(uint32_t graphicsFamilyIndex, VkDevic
 	renderArea.offset.x = 0;
 	renderArea.offset.y = 0;
 	renderArea.extent = window->getSurfaceSize();
-
-	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassBeginInfo.renderPass = window->getRenderPass()->getRenderPass();
-	renderPassBeginInfo.framebuffer = window->getActiveFrameBuffer()->getActiveFrameBuffer(window->getSwapchain()->getActiveImageSwapchain());
-	renderPassBeginInfo.renderArea = renderArea;
-	renderPassBeginInfo.clearValueCount = 1;
-	renderPassBeginInfo.pClearValues = &clearValues;
 }
 
 
@@ -57,20 +49,28 @@ void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount)
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-	this->commandBuffers.resize(bufferCount);
 	cmdBuffers.resize(bufferCount);
 
 	vkAllocateCommandBuffers(device, &allocateInfo, cmdBuffers.data());
 
 	for (auto i = 0; i < cmdBuffers.size(); ++i) {
+		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassBeginInfo.renderPass = window->getRenderPass()->getRenderPass();
+		renderPassBeginInfo.framebuffer = window->getActiveFrameBuffer()->getFrameBuffers()[i];
+		renderPassBeginInfo.renderArea = renderArea;
+		renderPassBeginInfo.clearValueCount = 1;
+		renderPassBeginInfo.pClearValues = &clearValues;
+
 		CommandBuffer cmdBuffer = {};
 		cmdBuffer.type = CommandBufferType::GRAPHICS;
 		cmdBuffer.commandBuffer = cmdBuffers[i];
 
+		this->commandBuffers.push_back(cmdBuffer);
+
 		util->ErrorCheck(vkBeginCommandBuffer(cmdBuffer.commandBuffer, &beginInfo));
 
 		window->getRenderPass()->beginRenderPass(cmdBuffer.commandBuffer, &renderPassBeginInfo);
-		window->getPipelinePTR()->bindPipeline(cmdBuffer.commandBuffer, 
+		window->getPipelinePTR()->bindPipeline(cmdBuffer.commandBuffer,
 			window->getVertexBufferPTR(), window->getIndexBufferPTR());
 		window->getDescriptorHandler()->bind(cmdBuffer.commandBuffer, window->getPipelinePTR()->getPipelineLayout(), i);
 
