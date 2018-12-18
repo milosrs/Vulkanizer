@@ -28,6 +28,9 @@
     <Filter Include="Buffers Headers">
       <UniqueIdentifier>{173f2e1f-8769-49d6-954f-5d2f895ce5e4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Textures">
+      <UniqueIdentifier>{3114d425-0efb-491c-9cef-63fddb1a88b5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -102,6 +105,9 @@
     <ClInclude Include="CommandBufferHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -167,6 +173,9 @@
     <ClCompile Include="CommandBufferHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader.vert">
@@ -175,5 +184,10 @@
     <None Include="shader.frag">
       <Filter>Shaders</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\textures\chef.png">
+      <Filter>Textures</Filter>
+    </Image>
   </ItemGroup>
 </Project>

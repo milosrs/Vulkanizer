@@ -92,7 +92,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -111,7 +111,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -132,7 +132,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -155,7 +155,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -186,6 +186,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="StagingBuffer.h" />
     <ClInclude Include="Swapchain.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="UniformBuffer.h" />
     <ClInclude Include="Util.h" />
@@ -214,6 +215,7 @@
     <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Swapchain.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Triangle.cpp" />
     <ClCompile Include="UniformBuffer.cpp" />
     <ClCompile Include="Util.cpp" />
@@ -224,6 +226,9 @@
   <ItemGroup>
     <None Include="shader.frag" />
     <None Include="shader.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\textures\chef.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

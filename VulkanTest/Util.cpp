@@ -17,7 +17,6 @@ void Util::printFPS()
 	}
 }
 
-
 Util::~Util()
 {
 }

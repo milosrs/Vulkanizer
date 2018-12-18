@@ -108,7 +108,8 @@ void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
 
 		descriptorHandler->createDescriptorSets(uniformBuffers);
 	}
-	
+	vertexBuffer->fillBuffer();
+	indexBuffer->fillBuffer();
 	commandBufferHandler->createDrawingCommandBuffers(frameBuffer->getFrameBuffers().size());
 	commandBufferHandler->createTransferCommandBuffers(2);
 }
@@ -199,7 +200,7 @@ void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
 	presentInfo.pWaitSemaphores = waitSemaphores.data();
 	presentInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
 	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = this->swapchain->getSwapchainPTR();
+	presentInfo.pSwapchains = swapchains;
 	presentInfo.pImageIndices = this->swapchain->getActiveImageSwapchainPTR();
 	presentInfo.pResults = &presentResult;
 

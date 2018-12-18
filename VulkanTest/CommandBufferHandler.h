@@ -44,6 +44,9 @@ public:
 	VkFence - ograda za submit*/
 	bool submitQueue(int, VkQueue, CommandBufferSemaphoreInfo* = nullptr, CommandBufferSemaphoreInfo* = nullptr, VkFence* = nullptr);
 
+	VkCommandBuffer createOneTimeUsageBuffer();
+	void endOneTimeUsageBuffer(VkCommandBuffer, VkQueue);
+
 	std::vector<CommandBuffer> getCommandBuffers();
 	VkCommandPool getCommandPool();
 private:
@@ -51,7 +54,7 @@ private:
 	VkCommandPool transferCommandPool = VK_NULL_HANDLE;
 	VkDevice device = VK_NULL_HANDLE;
 
-	VkClearValue clearValues = { 0.0f, 0.0f, 0.0f, 1.0f };
+	VkClearValue clearValues = { 0.2f, 0.2f, 0.2f, 1.0f };
 	VkRenderPassBeginInfo renderPassBeginInfo{};
 	VkRect2D renderArea{};
 

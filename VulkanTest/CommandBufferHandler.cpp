@@ -175,7 +175,6 @@ bool CommandBufferHandler::submitQueue(int commandBufferIndex, VkQueue queue, Co
 	}
 
 	if (fence != nullptr) {
-		vkResetFences(device, 1, fence);
 		result = vkQueueSubmit(queue, 1, &submitInfo, *fence);
 	}
 	else {
@@ -189,6 +188,41 @@ bool CommandBufferHandler::submitQueue(int commandBufferIndex, VkQueue queue, Co
 	}
 
 	return success;
+}
+
+VkCommandBuffer CommandBufferHandler::createOneTimeUsageBuffer()
+{
+	VkCommandBufferAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = cmdPool;
+	allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+
+	VkCommandBufferBeginInfo beginInfo = {};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+	return commandBuffer;
+}
+
+void CommandBufferHandler::endOneTimeUsageBuffer(VkCommandBuffer commandBuffer, VkQueue queue)
+{
+	vkEndCommandBuffer(commandBuffer);
+
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(queue);
+
+	vkFreeCommandBuffers(device, cmdPool, 1, &commandBuffer);
 }
 
 std::vector<CommandBuffer> CommandBufferHandler::getCommandBuffers()
