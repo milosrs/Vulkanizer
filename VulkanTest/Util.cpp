@@ -54,6 +54,11 @@ void Util::ErrorCheck(VkResult result) {
 	}
 }
 
+VkDevice Util::getDevice()
+{
+	return device;
+}
+
 #else
 void Util::ErrorCheck(VkResult result) {};
 #endif
@@ -76,6 +81,131 @@ uint32_t Util::findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties * memo
 			}
 		}
 	}
+
+	return ret;
+}
+
+void Util::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+	VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory,
+	VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkDeviceSize size, stbi_uc* pixels, StagingBuffer<stbi_uc*>* stagingBuffer) {
+
+	VkImageCreateInfo info = {};
+	VkMemoryRequirements imageMemoryRequirements = {};
+	VkMemoryAllocateInfo allocateInfo = {};
+
+	
+	stagingBuffer->fillBuffer(pixels);
+
+	stbi_image_free(pixels);
+
+	info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	info.imageType = VK_IMAGE_TYPE_2D;								//Kakav koordinatni sistem koristimo za texturu?
+	info.extent = { width, height, 1 };								//W, H, Depth mora biti 1.
+	info.mipLevels = 1;
+	info.arrayLayers = 1;
+	info.format = format;											//Format bi trebao da bude kao format bafera
+	info.tiling = VK_IMAGE_TILING_OPTIMAL;							//Da bi smo pristupali slici iz sejdera. Linear tilingom bi mogli pristupati texelima kako hocemo.
+	info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;					//Preinitialized cuva podatke o texelima posle tranzicije.
+	info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;	//Sampled bitom mozemo pristupiti texturi iz sejdera.
+	info.samples = VK_SAMPLE_COUNT_1_BIT;							//Multisampling
+	info.flags = 0;
+
+	ErrorCheck(vkCreateImage(device, &info, nullptr, image));
+	vkGetImageMemoryRequirements(device, *image, &imageMemoryRequirements);
+
+	allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocateInfo.pNext = nullptr;
+	allocateInfo.memoryTypeIndex = findMemoryTypeIndex(memprops, &imageMemoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	allocateInfo.allocationSize = imageMemoryRequirements.size;
+
+	ErrorCheck(vkAllocateMemory(device, &allocateInfo, nullptr, imageMemory));
+	ErrorCheck(vkBindImageMemory(device, *image, *imageMemory, 0));
+}
+
+void Util::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, 
+								VkCommandBuffer recordingBuffer)
+{
+	VkImageMemoryBarrier barrier = {};
+	VkImageSubresourceRange subresourceRange = {};
+	VkPipelineStageFlags sourceStage = {};
+	VkPipelineStageFlags dstStage = {};
+
+	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
+	else {
+		throw std::invalid_argument("Layout transition not supported.");
+	}
+
+	subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	subresourceRange.baseArrayLayer = 0;
+	subresourceRange.baseMipLevel = 0;
+	subresourceRange.layerCount = 1;
+	subresourceRange.levelCount = 1;
+
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.image = image;
+	barrier.oldLayout = oldLayout;
+	barrier.newLayout = newLayout;
+
+	/*Ova dva polja za redove moraju biti namestena da budu ignorisana, 
+		ako necemo da prebacujemo vlasnistvo nad slikom iz jednog Queue-a u drugi.*/
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;	
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.srcAccessMask = 0;		//TODO
+	barrier.dstAccessMask = 0;		//TODO
+
+	vkCmdPipelineBarrier(recordingBuffer, sourceStage, dstStage, 0, 0, nullptr, 0, nullptr, 0, &barrier);
+}
+
+void Util::copyBufferToimage(VkCommandBuffer cmdBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+{
+	VkBufferImageCopy region{};
+	VkImageSubresourceLayers subresouce{};
+
+	subresouce.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	subresouce.baseArrayLayer = 0;
+	subresouce.mipLevel = 0;
+	subresouce.layerCount = 1;
+
+	region.bufferImageHeight = 0;
+	region.bufferOffset = 0;									//Na kom mestu u baferu pocinju podaci o pikselima?
+	region.bufferRowLength = 0;
+	region.imageOffset = { 0, 0, 0 };							//Gde
+	region.imageExtent = { width, height, 0 };					//Kopiramo
+	region.imageSubresource = subresouce;						//Podatke o slici
+
+	vkCmdCopyBufferToImage(cmdBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+}
+
+VkImageView Util::createImageView(VkDevice device, VkImage image, VkFormat format)
+{
+	VkImageViewCreateInfo imgCreateInfo = {};
+	VkImageView ret = VK_NULL_HANDLE;
+
+	imgCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	imgCreateInfo.subresourceRange.baseMipLevel = 0;
+	imgCreateInfo.subresourceRange.levelCount = 1;
+	imgCreateInfo.subresourceRange.baseArrayLayer = 0;
+	imgCreateInfo.subresourceRange.layerCount = 1;
+	imgCreateInfo.format = format;
+	imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	imgCreateInfo.image = image;
+	imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+
+	ErrorCheck(vkCreateImageView(device, &imgCreateInfo, nullptr, &ret));
 
 	return ret;
 }

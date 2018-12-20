@@ -22,8 +22,8 @@ protected:
 	VkDeviceMemory bufferMemory = VK_NULL_HANDLE;;
 	VkPhysicalDeviceMemoryProperties deviceMemoryProps = {};
 
-	VkMemoryAllocateInfo allocateInfo{};
-	VkBufferCreateInfo bufferInfo{};
+	VkMemoryAllocateInfo allocateInfo = {};
+	VkBufferCreateInfo bufferInfo = {};
 
 	Util* util = nullptr;
 };

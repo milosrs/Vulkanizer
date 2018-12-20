@@ -31,21 +31,19 @@ public:
 	/*How much of these?*/
 	void createDrawingCommandBuffers(uint32_t);
 
-	/*How much of these?*/
-	void createTransferCommandBuffers(uint32_t);
-
-	void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize, VkQueue);
-
-	/*cmdBufferIndex - Index command buffera za submit
-	VkQueue - U koji red bi trebalo da se submituje posao bafera.
-	VkPipelineStageFlags - U kom trenutku u pipeline-u Vulkan Core-a bi semafori trebalo da reaguju na ovaj submit
-	ComandBufferSemaphoreInfo - koji semafor da cekamo
-	ComandBufferSemaphoreInfo  - koji semafor da signaliziramo
-	VkFence - ograda za submit*/
+	/*	
+		cmdBufferIndex - Index command buffera za submit
+		VkQueue - U koji red bi trebalo da se submituje posao bafera.
+		VkPipelineStageFlags - U kom trenutku u pipeline-u Vulkan Core-a bi semafori trebalo da reaguju na ovaj submit
+		ComandBufferSemaphoreInfo - koji semafor da cekamo
+		ComandBufferSemaphoreInfo  - koji semafor da signaliziramo
+		VkFence - ograda za submit
+	*/
 	bool submitQueue(int, VkQueue, CommandBufferSemaphoreInfo* = nullptr, CommandBufferSemaphoreInfo* = nullptr, VkFence* = nullptr);
 
-	VkCommandBuffer createOneTimeUsageBuffer();
-	void endOneTimeUsageBuffer(VkCommandBuffer, VkQueue);
+	static VkCommandBuffer createOneTimeUsageBuffer(VkCommandPool, VkDevice);
+	static void endOneTimeUsageBuffer(VkCommandBuffer, VkQueue, VkCommandPool, VkDevice);
+	static void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize, VkQueue);
 
 	std::vector<CommandBuffer> getCommandBuffers();
 	VkCommandPool getCommandPool();

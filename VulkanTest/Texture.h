@@ -12,21 +12,27 @@ class Texture
 public:
 	/*String: Path to image,
 	  Unsigned: Mode in which to open the image*/
-	Texture(std::string, unsigned int);
+	Texture(VkDevice, VkPhysicalDeviceMemoryProperties*, VkFormat, std::string, unsigned int);
 	~Texture();
 
-	void createTextureTest(VkDevice, VkPhysicalDeviceMemoryProperties*, VkFormat);
+	void beginCreatingTexture(VkCommandPool, VkQueue);
 private:
+	void createSampler();
 
 	int width, height, channelCount;
 	unsigned int mode;
 	stbi_uc* pixels;
 
+	VkDevice device = VK_NULL_HANDLE;
+	VkPhysicalDeviceMemoryProperties *physicalProperties = nullptr;
+	VkFormat imageFormat = {};
 	VkDeviceSize size = VK_NULL_HANDLE;
 	VkImage texture = VK_NULL_HANDLE;
+	VkImageView textureView = VK_NULL_HANDLE;
 	VkDeviceMemory textureMemory = VK_NULL_HANDLE;
+	VkSampler sampler = VK_NULL_HANDLE;
 
-	std::unique_ptr<StagingBuffer<stbi_uc*>> stagingBuffer = nullptr;
+	StagingBuffer<stbi_uc*>* stagingBuffer = nullptr;
 	Util* util = &Util::instance();
 };
 

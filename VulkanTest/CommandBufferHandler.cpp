@@ -82,59 +82,19 @@ void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount)
 	}
 }
 
-void CommandBufferHandler::createTransferCommandBuffers(uint32_t bufferCount) {
-	VkCommandBufferAllocateInfo allocateInfo = {};
-	
-	std::vector<VkCommandBuffer> cmdBuffers;
-
-	allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocateInfo.commandPool = transferCommandPool;
-	allocateInfo.commandBufferCount = bufferCount;
-	allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;				//Moze da bude submitovan u Queue, ostali moraju da budu pozivani iz primarnog.
-
-	cmdBuffers.resize(bufferCount);
-
-	vkAllocateCommandBuffers(device, &allocateInfo, cmdBuffers.data());
-
-	for (auto i = 0; i < cmdBuffers.size(); ++i) {
-		CommandBuffer cmdBuffer = {};
-		cmdBuffer.type = CommandBufferType::TRANSFER;
-		cmdBuffer.commandBuffer = cmdBuffers[i];
-	}
-}
-
 void CommandBufferHandler::copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size, VkQueue queue)
 {
-	VkCommandBufferBeginInfo beginInfo = {};
-	CommandBuffer cmdBuff;
-	uint32_t index = 0;
-
-	for (CommandBuffer cmd : commandBuffers) {
-		if (cmd.type == CommandBufferType::TRANSFER) {
-			cmdBuff = cmd;
-		}
-
-		++index;
-	}
-
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	vkBeginCommandBuffer(cmdBuff.commandBuffer, &beginInfo);
-
+	VkCommandBuffer activeBuffer = createOneTimeUsageBuffer();
+	
 	VkBufferCopy copyRegion = {};
 	copyRegion.size = size;
 	copyRegion.srcOffset = 0;
 	copyRegion.dstOffset = 0;
 
-	vkCmdCopyBuffer(cmdBuff.commandBuffer, src, dst, 1, &copyRegion);
-	vkEndCommandBuffer(cmdBuff.commandBuffer);
+	vkCmdCopyBuffer(activeBuffer, src, dst, 1, &copyRegion);
+	vkEndCommandBuffer(activeBuffer);
 
-	submitQueue(index, queue, nullptr, nullptr, nullptr);
-	vkQueueWaitIdle(queue);
-	vkFreeCommandBuffers(device, transferCommandPool, 1, &cmdBuff.commandBuffer);
-
-	commandBuffers.erase(commandBuffers.begin() + index);
+	endOneTimeUsageBuffer(activeBuffer, queue);
 }
 
 bool CommandBufferHandler::submitQueue(int commandBufferIndex, VkQueue queue, CommandBufferSemaphoreInfo *waitSemaphoreInfo,
@@ -190,7 +150,7 @@ bool CommandBufferHandler::submitQueue(int commandBufferIndex, VkQueue queue, Co
 	return success;
 }
 
-VkCommandBuffer CommandBufferHandler::createOneTimeUsageBuffer()
+VkCommandBuffer CommandBufferHandler::createOneTimeUsageBuffer(VkCommandPool cmdPool, VkDevice device)
 {
 	VkCommandBufferAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -210,7 +170,7 @@ VkCommandBuffer CommandBufferHandler::createOneTimeUsageBuffer()
 	return commandBuffer;
 }
 
-void CommandBufferHandler::endOneTimeUsageBuffer(VkCommandBuffer commandBuffer, VkQueue queue)
+void CommandBufferHandler::endOneTimeUsageBuffer(VkCommandBuffer commandBuffer, VkQueue queue, VkCommandPool cmdPool, VkDevice device)
 {
 	vkEndCommandBuffer(commandBuffer);
 

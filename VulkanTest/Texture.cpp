@@ -2,8 +2,13 @@
 #include "Texture.h"
 
 
-Texture::Texture(std::string path, unsigned int mode)
+Texture::Texture(VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkFormat imageFormat,
+				std::string path, unsigned int mode)
 {
+	this->device = device;
+	this->imageFormat = imageFormat;
+	this->physicalProperties = memprops;
+
 	pixels = stbi_load(path.c_str(), &width, &height, &channelCount, mode);
 	size = width * height * mode;													//Mode je ustvari broj bajtova po pikselu
 
@@ -14,41 +19,59 @@ Texture::Texture(std::string path, unsigned int mode)
 }
 
 
+
 Texture::~Texture()
 {
+	vkDestroySampler(device, sampler, nullptr);
+	vkDestroyImageView(device, this->textureView, nullptr);
+	vkDestroyImage(device, texture, nullptr);
+	vkFreeMemory(device, textureMemory, nullptr);
 }
 
-void Texture::createTextureTest(VkDevice device, VkPhysicalDeviceMemoryProperties* memprops, VkFormat imageFormat)
+void Texture::beginCreatingTexture(VkCommandPool commandPool, VkQueue queue)
 {
-	VkImageCreateInfo info = {};
-	VkMemoryRequirements imageMemoryRequirements = {};
-	VkMemoryAllocateInfo allocateInfo = {};
+	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+	VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	VkMemoryPropertyFlags imageMemoryProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	VkImageViewCreateInfo imgCreateInfo = {};
 
-	stagingBuffer = std::make_unique<StagingBuffer<stbi_uc*>>(device, *memprops, size);
-	stagingBuffer->fillBuffer(pixels);
+	util->createImage(width, height, imageFormat, tiling, usage,
+		imageMemoryProps, &texture, &textureMemory, device,
+		physicalProperties, size, pixels, stagingBuffer);
 
-	stbi_image_free(pixels);
+	VkCommandBuffer transitioner = CommandBufferHandler::createOneTimeUsageBuffer(commandPool, device);
+	util->transitionImageLayout(texture, imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, transitioner);
+	CommandBufferHandler::endOneTimeUsageBuffer(transitioner, queue, commandPool, device);
+	util->copyBufferToimage(transitioner, stagingBuffer->getBuffer(), texture, width, height);
 
-	info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	info.imageType = VK_IMAGE_TYPE_2D;								//Kakav koordinatni sistem koristimo za texturu?
-	info.extent = { width, height, 1 };								//W, H, Depth mora biti 1.
-	info.mipLevels = 1;
-	info.arrayLayers = 1;
-	info.format = imageFormat;										//Format bi trebao da bude kao format bafera
-	info.tiling = VK_IMAGE_TILING_OPTIMAL;							//Da bi smo pristupali slici iz sejdera. Linear tilingom bi mogli pristupati texelima kako hocemo.
-	info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;					//Preinitialized cuva podatke o texelima posle tranzicije.
-	info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;	//Sampled bitom mozemo pristupiti texturi iz sejdera.
-	info.samples = VK_SAMPLE_COUNT_1_BIT;							//Multisampling
-	info.flags = 0;
+	VkCommandBuffer retransitioner = CommandBufferHandler::createOneTimeUsageBuffer(commandPool, device);
+	util->transitionImageLayout(texture, imageFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, transitioner); //Mozda treba napraviti novi command buffer za ovu operaciju.
+	CommandBufferHandler::endOneTimeUsageBuffer(retransitioner, queue, commandPool, device);
 
-	util->ErrorCheck(vkCreateImage(device, &info, nullptr, &texture));
-	vkGetImageMemoryRequirements(device, texture, &imageMemoryRequirements);
+	this->textureView = util->createImageView(device, texture, imageFormat);
+}
 
-	allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocateInfo.pNext = nullptr;
-	allocateInfo.memoryTypeIndex = util->findMemoryTypeIndex(memprops, &imageMemoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	allocateInfo.allocationSize = imageMemoryRequirements.size;
+void Texture::createSampler()
+{
+	VkSamplerCreateInfo info = {};
 
-	util->ErrorCheck(vkAllocateMemory(device, &allocateInfo, nullptr, &textureMemory));
-	util->ErrorCheck(vkBindImageMemory(device, texture, textureMemory, 0));
+	info.sType - VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	info.minFilter = VK_FILTER_LINEAR;						//Undersampler
+	info.magFilter = VK_FILTER_LINEAR;						//Oversampler
+	info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;		//U, V, W su koordinate texela, za geometriju su x,y,z
+	info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	info.anisotropyEnable = VK_TRUE;
+	info.maxAnisotropy = 16;
+	info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+	info.compareEnable = VK_FALSE;
+	info.compareOp = VK_COMPARE_OP_ALWAYS;
+	info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	info.mipLodBias = 0.0f;									//Level of details bias.
+	info.minLod = 0.0f;
+	info.maxLod = 0.0f;
+	info.anisotropyEnable = VK_TRUE;						//Anisotropy je opciona, mora se navesti u logicalDevice-u
+	info.maxAnisotropy = 1;
+
+	util->ErrorCheck(vkCreateSampler(device, &info, nullptr, &sampler));
 }

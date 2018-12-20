@@ -91,23 +91,7 @@ void Swapchain::initSwapchainImgs()
 	util->ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, images.data()));
 
 	for (uint32_t i = 0; i < swapchainImageCount; i++) {
-		VkImageViewCreateInfo imgCreateInfo = {};
-		imgCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
-		imgCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
-		imgCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
-		imgCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-		imgCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		imgCreateInfo.subresourceRange.baseMipLevel = 0;
-		imgCreateInfo.subresourceRange.levelCount = 1;
-		imgCreateInfo.subresourceRange.baseArrayLayer = 0;
-		imgCreateInfo.subresourceRange.layerCount = 1;
-		imgCreateInfo.format = this->imagesFormat;
-		imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		imgCreateInfo.image = images[i];
-		imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-
-
-		util->ErrorCheck(vkCreateImageView(renderer->getDevice(), &imgCreateInfo, nullptr, &imageViews[i]));
+		imageViews[i] = util->createImageView(this->mainWindow->getRenderer()->getDevice(), images[i], imagesFormat);
 	}
 }
 

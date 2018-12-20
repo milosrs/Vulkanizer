@@ -360,6 +360,7 @@ int ratePhysicalDevice(VkPhysicalDevice gpu) {
 	score += properties.limits.maxGeometryShaderInvocations;
 	score += features.multiViewport ? 200 : 0;
 	score += features.tessellationShader ? 500 : 0;
+	score += features.samplerAnisotropy ? -3500 : 0;
 
 	if (!features.geometryShader) {
 		score = 0;

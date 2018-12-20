@@ -14,6 +14,18 @@ public:
 
 	};
 
+	StagingBuffer(const StagingBuffer& stagingBuffer) {
+		this->allocateInfo = stagingBuffer.allocateInfo;
+		this->buffer = stagingBuffer.buffer;
+		this->bufferInfo = stagingBuffer.bufferInfo;
+		this->bufferMemory = stagingBuffer.bufferMemory;
+		this->device = stagingBuffer.device;
+		this->deviceMemoryProps = stagingBuffer.deviceMemoryProps;
+		this->memoryRequirements = stagingBuffer.memoryRequirements;
+		this->size = stagingBuffer.size;
+		this->util = stagingBuffer.util;
+	}
+
 	~StagingBuffer() {};
 
 	void fillBuffer(std::vector<T> inputData) {
