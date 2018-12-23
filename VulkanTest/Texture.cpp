@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Texture.h"
-
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 Texture::Texture(VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkFormat imageFormat,
 				std::string path, unsigned int mode)
@@ -8,7 +9,7 @@ Texture::Texture(VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, Vk
 	this->device = device;
 	this->imageFormat = imageFormat;
 	this->physicalProperties = memprops;
-
+	
 	pixels = stbi_load(path.c_str(), &width, &height, &channelCount, mode);
 	size = width * height * mode;													//Mode je ustvari broj bajtova po pikselu
 
@@ -16,9 +17,10 @@ Texture::Texture(VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, Vk
 		throw std::runtime_error("Error opening texture file: " + path);
 		exit(1);
 	}
+
+	stagingBuffer = new StagingBuffer<unsigned char>(device, *memprops, size);
+	createSampler();
 }
-
-
 
 Texture::~Texture()
 {
@@ -35,27 +37,41 @@ void Texture::beginCreatingTexture(VkCommandPool commandPool, VkQueue queue)
 	VkMemoryPropertyFlags imageMemoryProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	VkImageViewCreateInfo imgCreateInfo = {};
 
-	util->createImage(width, height, imageFormat, tiling, usage,
+	Util::createImage(width, height, imageFormat, tiling, usage,
 		imageMemoryProps, &texture, &textureMemory, device,
 		physicalProperties, size, pixels, stagingBuffer);
 
+	stbi_image_free(pixels);
+
 	VkCommandBuffer transitioner = CommandBufferHandler::createOneTimeUsageBuffer(commandPool, device);
-	util->transitionImageLayout(texture, imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, transitioner);
+	Util::transitionImageLayout(&texture, imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, 
+								VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, transitioner);
+	Util::copyBufferToimage(transitioner, stagingBuffer->getBuffer(), &texture, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+							width, height);
 	CommandBufferHandler::endOneTimeUsageBuffer(transitioner, queue, commandPool, device);
-	util->copyBufferToimage(transitioner, stagingBuffer->getBuffer(), texture, width, height);
 
 	VkCommandBuffer retransitioner = CommandBufferHandler::createOneTimeUsageBuffer(commandPool, device);
-	util->transitionImageLayout(texture, imageFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, transitioner); //Mozda treba napraviti novi command buffer za ovu operaciju.
+	Util::transitionImageLayout(&texture, imageFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, transitioner); //Mozda treba napraviti novi command buffer za ovu operaciju.
 	CommandBufferHandler::endOneTimeUsageBuffer(retransitioner, queue, commandPool, device);
 
-	this->textureView = util->createImageView(device, texture, imageFormat);
+	this->textureView = Util::createImageView(device, texture, imageFormat);
+}
+
+VkSampler Texture::getSampler()
+{
+	return sampler;
+}
+
+VkImageView Texture::getTextureImageView()
+{
+	return textureView;
 }
 
 void Texture::createSampler()
 {
 	VkSamplerCreateInfo info = {};
 
-	info.sType - VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	info.minFilter = VK_FILTER_LINEAR;						//Undersampler
 	info.magFilter = VK_FILTER_LINEAR;						//Oversampler
 	info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;		//U, V, W su koordinate texela, za geometriju su x,y,z
@@ -73,5 +89,5 @@ void Texture::createSampler()
 	info.anisotropyEnable = VK_TRUE;						//Anisotropy je opciona, mora se navesti u logicalDevice-u
 	info.maxAnisotropy = 1;
 
-	util->ErrorCheck(vkCreateSampler(device, &info, nullptr, &sampler));
+	Util::ErrorCheck(vkCreateSampler(device, &info, nullptr, &sampler));
 }

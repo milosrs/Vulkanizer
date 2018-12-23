@@ -3,7 +3,6 @@
 #define COMMAND_BUFFER_HANDLER_H
 #endif
 #include <vector>
-#include "Util.h"
 #include "CommandBufferSemaphoreInfo.h"
 #include <map>
 
@@ -43,7 +42,7 @@ public:
 
 	static VkCommandBuffer createOneTimeUsageBuffer(VkCommandPool, VkDevice);
 	static void endOneTimeUsageBuffer(VkCommandBuffer, VkQueue, VkCommandPool, VkDevice);
-	static void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize, VkQueue);
+	static void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize, VkQueue, VkCommandPool, VkDevice);
 
 	std::vector<CommandBuffer> getCommandBuffers();
 	VkCommandPool getCommandPool();
@@ -61,6 +60,5 @@ private:
 
 	uint32_t drawingBuffersCount = 0;
 	MainWindow* window = nullptr;
-	Util* util;
 };
 

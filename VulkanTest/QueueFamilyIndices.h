@@ -1,5 +1,7 @@
 #pragma once
-
+#ifndef QUEUE_FAMILY_INDICES_H
+#define QUEUE_FAMILY_INDICES_H
+#endif
 #include <vector>
 #include <assert.h>
 #include <optional>

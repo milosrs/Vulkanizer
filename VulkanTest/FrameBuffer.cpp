@@ -9,7 +9,6 @@ FrameBuffer::FrameBuffer(
 	VkExtent2D surfaceSize,
 	std::vector<VkImageView> attachments)
 {
-	util = &Util::instance();
 	this->renderer = renderer;
 
 	initFrameBuffer(swapchainImageCount, imageViews, renderPass, surfaceSize, attachments);
@@ -49,7 +48,7 @@ void FrameBuffer::initFrameBuffer(
 		frameBufferCreateInfo.pAttachments = allAttachments.data();
 		frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(allAttachments.size());
 
-		util->ErrorCheck(vkCreateFramebuffer(renderer->getDevice(), &frameBufferCreateInfo, nullptr, &frameBuffers[i]));
+		Util::ErrorCheck(vkCreateFramebuffer(renderer->getDevice(), &frameBufferCreateInfo, nullptr, &frameBuffers[i]));
 	}
 }
 

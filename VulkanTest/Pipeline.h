@@ -1,14 +1,17 @@
 #pragma once
+#ifndef PIPELINE_H
+#define PIPELINE_H
+#endif
 #include <string>
 #include <fstream>
 #include <vector>
 #include <array>
 #include "PLATFORM.h"
-#include "Util.h"
 #include "Vertices.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "Renderer.h"
+#include "Util.h"
 
 class Pipeline
 {
@@ -51,9 +54,8 @@ private:
 	std::vector<VkVertexInputAttributeDescription> attributeDescription;
 
 	/*Uniform Buffer Object binding*/
-	VkDescriptorSetLayoutBinding layoutBinding = {};
+	std::vector<VkDescriptorSetLayoutBinding> layoutBindings = {};
 	VkDescriptorSetLayout descriptorLayout = {};
-	VkDescriptorSetLayoutCreateInfo descriptorCreateInfo = {};
 
 	VkViewport viewport = {};
 	VkRect2D scissors = {};
@@ -80,7 +82,5 @@ private:
 	VkPipeline pipeline = VK_NULL_HANDLE;
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
 	bool viewportCreated = false;
-
-	Util* util = nullptr;
 };
 

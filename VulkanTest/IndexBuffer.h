@@ -1,4 +1,7 @@
 #pragma once
+#ifndef INDEX_BUFFER_H
+#define INDEX_BUFFER_H
+#endif
 #include "Buffer.h"
 
 class IndexBuffer : public Buffer {

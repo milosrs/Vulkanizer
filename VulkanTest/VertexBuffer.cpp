@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "VertexBuffer.h"
 
-
 VertexBuffer::VertexBuffer(VkDevice device, VkPhysicalDeviceMemoryProperties properties, std::shared_ptr<Vertices> vertices) : Buffer(device, properties)
 {
 	this->vertices = std::make_shared<Vertices>();

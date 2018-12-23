@@ -8,7 +8,6 @@ MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::
 	this->sizeX = sizeX;
 	this->sizeY = sizeY;
 	this->name = windowName;
-	this->util = &Util::instance();
 
 	InitOSWindow();
 	InitOSSurface();
@@ -73,31 +72,39 @@ void MainWindow::createData()
 
 void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
 {
-	this->indexBuffer = std::make_unique<IndexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
-		vertices->getIndices());
+	this->texture = std::make_unique<Texture>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryPropertiesPTR(),
+		surfaceFormat.format, "../Textures/sculpture.jpg", 4);
 	this->vertexBuffer = std::make_unique<VertexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
 		vertices);
+	this->indexBuffer = std::make_unique<IndexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
+		vertices->getIndices());
+
+	texture->beginCreatingTexture(commandBufferHandler->getCommandPool(), renderer->getQueueIndices()->getQueue());
 
 	if (!uniform) {
 		/*Pravimo Vertex Staging buffer*/
-		StagingBuffer<Vertex>* stagingBufferVertex = new StagingBuffer<Vertex>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
+		StagingBuffer<Vertex>* stagingBufferVertex = new StagingBuffer<Vertex>(renderer->getDevice(), 
+			renderer->getPhysicalDeviceMemoryProperties(),
 			vertexBuffer->getSize());
 
 		stagingBufferVertex->fillBuffer(vertexBuffer->getVertices());
 
 		commandBufferHandler->copyBuffer(stagingBufferVertex->getBuffer(), vertexBuffer->getBuffer(),
-			vertexBuffer->getSize(), renderer->getQueueIndices()->getQueue());
+			vertexBuffer->getSize(), renderer->getQueueIndices()->getQueue(), 
+			commandBufferHandler->getCommandPool(), renderer->getDevice());
 
 		stagingBufferVertex->~StagingBuffer();
 
 		/*Pravimo Index Staging buffer*/
-		StagingBuffer<uint16_t>* stagingBufferIndices = new StagingBuffer<uint16_t>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
+		StagingBuffer<uint16_t>* stagingBufferIndices = new StagingBuffer<uint16_t>(renderer->getDevice(), 
+			renderer->getPhysicalDeviceMemoryProperties(),
 			indexBuffer->getSize());
 
 		stagingBufferIndices->fillBuffer(indexBuffer->getIndices());
 
 		commandBufferHandler->copyBuffer(stagingBufferIndices->getBuffer(), indexBuffer->getBuffer(),
-			indexBuffer->getSize(), renderer->getQueueIndices()->getQueue());
+			indexBuffer->getSize(), renderer->getQueueIndices()->getQueue(), 
+			commandBufferHandler->getCommandPool(), renderer->getDevice());
 
 		stagingBufferIndices->~StagingBuffer();
 	}
@@ -106,12 +113,12 @@ void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
 			uniformBuffers.push_back(new UniformBuffer(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties()));
 		}
 
-		descriptorHandler->createDescriptorSets(uniformBuffers);
+		descriptorHandler->createDescriptorSets(uniformBuffers, texture->getSampler(), texture->getTextureImageView());
 	}
 	vertexBuffer->fillBuffer();
 	indexBuffer->fillBuffer();
+
 	commandBufferHandler->createDrawingCommandBuffers(frameBuffer->getFrameBuffers().size());
-	commandBufferHandler->createTransferCommandBuffers(2);
 }
 
 void MainWindow::bindPipeline(VkCommandBuffer cmdBuffer)
@@ -187,7 +194,7 @@ void MainWindow::beginRender(VkSemaphore semaphoreToWait)
 		recreateSwapchain();
 	}
 	else if (result != VK_SUCCESS) {
-		util->ErrorCheck(result);
+		Util::ErrorCheck(result);
 	}
 }
 
@@ -204,7 +211,7 @@ void MainWindow::endRender(std::vector<VkSemaphore> waitSemaphores)
 	presentInfo.pImageIndices = this->swapchain->getActiveImageSwapchainPTR();
 	presentInfo.pResults = &presentResult;
 
-	util->ErrorCheck(vkQueuePresentKHR(renderer->getQueueIndices()->getQueue(), &presentInfo));
+	Util::ErrorCheck(vkQueuePresentKHR(renderer->getQueueIndices()->getQueue(), &presentInfo));
 }
 
 void MainWindow::recreateSwapchain()
@@ -330,5 +337,5 @@ void MainWindow::InitOSSurface()
 	surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 	surfaceCreateInfo.hwnd = glfwGetWin32Window(this->window);
 	VkResult result = glfwCreateWindowSurface(renderer->getInstance(), this->window, nullptr, &surfaceKHR);
-	util->ErrorCheck(result);
+	Util::ErrorCheck(result);
 }

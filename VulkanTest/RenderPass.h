@@ -1,7 +1,10 @@
 #pragma once
+#ifndef RENDER_PASS_H
+#define RENDER_PASS_H
+#endif
 #include "PLATFORM.h"
-#include "Util.h"
 #include "Renderer.h"
+#include "Util.h"
 #include <array>
 #include <vector>
 
@@ -17,7 +20,6 @@ public:
 	VkRenderPass* getRenderPassPTR();
 
 	void beginRenderPass(VkCommandBuffer, VkRenderPassBeginInfo*);
-	void beginRenderPass(VkFramebuffer, VkCommandBuffer, VkRenderPassBeginInfo);
 	void endRenderPass(VkCommandBuffer commandBuffer);
 private:
 	void initRenderPass();
@@ -25,7 +27,6 @@ private:
 	void createDepthStencil();
 	void createColor();
 
-	Util* util = nullptr;
 	Renderer* renderer = nullptr;
 
 	VkRenderPass renderPass = nullptr;

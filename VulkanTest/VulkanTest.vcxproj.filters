@@ -189,5 +189,8 @@
     <Image Include="..\textures\chef.png">
       <Filter>Textures</Filter>
     </Image>
+    <Image Include="..\textures\sculpture.jpg">
+      <Filter>Textures</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -4,7 +4,6 @@
 
 Swapchain::Swapchain(MainWindow* mainWindow, Renderer* renderer)
 {
-	util = &Util::instance();
 	this->mainWindow = mainWindow;
 	this->renderer = renderer;
 	this->imagesFormat = mainWindow->getSurfaceFormat().format;
@@ -80,18 +79,18 @@ void Swapchain::initSwapchain() {
 	swapchainCreateInfo.clipped = VK_TRUE;														//Ukljucujemo clipping, jako bitno za telefone
 	swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;											//Ako rekonstruisemo swapchain, pokazivac na stari
 
-	util->ErrorCheck(vkCreateSwapchainKHR(renderer->getDevice(), &swapchainCreateInfo, nullptr, &swapchain));
+	Util::ErrorCheck(vkCreateSwapchainKHR(renderer->getDevice(), &swapchainCreateInfo, nullptr, &swapchain));
 }
 
 void Swapchain::initSwapchainImgs()
 {
-	util->ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, nullptr));
+	Util::ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, nullptr));
 	images.resize(swapchainImageCount);
 	imageViews.resize(swapchainImageCount);
-	util->ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, images.data()));
+	Util::ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, images.data()));
 
 	for (uint32_t i = 0; i < swapchainImageCount; i++) {
-		imageViews[i] = util->createImageView(this->mainWindow->getRenderer()->getDevice(), images[i], imagesFormat);
+		imageViews[i] = Util::createImageView(this->mainWindow->getRenderer()->getDevice(), images[i], imagesFormat);
 	}
 }
 
@@ -124,7 +123,7 @@ void Swapchain::initDepthStencilImage()
 
 		VkPhysicalDeviceMemoryProperties memoryProps = renderer->getPhysicalDeviceMemoryProperties();
 
-		uint32_t memoryIndex = this->util->findMemoryTypeIndex(&memoryProps, &memoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		uint32_t memoryIndex = Util::findMemoryTypeIndex(&memoryProps, &memoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 		this->allocateInfo.allocationSize = memoryRequirements.size;
 		this->allocateInfo.memoryTypeIndex = memoryIndex;
 		this->allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;

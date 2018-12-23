@@ -1,4 +1,7 @@
 #pragma once
+#ifndef STAGING_BUFFER_H
+#define STAGING_BUFFER_H
+#endif 
 #include "Buffer.h"
 #include <vector>
 
@@ -11,7 +14,6 @@ public:
 
 		this->initBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, size,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
 	};
 
 	StagingBuffer(const StagingBuffer& stagingBuffer) {
@@ -40,6 +42,14 @@ public:
 
 		vkMapMemory(device, bufferMemory, 0, size, 0, &data);
 		memcpy(data, &inputData, (size_t)size);
+		vkUnmapMemory(device, bufferMemory);
+	}
+
+	void fillBuffer(T* inputData) {
+		void *data;
+
+		vkMapMemory(device, bufferMemory, 0, size, 0, &data);
+		memcpy(data, inputData, (size_t)size);
 		vkUnmapMemory(device, bufferMemory);
 	}
 private:

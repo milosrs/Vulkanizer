@@ -1,10 +1,8 @@
 #include "pch.h"
 #include "RenderPass.h"
 
-
 RenderPass::RenderPass(Renderer* renderer, VkFormat depthStencilFormat, VkSurfaceFormatKHR surfaceFormat)
 {
-	util = &Util::instance();
 	this->renderer = renderer;
 	this->depthStencilFormat = depthStencilFormat;
 	this->surfaceFormat = surfaceFormat;
@@ -61,7 +59,7 @@ void RenderPass::createColor() {
 	info.pSubpasses = &subpass;
 	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 
-	util->ErrorCheck(vkCreateRenderPass(this->renderer->getDevice(), &info, nullptr, &this->renderPass));
+	Util::ErrorCheck(vkCreateRenderPass(this->renderer->getDevice(), &info, nullptr, &this->renderPass));
 }
 
 void RenderPass::beginRenderPass(VkCommandBuffer cmdBuffer, VkRenderPassBeginInfo* beginInfo) {
@@ -117,7 +115,7 @@ void RenderPass::createDepthStencil() {
 	renderPassInfo.subpassCount = static_cast<uint32_t>(subpasses.size());
 	renderPassInfo.pSubpasses = subpasses.data();
 
-	util->ErrorCheck(vkCreateRenderPass(renderer->getDevice(), &renderPassInfo, nullptr, &renderPass));
+	Util::ErrorCheck(vkCreateRenderPass(renderer->getDevice(), &renderPassInfo, nullptr, &renderPass));
 }
 
 VkRenderPass RenderPass::getRenderPass()

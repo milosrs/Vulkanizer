@@ -1,13 +1,11 @@
 #include "pch.h"
 #include "Pipeline.h"
 
-
 Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, VkRenderPass* renderPass, 
 					float width, float height, VkExtent2D extent)
 {
 	this->device = device;
 	this->memprops = memprops;
-	util = &Util::instance();
 
 	auto vertexShaderCode = loadShader("vert.spv");
 	auto fragmentShaderCode = loadShader("frag.spv");
@@ -40,7 +38,7 @@ Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, V
 	pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
 	pipelineCreateInfo.pInputAssemblyState = &this->inputAssemblyCreateInfo;
 
-	util->ErrorCheck(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline));
+	Util::ErrorCheck(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline));
 
 	vkDestroyShaderModule(device, fragmentShader, nullptr);
 	vkDestroyShaderModule(device, vertexShader, nullptr);
@@ -76,7 +74,7 @@ void Pipeline::createPipelineLayout() {
 	pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
 	auto result = vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout);
-	util->ErrorCheck(result);
+	Util::ErrorCheck(result);
 
 	if (result != VK_SUCCESS) {
 		exit(-1);
@@ -84,17 +82,27 @@ void Pipeline::createPipelineLayout() {
 }
 
 void Pipeline::createDescriptorLayout() {
-	layoutBinding.binding = 0;											//u sejderu location(binding = 0)
-	layoutBinding.descriptorCount = 1;
-	layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;	//Koristimo uniform buffer objekat
-	layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;				//Referenciramo se na vertex shader
-	layoutBinding.pImmutableSamplers = nullptr;
+	VkDescriptorSetLayoutCreateInfo descriptorCreateInfo = {};
 
-	descriptorCreateInfo.bindingCount = 1;
+	layoutBindings.resize(2);
+
+	layoutBindings[0].binding = 0;											//Uniform Buffer Object; location(binding = 0) 
+	layoutBindings[0].descriptorCount = 1;
+	layoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;	//Koristimo uniform buffer objekat
+	layoutBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;				//Referenciramo se na vertex shader
+	layoutBindings[0].pImmutableSamplers = nullptr;
+
+	layoutBindings[1].binding = 1;											//Combined Image Sampler
+	layoutBindings[1].descriptorCount = 1;
+	layoutBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	layoutBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	layoutBindings[1].pImmutableSamplers = nullptr;
+
+	descriptorCreateInfo.bindingCount = this->layoutBindings.size();
 	descriptorCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	descriptorCreateInfo.pBindings = &layoutBinding;
+	descriptorCreateInfo.pBindings = layoutBindings.data();
 
-	util->ErrorCheck(vkCreateDescriptorSetLayout(device, &descriptorCreateInfo, nullptr, &descriptorLayout));
+	Util::ErrorCheck(vkCreateDescriptorSetLayout(device, &descriptorCreateInfo, nullptr, &descriptorLayout));
 }
 
 void Pipeline::setupViewport(float width, float height, VkExtent2D extent) {
@@ -158,7 +166,7 @@ void Pipeline::createShaderModule(const std::vector<char> code, VkShaderModule* 
 	shaderInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	shaderInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
-	util->ErrorCheck(vkCreateShaderModule(this->device, &shaderInfo, nullptr, shaderHandle));
+	Util::ErrorCheck(vkCreateShaderModule(this->device, &shaderInfo, nullptr, shaderHandle));
 }
 
 void Pipeline::createVertexInformation() {

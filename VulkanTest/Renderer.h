@@ -11,7 +11,6 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-#include "Util.h"
 #include "BUILD_OPTIONS.h"
 #include "QueueFamilyIndices.h"
 #include <cstring>
@@ -37,10 +36,12 @@ public:
 	const VkDebugReportCallbackEXT getDebugReportHandle();
 	const VkDebugReportCallbackCreateInfoEXT& getDebugCallbackCreateInfo();
 	const VkQueue getQueue();
-	const VkPhysicalDeviceMemoryProperties& getPhysicalDeviceMemoryProperties();
+	VkPhysicalDeviceMemoryProperties* getPhysicalDeviceMemoryPropertiesPTR();
+	VkPhysicalDeviceMemoryProperties getPhysicalDeviceMemoryProperties();
 	void _DeinitInstance();
 	QueueFamilyIndices* getQueueIndices();
 	MainWindow* getMainWindowPTR();
+
 
 	void continueInitialization();
 private:
@@ -86,8 +87,6 @@ private:
 	uint32_t glfwInstanceExtensionsCount = 0;
 	uint32_t graphicsFamilyIndex = 0;
 	const char** glfwInstanceExtensions;
-
-	Util* util = nullptr;
 
 	std::unique_ptr<QueueFamilyIndices> queueFamilyIndices = nullptr;
 	std::unique_ptr<MainWindow> window = nullptr;

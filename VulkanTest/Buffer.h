@@ -1,4 +1,7 @@
 #pragma once
+#ifndef BUFFER_H
+#define BUFFER_H
+#endif
 #include "PLATFORM.h"
 #include "Vertices.h"
 #include "Util.h"
@@ -24,7 +27,5 @@ protected:
 
 	VkMemoryAllocateInfo allocateInfo = {};
 	VkBufferCreateInfo bufferInfo = {};
-
-	Util* util = nullptr;
 };
 

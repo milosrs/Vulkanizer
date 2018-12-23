@@ -1,6 +1,10 @@
 #pragma once
+#ifndef FRAME_BUFFER_H
+#define FRAME_BUFFER_H
+#endif
 #include "PLATFORM.h"
 #include "Renderer.h"
+#include "Util.h"
 #include <vector>
 #include <array>
 
@@ -38,6 +42,5 @@ private:
 	VkFence activeImageAvaiableFence = VK_NULL_HANDLE;
 
 	Renderer* renderer = nullptr;
-	Util* util = nullptr;
 };
 

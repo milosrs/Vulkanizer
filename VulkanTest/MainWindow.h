@@ -5,8 +5,6 @@
 
 #include "PLATFORM.h"
 #include "BUILD_OPTIONS.h"
-#include "Util.h"
-#include "Util.h"
 #include "Swapchain.h"
 #include "RenderPass.h"
 #include "FrameBuffer.h"
@@ -19,6 +17,7 @@
 #include "IndexBuffer.h"
 #include "UniformBuffer.h"
 #include "DescriptorHandler.h"
+#include "Texture.h"
 #include <vector>
 #include <string>
 #include <assert.h>
@@ -88,12 +87,12 @@ private:
 	std::unique_ptr<DescriptorHandler> descriptorHandler = nullptr;
 	std::unique_ptr<IndexBuffer> indexBuffer = nullptr;
 	std::unique_ptr<VertexBuffer> vertexBuffer = nullptr;
+	std::unique_ptr<Texture> texture = nullptr;
 
 	std::vector<UniformBuffer*> uniformBuffers;
 
 	Renderer* renderer = nullptr;
 	GLFWwindow* window = nullptr;
-	Util* util = nullptr;
 
 	VkSurfaceKHR surfaceKHR = VK_NULL_HANDLE;
 	VkSurfaceCapabilitiesKHR surfaceCapatibilities = {};

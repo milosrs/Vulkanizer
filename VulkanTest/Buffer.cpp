@@ -1,12 +1,10 @@
 #include "pch.h"
 #include "Buffer.h"
 
-
 Buffer::Buffer(VkDevice device, VkPhysicalDeviceMemoryProperties deviceMemoryProps)
 {
 	this->device = device;
 	this->deviceMemoryProps = deviceMemoryProps;
-	this->util = &Util::instance();
 }
 
 Buffer::~Buffer()
@@ -23,15 +21,15 @@ void Buffer::initBuffer(VkBufferUsageFlags usage, VkDeviceSize size,
 	bufferInfo.size = size;
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	util->ErrorCheck(vkCreateBuffer(device, &bufferInfo, nullptr, &this->buffer));
+	Util::ErrorCheck(vkCreateBuffer(device, &bufferInfo, nullptr, &this->buffer));
 	vkGetBufferMemoryRequirements(device, this->buffer, &memoryRequirements);
 
 	allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocateInfo.allocationSize = memoryRequirements.size;
-	allocateInfo.memoryTypeIndex = util->findMemoryTypeIndex(&this->deviceMemoryProps, &memoryRequirements, memPropFlags);
+	allocateInfo.memoryTypeIndex = Util::findMemoryTypeIndex(&this->deviceMemoryProps, &memoryRequirements, memPropFlags);
 
-	util->ErrorCheck(vkAllocateMemory(device, &allocateInfo, nullptr, &bufferMemory));
-	util->ErrorCheck(vkBindBufferMemory(device, this->buffer, bufferMemory, 0));
+	Util::ErrorCheck(vkAllocateMemory(device, &allocateInfo, nullptr, &bufferMemory));
+	Util::ErrorCheck(vkBindBufferMemory(device, this->buffer, bufferMemory, 0));
 }
 
 VkBuffer Buffer::getBuffer()

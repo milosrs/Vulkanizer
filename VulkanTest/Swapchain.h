@@ -39,7 +39,6 @@ private:
 
 	MainWindow* mainWindow = nullptr;
 	Renderer* renderer = nullptr;
-	Util* util = nullptr;
 
 	VkBool32 isWSISupported = false;
 

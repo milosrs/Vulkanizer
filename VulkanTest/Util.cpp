@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Util.h"
+#include "StagingBuffer.h"
+#include "CommandBufferHandler.h"
 
 Util::Util()
 {
@@ -86,8 +88,9 @@ uint32_t Util::findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties * memo
 }
 
 void Util::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
-	VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory,
-	VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkDeviceSize size, stbi_uc* pixels, StagingBuffer<stbi_uc*>* stagingBuffer) {
+						VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory,
+						VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkDeviceSize size, 
+						unsigned char* pixels, StagingBuffer<unsigned char>* stagingBuffer) {
 
 	VkImageCreateInfo info = {};
 	VkMemoryRequirements imageMemoryRequirements = {};
@@ -96,18 +99,16 @@ void Util::createImage(uint32_t width, uint32_t height, VkFormat format, VkImage
 	
 	stagingBuffer->fillBuffer(pixels);
 
-	stbi_image_free(pixels);
-
 	info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	info.imageType = VK_IMAGE_TYPE_2D;								//Kakav koordinatni sistem koristimo za texturu?
-	info.extent = { width, height, 1 };								//W, H, Depth mora biti 1.
+	info.imageType = VK_IMAGE_TYPE_2D;											//Kakav koordinatni sistem koristimo za texturu?
+	info.extent = { width, height, 1 };											//W, H, Depth mora biti 1.
 	info.mipLevels = 1;
 	info.arrayLayers = 1;
-	info.format = format;											//Format bi trebao da bude kao format bafera
-	info.tiling = VK_IMAGE_TILING_OPTIMAL;							//Da bi smo pristupali slici iz sejdera. Linear tilingom bi mogli pristupati texelima kako hocemo.
-	info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;					//Preinitialized cuva podatke o texelima posle tranzicije.
-	info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;	//Sampled bitom mozemo pristupiti texturi iz sejdera.
-	info.samples = VK_SAMPLE_COUNT_1_BIT;							//Multisampling
+	info.format = format;														//Format bi trebao da bude kao format bafera
+	info.tiling = VK_IMAGE_TILING_OPTIMAL;										//Da bi smo pristupali slici iz sejdera. Linear tilingom bi mogli pristupati texelima kako hocemo.
+	info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;								//Preinitialized cuva podatke o texelima posle tranzicije.
+	info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;	//Sampled bitom mozemo pristupiti texturi iz sejdera.
+	info.samples = VK_SAMPLE_COUNT_1_BIT;										//Multisampling
 	info.flags = 0;
 
 	ErrorCheck(vkCreateImage(device, &info, nullptr, image));
@@ -122,7 +123,7 @@ void Util::createImage(uint32_t width, uint32_t height, VkFormat format, VkImage
 	ErrorCheck(vkBindImageMemory(device, *image, *imageMemory, 0));
 }
 
-void Util::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, 
+void Util::transitionImageLayout(VkImage *image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, 
 								VkCommandBuffer recordingBuffer)
 {
 	VkImageMemoryBarrier barrier = {};
@@ -155,7 +156,7 @@ void Util::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout o
 	subresourceRange.levelCount = 1;
 
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	barrier.image = image;
+	barrier.image = *image;
 	barrier.oldLayout = oldLayout;
 	barrier.newLayout = newLayout;
 
@@ -163,13 +164,12 @@ void Util::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout o
 		ako necemo da prebacujemo vlasnistvo nad slikom iz jednog Queue-a u drugi.*/
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;	
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.srcAccessMask = 0;		//TODO
-	barrier.dstAccessMask = 0;		//TODO
 
 	vkCmdPipelineBarrier(recordingBuffer, sourceStage, dstStage, 0, 0, nullptr, 0, nullptr, 0, &barrier);
 }
 
-void Util::copyBufferToimage(VkCommandBuffer cmdBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+void Util::copyBufferToimage(VkCommandBuffer cmdBuffer, VkBuffer buffer, VkImage *image, VkImageLayout layout,
+							uint32_t width, uint32_t height)
 {
 	VkBufferImageCopy region{};
 	VkImageSubresourceLayers subresouce{};
@@ -183,10 +183,10 @@ void Util::copyBufferToimage(VkCommandBuffer cmdBuffer, VkBuffer buffer, VkImage
 	region.bufferOffset = 0;									//Na kom mestu u baferu pocinju podaci o pikselima?
 	region.bufferRowLength = 0;
 	region.imageOffset = { 0, 0, 0 };							//Gde
-	region.imageExtent = { width, height, 0 };					//Kopiramo
+	region.imageExtent = { width, height, 1 };					//Kopiramo
 	region.imageSubresource = subresouce;						//Podatke o slici
 
-	vkCmdCopyBufferToImage(cmdBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	vkCmdCopyBufferToImage(cmdBuffer, buffer, *image, layout, 1, &region);
 }
 
 VkImageView Util::createImageView(VkDevice device, VkImage image, VkFormat format)
@@ -203,7 +203,6 @@ VkImageView Util::createImageView(VkDevice device, VkImage image, VkFormat forma
 	imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	imgCreateInfo.image = image;
 	imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-
 
 	ErrorCheck(vkCreateImageView(device, &imgCreateInfo, nullptr, &ret));
 

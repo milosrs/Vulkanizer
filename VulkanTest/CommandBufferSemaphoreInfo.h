@@ -1,6 +1,8 @@
 #pragma once
+#ifndef COMMAND_BUFFER_SEMAPHORE_INFO_H
+#define COMMAND_BUFFER_SEMAPHORE_INFO_H
+#endif
 #include "PLATFORM.h"
-#include "Util.h"
 
 class CommandBufferSemaphoreInfo
 {
@@ -20,7 +22,5 @@ private:
 	bool shouldWaitForSignalization;
 	VkSemaphore semaphore = VK_NULL_HANDLE;
 	VkPipelineStageFlags* pipelineStages = nullptr;
-	
-	Util* util;
 };
 

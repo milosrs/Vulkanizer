@@ -7,7 +7,6 @@ int ratePhysicalDevice(VkPhysicalDevice gpu);
 
 Renderer::Renderer()
 {
-	util = &Util::instance();
 	SetupLayersAndExtensions();
 	SetupDebug();
 	_InitInstance();
@@ -100,7 +99,7 @@ void Renderer::_InitDevice() {
 		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 		deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-		util->ErrorCheck(vkCreateDevice(this->gpu, &deviceCreateInfo, nullptr, &device));		//Napravimo uredjaj
+		Util::ErrorCheck(vkCreateDevice(this->gpu, &deviceCreateInfo, nullptr, &device));		//Napravimo uredjaj
 		queueFamilyIndices->createQueues(&this->device);											//Napravimo queue za uredjaj
 		this->supportedProperties.clear();														//Sprecimo memory leak
 	}
@@ -144,7 +143,7 @@ bool Renderer::areGLFWExtensionsSupported() {
 void Renderer::createPhysicalDevices() {
 	VkPhysicalDevice ret = NULL;
 	uint32_t gpuCount = 0;
-	util->ErrorCheck(vkEnumeratePhysicalDevices(instance, &gpuCount, nullptr));
+	Util::ErrorCheck(vkEnumeratePhysicalDevices(instance, &gpuCount, nullptr));
 
 	if (gpuCount == 0) {
 		assert(0 && "Vulkan Error: No GPU-s with Vulkan support present.");
@@ -397,8 +396,12 @@ const VkQueue Renderer::getQueue() {
 	return this->queue;
 }
 
-const VkPhysicalDeviceMemoryProperties & Renderer::getPhysicalDeviceMemoryProperties()
+VkPhysicalDeviceMemoryProperties* Renderer::getPhysicalDeviceMemoryPropertiesPTR()
 {
+	return &this->gpuMemoryProperties;
+}
+
+VkPhysicalDeviceMemoryProperties Renderer::getPhysicalDeviceMemoryProperties() {
 	return this->gpuMemoryProperties;
 }
 

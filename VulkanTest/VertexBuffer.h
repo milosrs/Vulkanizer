@@ -1,4 +1,7 @@
 #pragma once
+#ifndef VERTEX_BUFFER_H
+#define VERTEX_BUFFER_H
+#endif
 #include "Buffer.h"
 #include "PLATFORM.h"
 

@@ -5,7 +5,6 @@ Scene::Scene(MainWindow* window, Renderer* renderer)
 {
 	this->window = window;
 	this->renderer = renderer;
-	this->util = &Util::instance();
 
 	createSyncObjects();
 }
@@ -28,9 +27,9 @@ void Scene::createSyncObjects() {
 	fcreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		util->ErrorCheck(vkCreateSemaphore(renderer->getDevice(), &createInfo, nullptr, &imageAvaiableSemaphores[i]));
-		util->ErrorCheck(vkCreateSemaphore(renderer->getDevice(), &createInfo, nullptr, &renderFinishedSemaphores[i]));
-		util->ErrorCheck(vkCreateFence(renderer->getDevice(), &fcreateInfo, nullptr, &fences[i]));
+		Util::ErrorCheck(vkCreateSemaphore(renderer->getDevice(), &createInfo, nullptr, &imageAvaiableSemaphores[i]));
+		Util::ErrorCheck(vkCreateSemaphore(renderer->getDevice(), &createInfo, nullptr, &renderFinishedSemaphores[i]));
+		Util::ErrorCheck(vkCreateFence(renderer->getDevice(), &fcreateInfo, nullptr, &fences[i]));
 	}
 }
 

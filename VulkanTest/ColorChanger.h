@@ -28,7 +28,5 @@ private:
 	std::array<VkClearValue, 2> clearValues{};
 
 	float getColor(float circleNo);
-
-	Util* util;
 };
 

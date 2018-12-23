@@ -38,7 +38,7 @@ void ColorChanger::render(VkViewport* viewport) {
 		CommandBufferSemaphoreInfo imageSemaphoreInfo(true, imageAcquiredSemaphore, &stage);
 		bool isSubmitted = false;
 		glfwPollEvents();
-		util->printFPS();
+		Util::printFPS();
 		window->beginRender(imageAcquiredSemaphore);
 		
 		

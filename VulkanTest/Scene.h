@@ -1,7 +1,6 @@
 #pragma once
 #include "PLATFORM.h"
 #include "MainWindow.h"
-#include "Util.h"
 #include "CommandBufferSemaphoreInfo.h"
 #include "CommandBufferHandler.h"
 #include <vector>
@@ -23,7 +22,6 @@ protected:
 
 	MainWindow* window = nullptr;
 	Renderer* renderer = nullptr;
-	Util* util = nullptr;
 
 	size_t frameCount = 0;
 };

@@ -1,4 +1,7 @@
 #pragma once
+#ifndef UNIFORM_BUFFER_H
+#define UNIFORM_BUFFER_H
+#endif
 #define GLM_FORCE_RADIANS
 #include "Buffer.h"
 #include <glm/glm.hpp>

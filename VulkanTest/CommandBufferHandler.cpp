@@ -7,7 +7,6 @@ CommandBufferHandler::CommandBufferHandler(uint32_t graphicsFamilyIndex, VkDevic
 	VkCommandPoolCreateInfo cmdPoolCreateInfo{};
 	VkCommandPoolCreateInfo transferCmdPoolCreateInfo{};
 
-	this->util = &Util::instance();
 	this->device = device;
 	this->window = window;
 
@@ -67,7 +66,7 @@ void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount)
 
 		this->commandBuffers.push_back(cmdBuffer);
 
-		util->ErrorCheck(vkBeginCommandBuffer(cmdBuffer.commandBuffer, &beginInfo));
+		Util::ErrorCheck(vkBeginCommandBuffer(cmdBuffer.commandBuffer, &beginInfo));
 
 		window->getRenderPass()->beginRenderPass(cmdBuffer.commandBuffer, &renderPassBeginInfo);
 		window->getPipelinePTR()->bindPipeline(cmdBuffer.commandBuffer,
@@ -78,13 +77,13 @@ void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount)
 			1, 0, 0, 0);
 
 		window->getRenderPass()->endRenderPass(cmdBuffer.commandBuffer);
-		util->ErrorCheck(vkEndCommandBuffer(cmdBuffer.commandBuffer));//Pretvara command buffer u executable koji GPU izvrsava
+		Util::ErrorCheck(vkEndCommandBuffer(cmdBuffer.commandBuffer));//Pretvara command buffer u executable koji GPU izvrsava
 	}
 }
 
-void CommandBufferHandler::copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size, VkQueue queue)
+void CommandBufferHandler::copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size, VkQueue queue, VkCommandPool cmdPool, VkDevice device)
 {
-	VkCommandBuffer activeBuffer = createOneTimeUsageBuffer();
+	VkCommandBuffer activeBuffer = createOneTimeUsageBuffer(cmdPool, device);
 	
 	VkBufferCopy copyRegion = {};
 	copyRegion.size = size;
@@ -93,8 +92,8 @@ void CommandBufferHandler::copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize s
 
 	vkCmdCopyBuffer(activeBuffer, src, dst, 1, &copyRegion);
 	vkEndCommandBuffer(activeBuffer);
-
-	endOneTimeUsageBuffer(activeBuffer, queue);
+	
+	endOneTimeUsageBuffer(activeBuffer, queue, cmdPool, device);
 }
 
 bool CommandBufferHandler::submitQueue(int commandBufferIndex, VkQueue queue, CommandBufferSemaphoreInfo *waitSemaphoreInfo,
@@ -144,7 +143,7 @@ bool CommandBufferHandler::submitQueue(int commandBufferIndex, VkQueue queue, Co
 	success = result == VK_SUCCESS;
 
 	if (!success) {
-		util->ErrorCheck(result);
+		Util::ErrorCheck(result);
 	}
 
 	return success;

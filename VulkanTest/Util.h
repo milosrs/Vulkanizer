@@ -1,10 +1,9 @@
 #pragma once
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#ifndef UTIL_H
+#define UTIL_H
+#endif // !UTIL_H
 #include <assert.h>
 #include "PLATFORM.h"
-#include "StagingBuffer.h"
-#include "CommandBufferHandler.h"
 #include <iostream>
 #include "BUILD_OPTIONS.h"
 #include <chrono>
@@ -13,6 +12,9 @@ static auto timer = std::chrono::steady_clock();
 static auto last_time = timer.now();
 static uint64_t frameCounter = 0;
 static uint64_t fps = 0;
+
+class CommandBufferHandler;
+template <class T> class StagingBuffer;
 
 class Util
 {
@@ -23,24 +25,25 @@ public:
 	}
 	~Util();
 
-	void printFPS();
+	static void printFPS();
 
-	void ErrorCheck(VkResult result);
+	static void ErrorCheck(VkResult result);
 
-	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout,
-		VkCommandBuffer recordingBuffer);
+	static void transitionImageLayout(VkImage*, VkFormat, VkImageLayout, VkImageLayout, VkCommandBuffer);
 
-	void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage*,
-						VkDeviceMemory*, VkDevice, VkPhysicalDeviceMemoryProperties *, VkDeviceSize, stbi_uc*, StagingBuffer<stbi_uc*>* stagingBuffer);
+	static void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, 
+							VkMemoryPropertyFlags, VkImage*, VkDeviceMemory*, VkDevice, 
+							VkPhysicalDeviceMemoryProperties *, VkDeviceSize, 
+							unsigned char*, StagingBuffer<unsigned char>*);
 
-	VkImageView createImageView(VkDevice, VkImage, VkFormat);
+	static VkImageView createImageView(VkDevice, VkImage, VkFormat);
 
-	void copyBufferToimage(VkCommandBuffer, VkBuffer, VkImage, uint32_t, uint32_t);
+	static void copyBufferToimage(VkCommandBuffer, VkBuffer, VkImage*, VkImageLayout, uint32_t, uint32_t);
 
-	uint32_t findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties*, const VkMemoryRequirements*, 
+	static uint32_t findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties*, const VkMemoryRequirements*,
 									const VkMemoryPropertyFlags);
 
-	wchar_t *convertCharArrayToLPCWSTR(const char* charArray);
+	static wchar_t *convertCharArrayToLPCWSTR(const char* charArray);
 	
 
 	VkDevice getDevice();

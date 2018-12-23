@@ -1,9 +1,11 @@
 #pragma once
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#ifndef TEXTURE_H
+#define TEXTURE_H
+#endif
 #include <cstring>
 #include <memory>
 #include "StagingBuffer.h"
+#include "CommandBufferHandler.h"
 #include "PLATFORM.h"
 #include "Util.h"
 
@@ -16,12 +18,15 @@ public:
 	~Texture();
 
 	void beginCreatingTexture(VkCommandPool, VkQueue);
+
+	VkSampler getSampler();
+	VkImageView getTextureImageView();
 private:
 	void createSampler();
 
 	int width, height, channelCount;
 	unsigned int mode;
-	stbi_uc* pixels;
+	unsigned char* pixels;
 
 	VkDevice device = VK_NULL_HANDLE;
 	VkPhysicalDeviceMemoryProperties *physicalProperties = nullptr;
@@ -32,7 +37,6 @@ private:
 	VkDeviceMemory textureMemory = VK_NULL_HANDLE;
 	VkSampler sampler = VK_NULL_HANDLE;
 
-	StagingBuffer<stbi_uc*>* stagingBuffer = nullptr;
-	Util* util = &Util::instance();
+	StagingBuffer<unsigned char>* stagingBuffer = nullptr;
 };
 

@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "UniformBuffer.h"
 
-
 UniformBuffer::UniformBuffer(VkDevice device, VkPhysicalDeviceMemoryProperties memprops) : Buffer(device, memprops)
 {
 	this->size = sizeof(UBO);

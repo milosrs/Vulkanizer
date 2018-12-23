@@ -5,7 +5,6 @@ CommandBufferSemaphoreInfo::CommandBufferSemaphoreInfo(bool shouldWaitForSignali
 	this->shouldWaitForSignalization = shouldWaitForSignalization;
 	this->semaphore = semaphore;
 	this->pipelineStages = pipelineStages;
-	util = &Util::instance();
 }
 
 CommandBufferSemaphoreInfo::~CommandBufferSemaphoreInfo()
