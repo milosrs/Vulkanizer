@@ -89,47 +89,63 @@ uint32_t Util::findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties * memo
 
 void Util::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
 						VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory,
-						VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkDeviceSize size, 
-						unsigned char* pixels, StagingBuffer<unsigned char>* stagingBuffer) {
+						VkDevice device, VkPhysicalDeviceMemoryProperties *memprops) {
 
-	VkImageCreateInfo info = {};
-	VkMemoryRequirements imageMemoryRequirements = {};
-	VkMemoryAllocateInfo allocateInfo = {};
+	VkImageCreateInfo imageInfo = {};
+	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageInfo.extent.width = width;
+	imageInfo.extent.height = height;
+	imageInfo.extent.depth = 1;
+	imageInfo.mipLevels = 1;
+	imageInfo.arrayLayers = 1;
+	imageInfo.format = format;
+	imageInfo.tiling = tiling;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	imageInfo.usage = usage;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	
-	stagingBuffer->fillBuffer(pixels);
+	if (vkCreateImage(device, &imageInfo, nullptr, image) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create image!");
+	}
 
-	info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	info.imageType = VK_IMAGE_TYPE_2D;											//Kakav koordinatni sistem koristimo za texturu?
-	info.extent = { width, height, 1 };											//W, H, Depth mora biti 1.
-	info.mipLevels = 1;
-	info.arrayLayers = 1;
-	info.format = format;														//Format bi trebao da bude kao format bafera
-	info.tiling = VK_IMAGE_TILING_OPTIMAL;										//Da bi smo pristupali slici iz sejdera. Linear tilingom bi mogli pristupati texelima kako hocemo.
-	info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;								//Preinitialized cuva podatke o texelima posle tranzicije.
-	info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;	//Sampled bitom mozemo pristupiti texturi iz sejdera.
-	info.samples = VK_SAMPLE_COUNT_1_BIT;										//Multisampling
-	info.flags = 0;
+	VkMemoryRequirements memRequirements;
+	vkGetImageMemoryRequirements(device, *image, &memRequirements);
 
-	ErrorCheck(vkCreateImage(device, &info, nullptr, image));
-	vkGetImageMemoryRequirements(device, *image, &imageMemoryRequirements);
+	VkMemoryAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = findMemoryTypeIndex(memprops, &memRequirements, properties);
 
-	allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocateInfo.pNext = nullptr;
-	allocateInfo.memoryTypeIndex = findMemoryTypeIndex(memprops, &imageMemoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	allocateInfo.allocationSize = imageMemoryRequirements.size;
+	if (vkAllocateMemory(device, &allocInfo, nullptr, imageMemory) != VK_SUCCESS) {
+		throw std::runtime_error("failed to allocate image memory!");
+	}
 
-	ErrorCheck(vkAllocateMemory(device, &allocateInfo, nullptr, imageMemory));
-	ErrorCheck(vkBindImageMemory(device, *image, *imageMemory, 0));
+	vkBindImageMemory(device, *image, *imageMemory, 0);
 }
 
 void Util::transitionImageLayout(VkImage *image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, 
-								VkCommandBuffer recordingBuffer)
+								VkCommandPool commandPool, VkQueue queue, VkDevice device)
 {
+	VkCommandBuffer cmdBuffer = CommandBufferHandler::createOneTimeUsageBuffer(commandPool, device);
 	VkImageMemoryBarrier barrier = {};
-	VkImageSubresourceRange subresourceRange = {};
 	VkPipelineStageFlags sourceStage = {};
 	VkPipelineStageFlags dstStage = {};
+
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.oldLayout = oldLayout;
+	barrier.newLayout = newLayout;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = *image;
+	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = 1;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = 1;
+	/*Ova dva polja za redove moraju biti namestena da budu ignorisana,
+		ako necemo da prebacujemo vlasnistvo nad slikom iz jednog Queue-a u drugi.*/
 
 	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
 		barrier.srcAccessMask = 0;
@@ -139,54 +155,42 @@ void Util::transitionImageLayout(VkImage *image, VkFormat format, VkImageLayout 
 		dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 	}
 	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-		barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
 		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 	}
 	else {
-		throw std::invalid_argument("Layout transition not supported.");
+		throw std::invalid_argument("unsupported layout transition!");
 	}
 
-	subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	subresourceRange.baseArrayLayer = 0;
-	subresourceRange.baseMipLevel = 0;
-	subresourceRange.layerCount = 1;
-	subresourceRange.levelCount = 1;
-
-	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	barrier.image = *image;
-	barrier.oldLayout = oldLayout;
-	barrier.newLayout = newLayout;
-
-	/*Ova dva polja za redove moraju biti namestena da budu ignorisana, 
-		ako necemo da prebacujemo vlasnistvo nad slikom iz jednog Queue-a u drugi.*/
-	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;	
-	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-	vkCmdPipelineBarrier(recordingBuffer, sourceStage, dstStage, 0, 0, nullptr, 0, nullptr, 0, &barrier);
+	vkCmdPipelineBarrier(cmdBuffer, sourceStage, dstStage, 0, 0, nullptr, 0, nullptr, 0, &barrier);
+	CommandBufferHandler::endOneTimeUsageBuffer(cmdBuffer, queue, commandPool, device);
 }
 
-void Util::copyBufferToimage(VkCommandBuffer cmdBuffer, VkBuffer buffer, VkImage *image, VkImageLayout layout,
-							uint32_t width, uint32_t height)
+void Util::copyBufferToimage(VkBuffer buffer, VkImage *image, uint32_t width, uint32_t height,
+								VkCommandPool commandPool, VkDevice device, VkQueue queue)
 {
-	VkBufferImageCopy region{};
-	VkImageSubresourceLayers subresouce{};
+	VkCommandBuffer cmdBuffer = CommandBufferHandler::createOneTimeUsageBuffer(commandPool, device);
 
-	subresouce.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	subresouce.baseArrayLayer = 0;
-	subresouce.mipLevel = 0;
-	subresouce.layerCount = 1;
-
-	region.bufferImageHeight = 0;
-	region.bufferOffset = 0;									//Na kom mestu u baferu pocinju podaci o pikselima?
+	VkBufferImageCopy region = {};
+	region.bufferOffset = 0;
 	region.bufferRowLength = 0;
-	region.imageOffset = { 0, 0, 0 };							//Gde
-	region.imageExtent = { width, height, 1 };					//Kopiramo
-	region.imageSubresource = subresouce;						//Podatke o slici
+	region.bufferImageHeight = 0;
+	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.baseArrayLayer = 0;
+	region.imageSubresource.layerCount = 1;
+	region.imageOffset = { 0, 0, 0 };
+	region.imageExtent = {
+		width,
+		height,
+		1
+	};
 
-	vkCmdCopyBufferToImage(cmdBuffer, buffer, *image, layout, 1, &region);
+	vkCmdCopyBufferToImage(cmdBuffer, buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	CommandBufferHandler::endOneTimeUsageBuffer(cmdBuffer, queue, commandPool, device);
 }
 
 VkImageView Util::createImageView(VkDevice device, VkImage image, VkFormat format)

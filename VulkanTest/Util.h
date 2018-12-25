@@ -29,16 +29,15 @@ public:
 
 	static void ErrorCheck(VkResult result);
 
-	static void transitionImageLayout(VkImage*, VkFormat, VkImageLayout, VkImageLayout, VkCommandBuffer);
+	static void transitionImageLayout(VkImage*, VkFormat, VkImageLayout, VkImageLayout, VkCommandPool, VkQueue, VkDevice);
 
 	static void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, 
 							VkMemoryPropertyFlags, VkImage*, VkDeviceMemory*, VkDevice, 
-							VkPhysicalDeviceMemoryProperties *, VkDeviceSize, 
-							unsigned char*, StagingBuffer<unsigned char>*);
+							VkPhysicalDeviceMemoryProperties *);
 
 	static VkImageView createImageView(VkDevice, VkImage, VkFormat);
 
-	static void copyBufferToimage(VkCommandBuffer, VkBuffer, VkImage*, VkImageLayout, uint32_t, uint32_t);
+	static void copyBufferToimage(VkBuffer, VkImage*, uint32_t, uint32_t, VkCommandPool, VkDevice, VkQueue);
 
 	static uint32_t findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties*, const VkMemoryRequirements*,
 									const VkMemoryPropertyFlags);

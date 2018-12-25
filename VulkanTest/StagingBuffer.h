@@ -43,7 +43,7 @@ public:
 		vkMapMemory(device, bufferMemory, 0, size, 0, &data);
 		memcpy(data, &inputData, (size_t)size);
 		vkUnmapMemory(device, bufferMemory);
-	}
+	};
 
 	void fillBuffer(T* inputData) {
 		void *data;
@@ -51,7 +51,7 @@ public:
 		vkMapMemory(device, bufferMemory, 0, size, 0, &data);
 		memcpy(data, inputData, (size_t)size);
 		vkUnmapMemory(device, bufferMemory);
-	}
+	};
 private:
 	VkDeviceSize size = VK_NULL_HANDLE;
 };

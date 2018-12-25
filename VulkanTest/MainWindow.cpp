@@ -60,11 +60,11 @@ void MainWindow::createData()
 	renderPass = std::make_unique<RenderPass>(renderer, swapchain->getDepthStencilFormat(), this->surfaceFormat);
 	scissorsExtent = surfaceCapatibilities.currentExtent;
 	pipeline = std::make_unique<Pipeline>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
-		renderPass->getRenderPassPTR(), width, height, scissorsExtent);
+		renderPass->getRenderPassPTR(), (float)width, (float)height, scissorsExtent);
 	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), swapchain->getImageViews(),
 		renderPass->getRenderPass(), this->getSurfaceSize());
 	descriptorHandler = std::make_unique<DescriptorHandler>(renderer->getDevice(), pipeline->getDescriptorSetLayout(), 
-															swapchain->getImageViews().size());
+															static_cast<uint32_t>(swapchain->getImageViews().size()));
 	commandBufferHandler = std::make_unique<CommandBufferHandler>(renderer->getQueueIndices()->getGraphicsFamilyIndex(),
 		renderer->getDevice(), this);
 }
@@ -73,52 +73,26 @@ void MainWindow::createData()
 void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
 {
 	this->texture = std::make_unique<Texture>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryPropertiesPTR(),
-		surfaceFormat.format, "../Textures/sculpture.jpg", 4);
+		VK_FORMAT_R8G8B8A8_UNORM, "../Textures/riki.jpg", 4);
 	this->vertexBuffer = std::make_unique<VertexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
 		vertices);
 	this->indexBuffer = std::make_unique<IndexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
 		vertices->getIndices());
 
-	texture->beginCreatingTexture(commandBufferHandler->getCommandPool(), renderer->getQueueIndices()->getQueue());
+	texture->beginCreatingTexture(commandBufferHandler->getCommandPool(), 
+		renderer->getQueueIndices()->getQueues()[renderer->getQueueIndices()->getGraphicsFamilyIndex()]);
 
-	if (!uniform) {
-		/*Pravimo Vertex Staging buffer*/
-		StagingBuffer<Vertex>* stagingBufferVertex = new StagingBuffer<Vertex>(renderer->getDevice(), 
-			renderer->getPhysicalDeviceMemoryProperties(),
-			vertexBuffer->getSize());
-
-		stagingBufferVertex->fillBuffer(vertexBuffer->getVertices());
-
-		commandBufferHandler->copyBuffer(stagingBufferVertex->getBuffer(), vertexBuffer->getBuffer(),
-			vertexBuffer->getSize(), renderer->getQueueIndices()->getQueue(), 
-			commandBufferHandler->getCommandPool(), renderer->getDevice());
-
-		stagingBufferVertex->~StagingBuffer();
-
-		/*Pravimo Index Staging buffer*/
-		StagingBuffer<uint16_t>* stagingBufferIndices = new StagingBuffer<uint16_t>(renderer->getDevice(), 
-			renderer->getPhysicalDeviceMemoryProperties(),
-			indexBuffer->getSize());
-
-		stagingBufferIndices->fillBuffer(indexBuffer->getIndices());
-
-		commandBufferHandler->copyBuffer(stagingBufferIndices->getBuffer(), indexBuffer->getBuffer(),
-			indexBuffer->getSize(), renderer->getQueueIndices()->getQueue(), 
-			commandBufferHandler->getCommandPool(), renderer->getDevice());
-
-		stagingBufferIndices->~StagingBuffer();
+	
+	for (auto i = 0; i < swapchain->getImageViews().size(); ++i) {
+		uniformBuffers.push_back(new UniformBuffer(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties()));
 	}
-	else {
-		for (auto i = 0; i < swapchain->getImageViews().size(); ++i) {
-			uniformBuffers.push_back(new UniformBuffer(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties()));
-		}
 
-		descriptorHandler->createDescriptorSets(uniformBuffers, texture->getSampler(), texture->getTextureImageView());
-	}
+	descriptorHandler->createDescriptorSets(uniformBuffers, texture->getSampler(), texture->getTextureImageView());
+	
 	vertexBuffer->fillBuffer();
 	indexBuffer->fillBuffer();
 
-	commandBufferHandler->createDrawingCommandBuffers(frameBuffer->getFrameBuffers().size());
+	commandBufferHandler->createDrawingCommandBuffers(static_cast<uint32_t>(frameBuffer->getFrameBuffers().size()));
 }
 
 void MainWindow::bindPipeline(VkCommandBuffer cmdBuffer)

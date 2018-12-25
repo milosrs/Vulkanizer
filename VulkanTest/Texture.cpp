@@ -33,26 +33,22 @@ Texture::~Texture()
 void Texture::beginCreatingTexture(VkCommandPool commandPool, VkQueue queue)
 {
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-	VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 	VkMemoryPropertyFlags imageMemoryProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-	VkImageViewCreateInfo imgCreateInfo = {};
-
-	Util::createImage(width, height, imageFormat, tiling, usage,
-		imageMemoryProps, &texture, &textureMemory, device,
-		physicalProperties, size, pixels, stagingBuffer);
-
+	
+	stagingBuffer->fillBuffer(pixels);
 	stbi_image_free(pixels);
 
-	VkCommandBuffer transitioner = CommandBufferHandler::createOneTimeUsageBuffer(commandPool, device);
-	Util::transitionImageLayout(&texture, imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, 
-								VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, transitioner);
-	Util::copyBufferToimage(transitioner, stagingBuffer->getBuffer(), &texture, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-							width, height);
-	CommandBufferHandler::endOneTimeUsageBuffer(transitioner, queue, commandPool, device);
+	Util::createImage(width, height, imageFormat, tiling, usage,
+		imageMemoryProps, &texture, &textureMemory, device, physicalProperties);
 
-	VkCommandBuffer retransitioner = CommandBufferHandler::createOneTimeUsageBuffer(commandPool, device);
-	Util::transitionImageLayout(&texture, imageFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, transitioner); //Mozda treba napraviti novi command buffer za ovu operaciju.
-	CommandBufferHandler::endOneTimeUsageBuffer(retransitioner, queue, commandPool, device);
+	Util::transitionImageLayout(&texture, imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, 
+								VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, commandPool, queue, device);
+
+	Util::copyBufferToimage(stagingBuffer->getBuffer(), &texture, width, height, commandPool, device, queue);
+
+	Util::transitionImageLayout(&texture, imageFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+								VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandPool, queue, device);
 
 	this->textureView = Util::createImageView(device, texture, imageFormat);
 }
@@ -87,7 +83,7 @@ void Texture::createSampler()
 	info.minLod = 0.0f;
 	info.maxLod = 0.0f;
 	info.anisotropyEnable = VK_TRUE;						//Anisotropy je opciona, mora se navesti u logicalDevice-u
-	info.maxAnisotropy = 1;
+	info.maxAnisotropy = 16;
 
 	Util::ErrorCheck(vkCreateSampler(device, &info, nullptr, &sampler));
 }

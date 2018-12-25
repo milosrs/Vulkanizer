@@ -192,5 +192,14 @@
     <Image Include="..\textures\sculpture.jpg">
       <Filter>Textures</Filter>
     </Image>
+    <Image Include="..\..\..\..\Pictures\riki.jpg">
+      <Filter>Textures</Filter>
+    </Image>
+    <Image Include="..\..\..\..\Pictures\seahawks.jpg">
+      <Filter>Textures</Filter>
+    </Image>
+    <Image Include="..\..\..\..\Pictures\snot.jpg">
+      <Filter>Textures</Filter>
+    </Image>
   </ItemGroup>
 </Project>

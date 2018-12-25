@@ -228,6 +228,9 @@
     <None Include="shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\..\..\..\Pictures\riki.jpg" />
+    <Image Include="..\..\..\..\Pictures\seahawks.jpg" />
+    <Image Include="..\..\..\..\Pictures\snot.jpg" />
     <Image Include="..\textures\chef.png" />
     <Image Include="..\textures\sculpture.jpg" />
   </ItemGroup>

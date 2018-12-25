@@ -98,7 +98,7 @@ void Pipeline::createDescriptorLayout() {
 	layoutBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 	layoutBindings[1].pImmutableSamplers = nullptr;
 
-	descriptorCreateInfo.bindingCount = this->layoutBindings.size();
+	descriptorCreateInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
 	descriptorCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	descriptorCreateInfo.pBindings = layoutBindings.data();
 
