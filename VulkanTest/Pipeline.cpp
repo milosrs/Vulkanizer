@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Pipeline.h"
+#include "DepthTester.h"
 
 Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, VkRenderPass* renderPass, 
 					float width, float height, VkExtent2D extent)
@@ -7,11 +8,14 @@ Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, V
 	this->device = device;
 	this->memprops = memprops;
 
+	/*Shaders, always on*/
 	auto vertexShaderCode = loadShader("vert.spv");
 	auto fragmentShaderCode = loadShader("frag.spv");
-
 	this->createShaderModule(vertexShaderCode, &vertexShader);
 	this->createShaderModule(fragmentShaderCode, &fragmentShader);
+	this->createDescriptorLayout();
+	this->createPipelineLayout();
+
 	this->createInputAssemblyInformation();
 	this->setupViewport(width, height, extent);
 	this->createMultisamplingInformation();
@@ -20,8 +24,10 @@ Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, V
 	this->createDynamicState();
 	this->createRasterizer();
 
-	this->createDescriptorLayout();
-	this->createPipelineLayout();
+	if (DepthTester::isInstanceCreated()) {
+		this->createDepthStencilInformation();
+		pipelineCreateInfo.pDepthStencilState = &dsCreateInfo;
+	}
 
 	pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	pipelineCreateInfo.stageCount = 2;
@@ -37,6 +43,7 @@ Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, V
 	pipelineCreateInfo.basePipelineIndex = -1;
 	pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
 	pipelineCreateInfo.pInputAssemblyState = &this->inputAssemblyCreateInfo;
+
 
 	Util::ErrorCheck(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline));
 
@@ -179,6 +186,16 @@ void Pipeline::createVertexInformation() {
 	vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.size());
 	vertexInputCreateInfo.pVertexBindingDescriptions = &bindingDescription;
 	vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
+}
+
+void Pipeline::createDepthStencilInformation()
+{
+	dsCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	dsCreateInfo.depthTestEnable = VK_TRUE;
+	dsCreateInfo.stencilTestEnable = VK_FALSE;
+	dsCreateInfo.depthWriteEnable = VK_TRUE;
+	dsCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;			//Ovo je kljucno
+	dsCreateInfo.depthBoundsTestEnable = VK_FALSE;
 }
 
 void Pipeline::createInputAssemblyInformation() {

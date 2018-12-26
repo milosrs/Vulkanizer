@@ -50,7 +50,7 @@ void Texture::beginCreatingTexture(VkCommandPool commandPool, VkQueue queue)
 	Util::transitionImageLayout(&texture, imageFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
 								VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandPool, queue, device);
 
-	this->textureView = Util::createImageView(device, texture, imageFormat);
+	this->textureView = Util::createImageView(device, texture, imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 VkSampler Texture::getSampler()

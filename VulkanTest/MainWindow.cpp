@@ -48,6 +48,12 @@ void MainWindow::createData()
 {
 	int width = 0, height = 0;									//Minimizacija, pauziramo render dok se ne vrati slika na povrsinu ekrana.
 	VkExtent2D scissorsExtent;
+	VkDevice device = renderer->getDevice();
+	VkPhysicalDeviceMemoryProperties memprops = renderer->getPhysicalDeviceMemoryProperties();
+	VkPhysicalDeviceMemoryProperties *pMemprops = renderer->getPhysicalDeviceMemoryPropertiesPTR();
+	VkPhysicalDevice gpu = renderer->getGpu();
+	std::vector<VkImageView> framebufferImageViews;
+	VkExtent2D extent;
 
 	while (width == 0 || height == 0) {
 		glfwGetFramebufferSize(window, &width, &height);
@@ -57,34 +63,50 @@ void MainWindow::createData()
 	InitSurface();
 
 	swapchain = std::make_unique<Swapchain>(this, renderer);
-	renderPass = std::make_unique<RenderPass>(renderer, swapchain->getDepthStencilFormat(), this->surfaceFormat);
-	scissorsExtent = surfaceCapatibilities.currentExtent;
-	pipeline = std::make_unique<Pipeline>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
-		renderPass->getRenderPassPTR(), (float)width, (float)height, scissorsExtent);
-	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), swapchain->getImageViews(),
-		renderPass->getRenderPass(), this->getSurfaceSize());
-	descriptorHandler = std::make_unique<DescriptorHandler>(renderer->getDevice(), pipeline->getDescriptorSetLayout(), 
-															static_cast<uint32_t>(swapchain->getImageViews().size()));
 	commandBufferHandler = std::make_unique<CommandBufferHandler>(renderer->getQueueIndices()->getGraphicsFamilyIndex(),
-		renderer->getDevice(), this);
+		device, this);
+
+	std::vector<VkImageView> swapchainImgs = swapchain->getImageViews();
+	framebufferImageViews.insert(framebufferImageViews.begin(), swapchainImgs.begin(), swapchainImgs.end());
+	extent = surfaceCapatibilities.currentExtent;
+
+	if (Util::shouldCreateDepthStencil()) {
+		depthTester = std::make_unique<DepthTester>(device, gpu, memprops);
+		depthTester->createDepthImage(extent.width, extent.height,
+			commandBufferHandler->getCommandPool(), renderer->getQueueIndices()->getQueue());
+		framebufferImageViews.push_back(depthTester->getDepthImageView());
+	}
+
+	renderPass = std::make_unique<RenderPass>(renderer, this->surfaceFormat);
+
+	scissorsExtent = extent;
+	pipeline = std::make_unique<Pipeline>(device, memprops, renderPass->getRenderPassPTR(), 
+											(float)width, (float)height, scissorsExtent);	
+
+	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), framebufferImageViews,
+		renderPass->getRenderPass(), this->getSurfaceSize());
+
+	descriptorHandler = std::make_unique<DescriptorHandler>(device, pipeline->getDescriptorSetLayout(), 
+															static_cast<uint32_t>(swapchain->getImageViews().size()));
 }
 
 
-void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
+void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, std::vector<VkClearValue> clearValues, bool uniform)
 {
-	this->texture = std::make_unique<Texture>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryPropertiesPTR(),
-		VK_FORMAT_R8G8B8A8_UNORM, "../Textures/riki.jpg", 4);
-	this->vertexBuffer = std::make_unique<VertexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
-		vertices);
-	this->indexBuffer = std::make_unique<IndexBuffer>(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties(),
-		vertices->getIndices());
+	VkDevice device = renderer->getDevice();
+	VkPhysicalDeviceMemoryProperties memprops = renderer->getPhysicalDeviceMemoryProperties();
+	VkPhysicalDeviceMemoryProperties *pMemprops = renderer->getPhysicalDeviceMemoryPropertiesPTR();
+	VkPhysicalDevice gpu = renderer->getGpu();
+
+	this->texture = std::make_unique<Texture>(device, pMemprops, VK_FORMAT_R8G8B8A8_UNORM, "../Textures/riki.jpg", 4);
+	this->vertexBuffer = std::make_unique<VertexBuffer>(device, memprops, vertices);
+	this->indexBuffer = std::make_unique<IndexBuffer>(device, memprops, vertices->getIndices());
 
 	texture->beginCreatingTexture(commandBufferHandler->getCommandPool(), 
 		renderer->getQueueIndices()->getQueues()[renderer->getQueueIndices()->getGraphicsFamilyIndex()]);
 
-	
 	for (auto i = 0; i < swapchain->getImageViews().size(); ++i) {
-		uniformBuffers.push_back(new UniformBuffer(renderer->getDevice(), renderer->getPhysicalDeviceMemoryProperties()));
+		uniformBuffers.push_back(new UniformBuffer(device, memprops));
 	}
 
 	descriptorHandler->createDescriptorSets(uniformBuffers, texture->getSampler(), texture->getTextureImageView());
@@ -92,7 +114,8 @@ void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, bool uniform)
 	vertexBuffer->fillBuffer();
 	indexBuffer->fillBuffer();
 
-	commandBufferHandler->createDrawingCommandBuffers(static_cast<uint32_t>(frameBuffer->getFrameBuffers().size()));
+	commandBufferHandler->createDrawingCommandBuffers(static_cast<uint32_t>(frameBuffer->getFrameBuffers().size()), 
+														clearValues);
 }
 
 void MainWindow::bindPipeline(VkCommandBuffer cmdBuffer)
@@ -195,6 +218,40 @@ void MainWindow::recreateSwapchain()
 	createData();
 }
 
+void MainWindow::DestroySurface() {
+	vkDestroySurfaceKHR(renderer->getInstance(), this->surfaceKHR, nullptr);
+}
+
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+	auto app = reinterpret_cast<MainWindow*>(glfwGetWindowUserPointer(window));
+	app->windowResized = true;
+}
+
+void MainWindow::InitOSWindow()
+{
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);													//Ovo kaze biblioteci da aplikacija nije pisana u OpenGL/ES
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);														//Za sada, promena velicine prozora nije moguca
+	this->window = glfwCreateWindow(this->sizeX, this->sizeY, "Hello world!", nullptr, nullptr);	//4-i param: Koji monitor je u pitanju (sada je default)  5-i param: Samo za OpenGL aplikacije
+	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+}
+
+void MainWindow::DeinitOSWindow()
+{
+	glfwDestroyWindow(this->window);
+	glfwTerminate();
+}
+
+void MainWindow::InitOSSurface()
+{
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+	surfaceCreateInfo.hwnd = glfwGetWin32Window(this->window);
+	VkResult result = glfwCreateWindowSurface(renderer->getInstance(), this->window, nullptr, &surfaceKHR);
+	Util::ErrorCheck(result);
+}
+
 Renderer* MainWindow::getRenderer()
 {
 	return this->renderer;
@@ -278,38 +335,4 @@ VkBool32 MainWindow::getIsWSISupported()
 VkSurfaceFormatKHR MainWindow::getSurfaceFormat()
 {
 	return this->surfaceFormat;
-}
-
-void MainWindow::DestroySurface() {
-	vkDestroySurfaceKHR(renderer->getInstance(), this->surfaceKHR, nullptr);
-}
-
-static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-	auto app = reinterpret_cast<MainWindow*>(glfwGetWindowUserPointer(window));
-	app->windowResized = true;
-}
-
-void MainWindow::InitOSWindow()
-{
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);													//Ovo kaze biblioteci da aplikacija nije pisana u OpenGL/ES
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);														//Za sada, promena velicine prozora nije moguca
-	this->window = glfwCreateWindow(this->sizeX, this->sizeY, "Hello world!", nullptr, nullptr);	//4-i param: Koji monitor je u pitanju (sada je default)  5-i param: Samo za OpenGL aplikacije
-	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
-}
-
-void MainWindow::DeinitOSWindow()
-{
-	glfwDestroyWindow(this->window);
-	glfwTerminate();
-}
-
-void MainWindow::InitOSSurface()
-{
-	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
-	
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
-	surfaceCreateInfo.hwnd = glfwGetWin32Window(this->window);
-	VkResult result = glfwCreateWindowSurface(renderer->getInstance(), this->window, nullptr, &surfaceKHR);
-	Util::ErrorCheck(result);
 }

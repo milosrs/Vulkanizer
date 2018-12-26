@@ -7,11 +7,13 @@
 #include <iostream>
 #include "BUILD_OPTIONS.h"
 #include <chrono>
+#include <vector>
 
 static auto timer = std::chrono::steady_clock();
 static auto last_time = timer.now();
 static uint64_t frameCounter = 0;
 static uint64_t fps = 0;
+static int selectedOption = -1;
 
 class CommandBufferHandler;
 template <class T> class StagingBuffer;
@@ -31,19 +33,29 @@ public:
 
 	static void transitionImageLayout(VkImage*, VkFormat, VkImageLayout, VkImageLayout, VkCommandPool, VkQueue, VkDevice);
 
-	static void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, 
+	static void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags,
 							VkMemoryPropertyFlags, VkImage*, VkDeviceMemory*, VkDevice, 
 							VkPhysicalDeviceMemoryProperties *);
 
-	static VkImageView createImageView(VkDevice, VkImage, VkFormat);
+	static VkImageView createImageView(VkDevice, VkImage, VkFormat, VkImageAspectFlags);
 
 	static void copyBufferToimage(VkBuffer, VkImage*, uint32_t, uint32_t, VkCommandPool, VkDevice, VkQueue);
 
 	static uint32_t findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties*, const VkMemoryRequirements*,
 									const VkMemoryPropertyFlags);
 
+	/*Used by Depth and Stencil buffers*/
+	static VkFormat findSupportedFormat(VkPhysicalDevice, VkDevice, const std::vector<VkFormat> &candidates, 
+										VkImageTiling tiling, VkFormatFeatureFlags flags);
+
 	static wchar_t *convertCharArrayToLPCWSTR(const char* charArray);
 	
+	/*Checks if a given Depth format has a stencil component*/
+	static bool hasStencilComponent(VkFormat depthFormat);
+
+	/*If user selects to see something that requires depth stencil, create it*/
+	static bool shouldCreateDepthStencil();
+	static void setOption(int option);
 
 	VkDevice getDevice();
 private: 

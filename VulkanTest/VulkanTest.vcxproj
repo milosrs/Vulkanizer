@@ -172,6 +172,7 @@
     <ClInclude Include="CommandBufferHandler.h" />
     <ClInclude Include="CommandBufferSemaphoreInfo.h" />
     <ClInclude Include="ColorChanger.h" />
+    <ClInclude Include="DepthTester.h" />
     <ClInclude Include="DescriptorHandler.h" />
     <ClInclude Include="FrameBuffer.h" />
     <ClInclude Include="IndexBuffer.h" />
@@ -184,10 +185,11 @@
     <ClInclude Include="RenderPass.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="SquareDepth.h" />
     <ClInclude Include="StagingBuffer.h" />
     <ClInclude Include="Swapchain.h" />
     <ClInclude Include="Texture.h" />
-    <ClInclude Include="Triangle.h" />
+    <ClInclude Include="Square.h" />
     <ClInclude Include="UniformBuffer.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="Buffer.h" />
@@ -198,6 +200,7 @@
     <ClCompile Include="CommandBufferHandler.cpp" />
     <ClCompile Include="CommandBufferSemaphoreInfo.cpp" />
     <ClCompile Include="ColorChanger.cpp" />
+    <ClCompile Include="DepthTester.cpp" />
     <ClCompile Include="DescriptorHandler.cpp" />
     <ClCompile Include="FrameBuffer.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
@@ -214,9 +217,10 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SquareDepth.cpp" />
     <ClCompile Include="Swapchain.cpp" />
     <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="Triangle.cpp" />
+    <ClCompile Include="Square.cpp" />
     <ClCompile Include="UniformBuffer.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="Buffer.cpp" />

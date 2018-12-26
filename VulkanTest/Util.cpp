@@ -56,6 +56,23 @@ void Util::ErrorCheck(VkResult result) {
 	}
 }
 
+bool Util::hasStencilComponent(VkFormat depthFormat)
+{
+		return depthFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+			depthFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
+			depthFormat == VK_FORMAT_D16_UNORM_S8_UINT;
+}
+
+bool Util::shouldCreateDepthStencil()
+{
+	return selectedOption > 1;
+}
+
+void Util::setOption(int option)
+{
+	selectedOption = option;
+}
+
 VkDevice Util::getDevice()
 {
 	return device;
@@ -64,6 +81,30 @@ VkDevice Util::getDevice()
 #else
 void Util::ErrorCheck(VkResult result) {};
 #endif
+
+VkFormat Util::findSupportedFormat(VkPhysicalDevice physicalDevice, VkDevice device, const std::vector<VkFormat> &candidates,
+									VkImageTiling tiling, VkFormatFeatureFlags features)
+{
+	VkFormat supportedFormat = {};
+
+	for (VkFormat format : candidates) {
+		VkFormatProperties props;
+		vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
+
+		if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+			supportedFormat = format;
+		}
+		else if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+			supportedFormat = format;
+		}
+	}
+
+	if (supportedFormat == VK_NULL_HANDLE) {
+		throw new std::runtime_error("No supported format found.");
+	}
+
+	return supportedFormat;
+}
 
 wchar_t* Util::convertCharArrayToLPCWSTR(const char* charArray)
 {
@@ -139,13 +180,23 @@ void Util::transitionImageLayout(VkImage *image, VkFormat format, VkImageLayout 
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.image = *image;
-	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	barrier.subresourceRange.baseMipLevel = 0;
 	barrier.subresourceRange.levelCount = 1;
 	barrier.subresourceRange.baseArrayLayer = 0;
 	barrier.subresourceRange.layerCount = 1;
 	/*Ova dva polja za redove moraju biti namestena da budu ignorisana,
 		ako necemo da prebacujemo vlasnistvo nad slikom iz jednog Queue-a u drugi.*/
+
+	if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+		if (hasStencilComponent(format)) {
+			barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+		}
+	}
+	else {
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	}
 
 	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
 		barrier.srcAccessMask = 0;
@@ -160,6 +211,13 @@ void Util::transitionImageLayout(VkImage *image, VkFormat format, VkImageLayout 
 
 		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	}
 	else {
 		throw std::invalid_argument("unsupported layout transition!");
@@ -193,12 +251,12 @@ void Util::copyBufferToimage(VkBuffer buffer, VkImage *image, uint32_t width, ui
 	CommandBufferHandler::endOneTimeUsageBuffer(cmdBuffer, queue, commandPool, device);
 }
 
-VkImageView Util::createImageView(VkDevice device, VkImage image, VkFormat format)
+VkImageView Util::createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect)
 {
 	VkImageViewCreateInfo imgCreateInfo = {};
 	VkImageView ret = VK_NULL_HANDLE;
 
-	imgCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	imgCreateInfo.subresourceRange.aspectMask = aspect;
 	imgCreateInfo.subresourceRange.baseMipLevel = 0;
 	imgCreateInfo.subresourceRange.levelCount = 1;
 	imgCreateInfo.subresourceRange.baseArrayLayer = 0;

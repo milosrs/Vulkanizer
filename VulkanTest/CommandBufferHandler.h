@@ -27,8 +27,11 @@ public:
 	CommandBufferHandler(uint32_t, VkDevice, MainWindow* = nullptr);
 	~CommandBufferHandler();
 
-	/*How much of these?*/
-	void createDrawingCommandBuffers(uint32_t);
+	/*
+	  1. Command buffer count,
+	  2. Clear values for them
+	*/
+	void createDrawingCommandBuffers(uint32_t, std::vector<VkClearValue>);
 
 	/*	
 		cmdBufferIndex - Index command buffera za submit
@@ -51,7 +54,6 @@ private:
 	VkCommandPool transferCommandPool = VK_NULL_HANDLE;
 	VkDevice device = VK_NULL_HANDLE;
 
-	VkClearValue clearValues = { 0.2f, 0.2f, 0.2f, 1.0f };
 	VkRenderPassBeginInfo renderPassBeginInfo{};
 	VkRect2D renderArea{};
 

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "FrameBuffer.h"
+#include "DepthTester.h"
 
 FrameBuffer::FrameBuffer(
 	Renderer* renderer,
@@ -37,6 +38,10 @@ void FrameBuffer::initFrameBuffer(
 		
 		VkFramebufferCreateInfo frameBufferCreateInfo{};
 		std::vector<VkImageView> allAttachments = { imageViews[i] };
+
+		if (DepthTester::isInstanceCreated()) {
+			allAttachments.push_back(imageViews[imageViews.size() - 1]);
+		}
 
 		allAttachments.insert(allAttachments.begin(), attachments.begin(), attachments.end());
 

@@ -10,8 +10,7 @@ public:
 	Scene(MainWindow*, Renderer*);
 	virtual ~Scene();
 
-	virtual void render(VkViewport*) = 0;
-	virtual void recordFrameBuffer() = 0;
+	virtual void render(VkViewport*);
 	void createSyncObjects();
 	void deleteSyncObjects();
 protected:
@@ -19,6 +18,7 @@ protected:
 	std::vector<VkSemaphore> imageAvaiableSemaphores;		//GPU-GPU sync
 	std::vector<VkSemaphore> renderFinishedSemaphores;		//GPU-GPU sinhronizacija
 	std::vector<VkFence> fences;							//CPU-GPU sinhronizacija
+	std::vector<VkClearValue> clearValues;
 
 	MainWindow* window = nullptr;
 	Renderer* renderer = nullptr;

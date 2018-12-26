@@ -1,3 +1,4 @@
+/*Pipeline ne mora da cuva reference na create info-ove, tako da samo ih vracaj u private fjama.*/
 #pragma once
 #ifndef PIPELINE_H
 #define PIPELINE_H
@@ -42,6 +43,7 @@ private:
 	void createMultisamplingInformation();
 	void createInputAssemblyInformation();
 	void createVertexInformation();
+	void createDepthStencilInformation();
 
 	/*Shaders*/
 	std::array<VkPipelineShaderStageCreateInfo, 2> shaderCreationInfo;
@@ -66,6 +68,7 @@ private:
 		VK_DYNAMIC_STATE_LINE_WIDTH
 	};
 
+	VkPipelineDepthStencilStateCreateInfo dsCreateInfo{};
 	VkPipelineShaderStageCreateInfo vsCreateInfo{};
 	VkPipelineShaderStageCreateInfo fsCreateInfo{};
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{}; 

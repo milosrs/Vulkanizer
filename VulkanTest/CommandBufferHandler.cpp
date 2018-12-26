@@ -32,7 +32,7 @@ CommandBufferHandler::~CommandBufferHandler()
 	this->cmdPool = nullptr;
 }
 
-void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount)
+void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount, std::vector<VkClearValue> clearValues)
 {
 	this->drawingBuffersCount = bufferCount;
 
@@ -57,8 +57,8 @@ void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount)
 		renderPassBeginInfo.renderPass = window->getRenderPass()->getRenderPass();
 		renderPassBeginInfo.framebuffer = window->getActiveFrameBuffer()->getFrameBuffers()[i];
 		renderPassBeginInfo.renderArea = renderArea;
-		renderPassBeginInfo.clearValueCount = 1;
-		renderPassBeginInfo.pClearValues = &clearValues;
+		renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		renderPassBeginInfo.pClearValues = clearValues.data();
 
 		CommandBuffer cmdBuffer = {};
 		cmdBuffer.type = CommandBufferType::GRAPHICS;

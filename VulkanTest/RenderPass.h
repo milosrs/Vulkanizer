@@ -13,7 +13,7 @@ class Renderer;
 class RenderPass
 {
 public:
-	RenderPass(Renderer* renderer, VkFormat depthStencilFormat, VkSurfaceFormatKHR surfaceFormat);
+	RenderPass(Renderer* renderer, VkSurfaceFormatKHR surfaceFormat);
 	~RenderPass();
 
 	VkRenderPass getRenderPass();
@@ -24,14 +24,13 @@ public:
 private:
 	void initRenderPass();
 
-	void createDepthStencil();
+	void createColorDepth();
 	void createColor();
 
 	Renderer* renderer = nullptr;
 
 	VkRenderPass renderPass = nullptr;
 	
-	VkFormat depthStencilFormat;
 	VkFormat colorFormat;
 	VkSurfaceFormatKHR surfaceFormat;
 

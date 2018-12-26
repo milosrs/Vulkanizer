@@ -17,6 +17,7 @@
 #include "IndexBuffer.h"
 #include "UniformBuffer.h"
 #include "DescriptorHandler.h"
+#include "DepthTester.h"
 #include "Texture.h"
 #include <vector>
 #include <string>
@@ -45,7 +46,7 @@ public:
 
 	/*Vertices: collection of vertices and indices
 	  Uniform: is this pipeline using uniform buffers*/
-	void setupPipeline(std::shared_ptr<Vertices>, bool);
+	void setupPipeline(std::shared_ptr<Vertices>, std::vector<VkClearValue>, bool);
 	void bindPipeline(VkCommandBuffer);
 
 	Renderer* getRenderer();
@@ -88,6 +89,7 @@ private:
 	std::unique_ptr<IndexBuffer> indexBuffer = nullptr;
 	std::unique_ptr<VertexBuffer> vertexBuffer = nullptr;
 	std::unique_ptr<Texture> texture = nullptr;
+	std::unique_ptr<DepthTester> depthTester = nullptr;
 
 	std::vector<UniformBuffer*> uniformBuffers;
 
