@@ -16,6 +16,9 @@ DepthTester::DepthTester(VkDevice device, VkPhysicalDevice gpu, VkPhysicalDevice
 
 DepthTester::~DepthTester()
 {
+	vkDestroyImageView(device, depthView, nullptr);
+	vkDestroyImage(device, depth, nullptr);
+	vkFreeMemory(device, depthMemory, nullptr);
 }
 
 void DepthTester::createDepthImage(uint32_t width, uint32_t height, VkCommandPool cmdPool, VkQueue queue)

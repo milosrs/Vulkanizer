@@ -72,9 +72,6 @@ void MainWindow::createData()
 
 	if (Util::shouldCreateDepthStencil()) {
 		depthTester = std::make_unique<DepthTester>(device, gpu, memprops);
-		depthTester->createDepthImage(extent.width, extent.height,
-			commandBufferHandler->getCommandPool(), renderer->getQueueIndices()->getQueue());
-		framebufferImageViews.push_back(depthTester->getDepthImageView());
 	}
 
 	renderPass = std::make_unique<RenderPass>(renderer, this->surfaceFormat);
@@ -82,6 +79,12 @@ void MainWindow::createData()
 	scissorsExtent = extent;
 	pipeline = std::make_unique<Pipeline>(device, memprops, renderPass->getRenderPassPTR(), 
 											(float)width, (float)height, scissorsExtent);	
+
+	if (Util::shouldCreateDepthStencil()) {
+		depthTester->createDepthImage(extent.width, extent.height,
+			commandBufferHandler->getCommandPool(), renderer->getQueueIndices()->getQueue());
+		framebufferImageViews.push_back(depthTester->getDepthImageView());
+	}
 
 	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), framebufferImageViews,
 		renderPass->getRenderPass(), this->getSurfaceSize());
@@ -98,12 +101,12 @@ void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, std::vector<V
 	VkPhysicalDeviceMemoryProperties *pMemprops = renderer->getPhysicalDeviceMemoryPropertiesPTR();
 	VkPhysicalDevice gpu = renderer->getGpu();
 
-	this->texture = std::make_unique<Texture>(device, pMemprops, VK_FORMAT_R8G8B8A8_UNORM, "../Textures/riki.jpg", 4);
+	this->texture = std::make_unique<Texture>(device, pMemprops, VK_FORMAT_R8G8B8A8_UNORM, "../Textures/mifka.jpg", 4);
 	this->vertexBuffer = std::make_unique<VertexBuffer>(device, memprops, vertices);
 	this->indexBuffer = std::make_unique<IndexBuffer>(device, memprops, vertices->getIndices());
 
 	texture->beginCreatingTexture(commandBufferHandler->getCommandPool(), 
-		renderer->getQueueIndices()->getQueues()[renderer->getQueueIndices()->getGraphicsFamilyIndex()]);
+		renderer->getQueueIndices()->getQueue());
 
 	for (auto i = 0; i < swapchain->getImageViews().size(); ++i) {
 		uniformBuffers.push_back(new UniformBuffer(device, memprops));
