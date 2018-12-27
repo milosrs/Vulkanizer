@@ -21,6 +21,7 @@ public:
 
 	VkSampler getSampler();
 	VkImageView getTextureImageView();
+	VkImage getTextureImage();
 private:
 	void createSampler();
 

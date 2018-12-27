@@ -57,6 +57,9 @@ public:
 	static bool shouldCreateDepthStencil();
 	static void setOption(int option);
 
+	bool shouldHaveBackground();
+	static void setShouldHaveBackground(bool);
+
 	VkDevice getDevice();
 private: 
 	Util();
@@ -69,4 +72,3 @@ private:
 	uint32_t graphicsFamilyIndex = 0;
 	VkCommandPool commandPool = nullptr;
 };
-

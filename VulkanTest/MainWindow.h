@@ -89,6 +89,7 @@ private:
 	std::unique_ptr<IndexBuffer> indexBuffer = nullptr;
 	std::unique_ptr<VertexBuffer> vertexBuffer = nullptr;
 	std::unique_ptr<Texture> texture = nullptr;
+	std::unique_ptr<Texture> background = nullptr;
 	std::unique_ptr<DepthTester> depthTester = nullptr;
 
 	std::vector<UniformBuffer*> uniformBuffers;

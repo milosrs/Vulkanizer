@@ -63,6 +63,11 @@ VkImageView Texture::getTextureImageView()
 	return textureView;
 }
 
+VkImage Texture::getTextureImage()
+{
+	return texture;
+}
+
 void Texture::createSampler()
 {
 	VkSamplerCreateInfo info = {};

@@ -117,6 +117,9 @@
     <ClInclude Include="DepthTester.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Renderings Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -190,6 +193,9 @@
     </ClCompile>
     <ClCompile Include="DepthTester.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Renderings Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -93,7 +93,6 @@ void MainWindow::createData()
 															static_cast<uint32_t>(swapchain->getImageViews().size()));
 }
 
-
 void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, std::vector<VkClearValue> clearValues, bool uniform)
 {
 	VkDevice device = renderer->getDevice();
