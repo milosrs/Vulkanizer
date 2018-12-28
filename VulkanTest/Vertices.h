@@ -49,7 +49,7 @@ class Vertices
 {
 private:
 	std::vector<Vertex> vertices;
-	std::vector<uint16_t> indices;
+	std::vector<uint32_t> indices;
 public:
 	Vertices();
 	Vertices(std::vector<Vertex>);
@@ -57,8 +57,8 @@ public:
 	~Vertices();
 
 	std::vector<Vertex> getVertices();
-	std::vector<uint16_t> getIndices();
+	std::vector<uint32_t> getIndices();
 	void setVertices(std::vector<Vertex> vertices);
-	void setIndices(std::vector<uint16_t> indices);
+	void setIndices(std::vector<uint32_t> indices);
 };
 

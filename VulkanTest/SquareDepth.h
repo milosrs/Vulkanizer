@@ -2,9 +2,9 @@
 #include "PLATFORM.h"
 #include "MainWindow.h"
 #include "Renderer.h"
-#include "Scene.h"
+#include "RenderObject.h"
 
-class SquareDepth : public Scene
+class SquareDepth : public RenderObject
 {
 public:
 	SquareDepth(MainWindow*, Renderer*);

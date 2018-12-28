@@ -2,6 +2,7 @@
 #include "MainWindow.h"
 #include "Renderer.h"
 #include "CommandBufferHandler.h"
+#include "RenderObject.h"
 
 MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::string windowName) {
 	this->renderer = renderer;
@@ -89,40 +90,27 @@ void MainWindow::createData()
 	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), framebufferImageViews,
 		renderPass->getRenderPass(), this->getSurfaceSize());
 
-	descriptorHandler = std::make_unique<DescriptorHandler>(device, pipeline->getDescriptorSetLayout(), 
-															static_cast<uint32_t>(swapchain->getImageViews().size()));
+	/*descriptorHandler = std::make_unique<DescriptorHandler>(device, pipeline->getDescriptorSetLayout(), 
+															static_cast<uint32_t>(swapchain->getImageViews().size()));*/
 }
 
-void MainWindow::setupPipeline(std::shared_ptr<Vertices> vertices, std::vector<VkClearValue> clearValues, bool uniform)
+void MainWindow::setupPipeline(RenderObject *renderObject, bool uniform)
 {
 	VkDevice device = renderer->getDevice();
 	VkPhysicalDeviceMemoryProperties memprops = renderer->getPhysicalDeviceMemoryProperties();
 	VkPhysicalDeviceMemoryProperties *pMemprops = renderer->getPhysicalDeviceMemoryPropertiesPTR();
 	VkPhysicalDevice gpu = renderer->getGpu();
 
-	this->texture = std::make_unique<Texture>(device, pMemprops, VK_FORMAT_R8G8B8A8_UNORM, "../Textures/mifka.jpg", 4);
-	this->vertexBuffer = std::make_unique<VertexBuffer>(device, memprops, vertices);
-	this->indexBuffer = std::make_unique<IndexBuffer>(device, memprops, vertices->getIndices());
-
-	texture->beginCreatingTexture(commandBufferHandler->getCommandPool(), 
-		renderer->getQueueIndices()->getQueue());
-
-	for (auto i = 0; i < swapchain->getImageViews().size(); ++i) {
-		uniformBuffers.push_back(new UniformBuffer(device, memprops));
-	}
-
-	descriptorHandler->createDescriptorSets(uniformBuffers, texture->getSampler(), texture->getTextureImageView());
+	renderObject->prepareObject("../Textures/mifka.jpg", 4, 
+		commandBufferHandler->getCommandPool(), renderer->getQueueIndices()->getQueue());
 	
-	vertexBuffer->fillBuffer();
-	indexBuffer->fillBuffer();
-
 	commandBufferHandler->createDrawingCommandBuffers(static_cast<uint32_t>(frameBuffer->getFrameBuffers().size()), 
-														clearValues);
+														renderObject);
 }
 
-void MainWindow::bindPipeline(VkCommandBuffer cmdBuffer)
+void MainWindow::bindPipeline(RenderObject* renderObject, VkCommandBuffer cmdBuffer)
 {
-	this->pipeline->bindPipeline(cmdBuffer, this->vertexBuffer.get(), this->indexBuffer.get());
+	this->pipeline->bindPipeline(cmdBuffer, renderObject->getVertexBuffer(), renderObject->getIndexBuffer());
 }
 
 void MainWindow::InitSurface() {
@@ -274,11 +262,6 @@ Swapchain* MainWindow::getSwapchain()
 	return this->swapchain.get();
 }
 
-DescriptorHandler * MainWindow::getDescriptorHandler()
-{
-	return descriptorHandler.get();
-}
-
 GLFWwindow * MainWindow::getWindowPTR()
 {
 	return this->window;
@@ -289,24 +272,9 @@ Pipeline * MainWindow::getPipelinePTR()
 	return this->pipeline.get();
 }
 
-IndexBuffer * MainWindow::getIndexBufferPTR()
-{
-	return indexBuffer.get();
-}
-
-VertexBuffer* MainWindow::getVertexBufferPTR()
-{
-	return vertexBuffer.get();
-}
-
 CommandBufferHandler * MainWindow::getCommandHandler()
 {
 	return this->commandBufferHandler.get();
-}
-
-std::vector<UniformBuffer*> MainWindow::getUniformBuffers()
-{
-	return this->uniformBuffers;
 }
 
 VkSurfaceKHR MainWindow::getSurface()

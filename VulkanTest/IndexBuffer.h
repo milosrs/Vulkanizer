@@ -6,11 +6,8 @@
 
 class IndexBuffer : public Buffer {
 public:
-	IndexBuffer(VkDevice, VkPhysicalDeviceMemoryProperties, std::vector<uint16_t>);
+	IndexBuffer(VkDevice, VkPhysicalDeviceMemoryProperties, VkDeviceSize = 0);
 	~IndexBuffer();
-	void fillBuffer();
-
-	std::vector<uint16_t> getIndices();
+	void fillBuffer(std::vector<uint32_t> indices);
 private:
-	std::vector<uint16_t> indices;
 };

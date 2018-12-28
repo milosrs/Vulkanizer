@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CommandBufferHandler.h"
 #include "MainWindow.h"
+#include "RenderObject.h"
 
 CommandBufferHandler::CommandBufferHandler(uint32_t graphicsFamilyIndex, VkDevice device, MainWindow* window)
 {
@@ -32,7 +33,7 @@ CommandBufferHandler::~CommandBufferHandler()
 	this->cmdPool = nullptr;
 }
 
-void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount, std::vector<VkClearValue> clearValues)
+void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount, RenderObject *object)
 {
 	this->drawingBuffersCount = bufferCount;
 
@@ -57,8 +58,8 @@ void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount, std
 		renderPassBeginInfo.renderPass = window->getRenderPass()->getRenderPass();
 		renderPassBeginInfo.framebuffer = window->getActiveFrameBuffer()->getFrameBuffers()[i];
 		renderPassBeginInfo.renderArea = renderArea;
-		renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-		renderPassBeginInfo.pClearValues = clearValues.data();
+		renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(object->getClearValues()->size());
+		renderPassBeginInfo.pClearValues = object->getClearValues()->data();
 
 		CommandBuffer cmdBuffer = {};
 		cmdBuffer.type = CommandBufferType::GRAPHICS;
@@ -70,10 +71,10 @@ void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount, std
 
 		window->getRenderPass()->beginRenderPass(cmdBuffer.commandBuffer, &renderPassBeginInfo);
 		window->getPipelinePTR()->bindPipeline(cmdBuffer.commandBuffer,
-			window->getVertexBufferPTR(), window->getIndexBufferPTR());
-		window->getDescriptorHandler()->bind(cmdBuffer.commandBuffer, window->getPipelinePTR()->getPipelineLayout(), i);
+			object->getVertexBuffer(), object->getIndexBuffer());
+		object->getDescriptorHandler()->bind(cmdBuffer.commandBuffer, window->getPipelinePTR()->getPipelineLayout(), i);
 
-		vkCmdDrawIndexed(cmdBuffer.commandBuffer, static_cast<uint32_t>(window->getVertexBufferPTR()->getIndices().size()), 
+		vkCmdDrawIndexed(cmdBuffer.commandBuffer, static_cast<uint32_t>(object->getVertices()->getIndices().size()),
 			1, 0, 0, 0);
 
 		window->getRenderPass()->endRenderPass(cmdBuffer.commandBuffer);

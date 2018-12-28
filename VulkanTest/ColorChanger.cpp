@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "ColorChanger.h"
 
-ColorChanger::ColorChanger(MainWindow* window, Renderer* renderer) : Scene(window, renderer)
+ColorChanger::ColorChanger(MainWindow* window, Renderer* renderer) : RenderObject(window, renderer)
 {
 	this->clearValues = std::array<VkClearValue, 2> {};
 }

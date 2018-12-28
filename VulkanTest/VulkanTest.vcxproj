@@ -185,7 +185,7 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderPass.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Scene.h" />
+    <ClInclude Include="RenderObject.h" />
     <ClInclude Include="SquareDepth.h" />
     <ClInclude Include="StagingBuffer.h" />
     <ClInclude Include="Swapchain.h" />
@@ -218,7 +218,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RenderPass.cpp" />
-    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="RenderObject.cpp" />
     <ClCompile Include="SquareDepth.cpp" />
     <ClCompile Include="Swapchain.cpp" />
     <ClCompile Include="Texture.cpp" />

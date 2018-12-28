@@ -143,7 +143,7 @@ void Pipeline::bindPipeline(VkCommandBuffer commandBuffer, VertexBuffer* vertexB
 	}
 
 	if (indexBuffer != nullptr) {
-		vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 	}
 }
 

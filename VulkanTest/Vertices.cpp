@@ -26,7 +26,7 @@ std::vector<Vertex> Vertices::getVertices()
 	return this->vertices;
 }
 
-std::vector<uint16_t> Vertices::getIndices()
+std::vector<uint32_t> Vertices::getIndices()
 {
 	return this->indices;
 }
@@ -36,7 +36,7 @@ void Vertices::setVertices(std::vector<Vertex> vertices)
 	this->vertices = vertices;
 }
 
-void Vertices::setIndices(std::vector<uint16_t> indices)
+void Vertices::setIndices(std::vector<uint32_t> indices)
 {
 	this->indices = indices;
 }

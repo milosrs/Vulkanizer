@@ -1,8 +1,8 @@
 #pragma once
-#include "Scene.h"
+#include "RenderObject.h"
 #include "Vertices.h"
 
-class Square : public Scene
+class Square : public RenderObject
 {
 public:
 	Square(MainWindow*, Renderer*);

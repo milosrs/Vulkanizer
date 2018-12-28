@@ -8,13 +8,9 @@
 class VertexBuffer : public Buffer
 {
 public:
-	VertexBuffer(VkDevice, VkPhysicalDeviceMemoryProperties, std::shared_ptr<Vertices>);
+	VertexBuffer(VkDevice, VkPhysicalDeviceMemoryProperties, VkDeviceSize);
 	~VertexBuffer();
-	void fillBuffer();
-
-	std::vector<Vertex> getVertices();
-	std::vector<uint16_t> getIndices();
+	void fillBuffer(std::vector<Vertex> vertices);
 private:
-	std::shared_ptr<Vertices> vertices = nullptr;
 };
 

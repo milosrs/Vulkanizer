@@ -3,7 +3,7 @@
 #include "PLATFORM.h"
 #include "MainWindow.h"
 #include "Renderer.h"
-#include "Scene.h"
+#include "RenderObject.h"
 
 #define PI 3.14159265389786351235489
 #define CIRCLE_RAD PI*2
@@ -14,7 +14,7 @@
 
 static double colorRotator = 0;
 
-class ColorChanger : public Scene
+class ColorChanger : public RenderObject
 {
 public:
 	ColorChanger(MainWindow*, Renderer*);

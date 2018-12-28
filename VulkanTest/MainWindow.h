@@ -28,6 +28,7 @@
 
 class Renderer;
 class CommandBufferHandler;
+class RenderObject;
 
 class MainWindow
 {
@@ -46,20 +47,16 @@ public:
 
 	/*Vertices: collection of vertices and indices
 	  Uniform: is this pipeline using uniform buffers*/
-	void setupPipeline(std::shared_ptr<Vertices>, std::vector<VkClearValue>, bool);
-	void bindPipeline(VkCommandBuffer);
+	void setupPipeline(RenderObject *, bool);
+	void bindPipeline(RenderObject*, VkCommandBuffer);
 
 	Renderer* getRenderer();
 	RenderPass* getRenderPass();
 	FrameBuffer* getActiveFrameBuffer();
 	Swapchain* getSwapchain();
-	DescriptorHandler* getDescriptorHandler();
 	GLFWwindow* getWindowPTR();
 	Pipeline* getPipelinePTR();
-	IndexBuffer* getIndexBufferPTR();
-	VertexBuffer* getVertexBufferPTR();
 	CommandBufferHandler* getCommandHandler();
-	std::vector<UniformBuffer*> getUniformBuffers();
 
 	VkSurfaceKHR getSurface();
 	VkSurfaceKHR* getSurfacePTR();
@@ -85,14 +82,8 @@ private:
 	std::unique_ptr<FrameBuffer> frameBuffer = nullptr;
 	std::unique_ptr<Pipeline> pipeline = nullptr;
 	std::unique_ptr<CommandBufferHandler> commandBufferHandler = nullptr;
-	std::unique_ptr<DescriptorHandler> descriptorHandler = nullptr;
-	std::unique_ptr<IndexBuffer> indexBuffer = nullptr;
-	std::unique_ptr<VertexBuffer> vertexBuffer = nullptr;
-	std::unique_ptr<Texture> texture = nullptr;
 	std::unique_ptr<Texture> background = nullptr;
 	std::unique_ptr<DepthTester> depthTester = nullptr;
-
-	std::vector<UniformBuffer*> uniformBuffers;
 
 	Renderer* renderer = nullptr;
 	GLFWwindow* window = nullptr;

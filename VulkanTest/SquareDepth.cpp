@@ -2,7 +2,7 @@
 #include "SquareDepth.h"
 
 
-SquareDepth::SquareDepth(MainWindow *mainWindow, Renderer *renderer) : Scene(mainWindow, renderer)
+SquareDepth::SquareDepth(MainWindow *mainWindow, Renderer *renderer) : RenderObject(mainWindow, renderer)
 {
 	this->vertices = std::make_shared<Vertices>();
 	vertices->setVertices({

@@ -7,6 +7,7 @@
 #include <map>
 
 class MainWindow;
+class RenderObject;
 
 enum CommandBufferType {
 	GRAPHICS = 0,
@@ -31,7 +32,7 @@ public:
 	  1. Command buffer count,
 	  2. Clear values for them
 	*/
-	void createDrawingCommandBuffers(uint32_t, std::vector<VkClearValue>);
+	void createDrawingCommandBuffers(uint32_t, RenderObject*);
 
 	/*	
 		cmdBufferIndex - Index command buffera za submit

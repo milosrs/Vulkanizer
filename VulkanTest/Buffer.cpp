@@ -1,8 +1,9 @@
 #include "pch.h"
 #include "Buffer.h"
 
-Buffer::Buffer(VkDevice device, VkPhysicalDeviceMemoryProperties deviceMemoryProps)
+Buffer::Buffer(VkDevice device, VkPhysicalDeviceMemoryProperties deviceMemoryProps, VkDeviceSize size)
 {
+	this->size = size;
 	this->device = device;
 	this->deviceMemoryProps = deviceMemoryProps;
 }
@@ -30,6 +31,11 @@ void Buffer::initBuffer(VkBufferUsageFlags usage, VkDeviceSize size,
 
 	Util::ErrorCheck(vkAllocateMemory(device, &allocateInfo, nullptr, &bufferMemory));
 	Util::ErrorCheck(vkBindBufferMemory(device, this->buffer, bufferMemory, 0));
+}
+
+void Buffer::setDeviceSize(VkDeviceSize size)
+{
+	this->size = size;
 }
 
 VkBuffer Buffer::getBuffer()

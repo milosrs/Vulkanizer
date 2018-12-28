@@ -9,10 +9,11 @@
 class Buffer
 {
 public:
-	Buffer(VkDevice, VkPhysicalDeviceMemoryProperties);
+	Buffer(VkDevice, VkPhysicalDeviceMemoryProperties, VkDeviceSize = 0);
 	~Buffer();
 
 	void initBuffer(VkBufferUsageFlags, VkDeviceSize, VkMemoryPropertyFlags);
+	void setDeviceSize(VkDeviceSize size);
 
 	VkBuffer getBuffer();
 	VkBuffer* getBufferPTR();
