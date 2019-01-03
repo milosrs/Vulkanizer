@@ -128,7 +128,7 @@ uint32_t Util::findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties * memo
 	return ret;
 }
 
-void Util::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+void Util::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
 						VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory,
 						VkDevice device, VkPhysicalDeviceMemoryProperties *memprops) {
 
@@ -138,7 +138,7 @@ void Util::createImage(uint32_t width, uint32_t height, VkFormat format, VkImage
 	imageInfo.extent.width = width;
 	imageInfo.extent.height = height;
 	imageInfo.extent.depth = 1;
-	imageInfo.mipLevels = 1;
+	imageInfo.mipLevels = mipLevels;
 	imageInfo.arrayLayers = 1;
 	imageInfo.format = format;
 	imageInfo.tiling = tiling;
@@ -167,7 +167,7 @@ void Util::createImage(uint32_t width, uint32_t height, VkFormat format, VkImage
 }
 
 void Util::transitionImageLayout(VkImage *image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, 
-								VkCommandPool commandPool, VkQueue queue, VkDevice device)
+								VkCommandPool commandPool, VkQueue queue, VkDevice device, uint32_t mipLevels)
 {
 	VkCommandBuffer cmdBuffer = CommandBufferHandler::createOneTimeUsageBuffer(commandPool, device);
 	VkImageMemoryBarrier barrier = {};
@@ -181,7 +181,7 @@ void Util::transitionImageLayout(VkImage *image, VkFormat format, VkImageLayout 
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.image = *image;
 	barrier.subresourceRange.baseMipLevel = 0;
-	barrier.subresourceRange.levelCount = 1;
+	barrier.subresourceRange.levelCount = mipLevels;
 	barrier.subresourceRange.baseArrayLayer = 0;
 	barrier.subresourceRange.layerCount = 1;
 	/*Ova dva polja za redove moraju biti namestena da budu ignorisana,
@@ -251,14 +251,14 @@ void Util::copyBufferToimage(VkBuffer buffer, VkImage *image, uint32_t width, ui
 	CommandBufferHandler::endOneTimeUsageBuffer(cmdBuffer, queue, commandPool, device);
 }
 
-VkImageView Util::createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect)
+VkImageView Util::createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect, uint32_t mipLevels)
 {
 	VkImageViewCreateInfo imgCreateInfo = {};
 	VkImageView ret = VK_NULL_HANDLE;
 
 	imgCreateInfo.subresourceRange.aspectMask = aspect;
 	imgCreateInfo.subresourceRange.baseMipLevel = 0;
-	imgCreateInfo.subresourceRange.levelCount = 1;
+	imgCreateInfo.subresourceRange.levelCount = mipLevels;
 	imgCreateInfo.subresourceRange.baseArrayLayer = 0;
 	imgCreateInfo.subresourceRange.layerCount = 1;
 	imgCreateInfo.format = format;

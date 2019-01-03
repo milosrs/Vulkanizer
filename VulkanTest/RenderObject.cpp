@@ -62,7 +62,10 @@ void RenderObject::prepareObject(VkCommandPool cmdPool, VkQueue queue)
 		VkDeviceSize indicesSize = sizeof(vertices->getIndices()[0]) * vertices->getIndices().size();
 
 		if (texturePath.length() > 0 && mode > 0) {
+			VkFormat imageFormat = VK_FORMAT_R8G8B8A8_UNORM;
+
 			this->texture = std::make_unique<Texture>(device, pMemprops, VK_FORMAT_R8G8B8A8_UNORM, texturePath, mode);
+			texture->supportsLinearBlitFormat(renderer->getGpu());
 			texture->beginCreatingTexture(cmdPool, queue);
 		}
 

@@ -31,13 +31,14 @@ public:
 
 	static void ErrorCheck(VkResult result);
 
-	static void transitionImageLayout(VkImage*, VkFormat, VkImageLayout, VkImageLayout, VkCommandPool, VkQueue, VkDevice);
+	static void transitionImageLayout(VkImage*, VkFormat, VkImageLayout, VkImageLayout, VkCommandPool, 
+										VkQueue, VkDevice, uint32_t);
 
-	static void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags,
+	static void createImage(uint32_t, uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags,
 							VkMemoryPropertyFlags, VkImage*, VkDeviceMemory*, VkDevice, 
 							VkPhysicalDeviceMemoryProperties *);
 
-	static VkImageView createImageView(VkDevice, VkImage, VkFormat, VkImageAspectFlags);
+	static VkImageView createImageView(VkDevice, VkImage, VkFormat, VkImageAspectFlags, uint32_t);
 
 	static void copyBufferToimage(VkBuffer, VkImage*, uint32_t, uint32_t, VkCommandPool, VkDevice, VkQueue);
 

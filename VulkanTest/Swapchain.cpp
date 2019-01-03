@@ -90,7 +90,8 @@ void Swapchain::initSwapchainImgs()
 	Util::ErrorCheck(vkGetSwapchainImagesKHR(renderer->getDevice(), swapchain, &swapchainImageCount, images.data()));
 
 	for (uint32_t i = 0; i < swapchainImageCount; i++) {
-		imageViews[i] = Util::createImageView(this->mainWindow->getRenderer()->getDevice(), images[i], imagesFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+		imageViews[i] = Util::createImageView(this->mainWindow->getRenderer()->getDevice(),
+			images[i], imagesFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 	}
 }
 

@@ -8,6 +8,7 @@
 #include "CommandBufferHandler.h"
 #include "PLATFORM.h"
 #include "Util.h"
+#include <vector>
 
 class Texture
 {
@@ -18,16 +19,21 @@ public:
 	~Texture();
 
 	void beginCreatingTexture(VkCommandPool, VkQueue);
+	
+	void supportsLinearBlitFormat(VkPhysicalDevice);
 
 	VkSampler getSampler();
 	VkImageView getTextureImageView();
 	VkImage getTextureImage();
 private:
 	void createSampler();
+	void generateMipmaps(VkCommandPool, VkQueue);
 
 	int width, height, channelCount;
 	unsigned int mode;
 	unsigned char* pixels;
+	unsigned int mipLevels;
+	bool supportsLinearBlit;
 
 	VkDevice device = VK_NULL_HANDLE;
 	VkPhysicalDeviceMemoryProperties *physicalProperties = nullptr;
@@ -37,6 +43,8 @@ private:
 	VkImageView textureView = VK_NULL_HANDLE;
 	VkDeviceMemory textureMemory = VK_NULL_HANDLE;
 	VkSampler sampler = VK_NULL_HANDLE;
+
+	std::vector<VkImage> mipmaps;
 
 	StagingBuffer<unsigned char>* stagingBuffer = nullptr;
 };
