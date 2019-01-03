@@ -4,12 +4,17 @@
 
 RenderObject::RenderObject(MainWindow* window, Renderer* renderer, std::string name)
 {
+	this->vertices = std::make_unique<Vertices>();
 	this->name = name;
 	this->device = renderer->getDevice();
 	this->pMemprops = renderer->getPhysicalDeviceMemoryPropertiesPTR();
 	this->memprops = renderer->getPhysicalDeviceMemoryProperties();
 	this->window = window;
 	this->renderer = renderer;
+
+	this->clearValues.resize(2);
+	this->clearValues[0] = { 0.2f, 0.2f, 0.2f, 1.0f };			//Background
+	this->clearValues[1] = { 1.0f, 0.0f };						//Depth stencil
 
 	this->descriptorHandler = std::make_unique<DescriptorHandler>(device, window->getPipelinePTR()->getDescriptorSetLayout(),
 		static_cast<uint32_t>(window->getSwapchain()->getImageViews().size()));
@@ -50,14 +55,16 @@ void RenderObject::deleteSyncObjects()
 	}
 }
 
-void RenderObject::prepareObject(std::string texturePath, unsigned int mode, VkCommandPool cmdPool, VkQueue queue)
+void RenderObject::prepareObject(VkCommandPool cmdPool, VkQueue queue)
 {
 	if (vertices != nullptr) {
 		VkDeviceSize verticesSize = sizeof(vertices->getVertices()[0]) * vertices->getVertices().size();
 		VkDeviceSize indicesSize = sizeof(vertices->getIndices()[0]) * vertices->getIndices().size();
 
-		this->texture = std::make_unique<Texture>(device, pMemprops, VK_FORMAT_R8G8B8A8_UNORM, texturePath, mode);
-		texture->beginCreatingTexture(cmdPool, queue);
+		if (texturePath.length() > 0 && mode > 0) {
+			this->texture = std::make_unique<Texture>(device, pMemprops, VK_FORMAT_R8G8B8A8_UNORM, texturePath, mode);
+			texture->beginCreatingTexture(cmdPool, queue);
+		}
 
 		this->vertexBuffer = std::make_unique<VertexBuffer>(device, memprops, verticesSize);
 		this->indexBuffer = std::make_unique<IndexBuffer>(device, memprops, indicesSize);
@@ -137,6 +144,12 @@ void RenderObject::setName(std::string name)
 	this->name = name;
 }
 
+void RenderObject::setTextureParams(std::string path, unsigned int mode)
+{
+	this->texturePath = path;
+	this->mode = mode;
+}
+
 std::string RenderObject::getName()
 {
 	return name;
@@ -167,9 +180,9 @@ DescriptorHandler * RenderObject::getDescriptorHandler()
 	return this->descriptorHandler.get();
 }
 
-std::shared_ptr<Vertices> RenderObject::getVertices()
+Vertices* RenderObject::getVertices()
 {
-	return this->vertices;
+	return this->vertices.get();
 }
 
 std::vector<UniformBuffer*> RenderObject::getUniformBuffers()

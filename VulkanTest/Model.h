@@ -2,6 +2,8 @@
 #include "PLATFORM.h"
 #include "RenderObject.h"
 #include "Texture.h"
+#include <unordered_map>
+#include <ppl.h>
 
 class Model : public RenderObject
 {
@@ -11,9 +13,12 @@ public:
 		2.Texture path
 	*/
 
-	Model(std::string, std::string, MainWindow*, Renderer*);
+	Model(std::string, std::string, unsigned int, MainWindow*, Renderer*);
 	~Model();
 private:
-	std::string objectPath, texturePath;
+	void loadModel();
+	//void parallelLoadingIsBadIdea();						WONT WORK! Messes up VERTICES/INDICES order
+	std::string objectPath;
+	
 };
 

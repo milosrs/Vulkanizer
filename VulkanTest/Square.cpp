@@ -3,7 +3,6 @@
 
 Square::Square(MainWindow* window, Renderer* renderer) : RenderObject(window, renderer)
 {
-	this->vertices = std::make_shared<Vertices>();
 	vertices->setVertices({
 		{ { -1.0f, -1.0f, 0.0f },{ 1.0f, 0.0f, 0.0f },{ 1.0f, 0.0f } },
 	{ { 1.0f, -1.0f, 0.0f  },{ 0.0f, 1.0f, 0.0f },{ 0.0f, 0.0f } },

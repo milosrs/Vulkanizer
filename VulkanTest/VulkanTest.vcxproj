@@ -234,6 +234,7 @@
     <None Include="shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\..\..\..\Pictures\mitraljezac.png" />
     <Image Include="..\..\..\..\Pictures\riki.jpg" />
     <Image Include="..\..\..\..\Pictures\seahawks.jpg" />
     <Image Include="..\..\..\..\Pictures\snot.jpg" />

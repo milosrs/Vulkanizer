@@ -101,8 +101,7 @@ void MainWindow::setupPipeline(RenderObject *renderObject, bool uniform)
 	VkPhysicalDeviceMemoryProperties *pMemprops = renderer->getPhysicalDeviceMemoryPropertiesPTR();
 	VkPhysicalDevice gpu = renderer->getGpu();
 
-	renderObject->prepareObject("../Textures/mifka.jpg", 4, 
-		commandBufferHandler->getCommandPool(), renderer->getQueueIndices()->getQueue());
+	renderObject->prepareObject(commandBufferHandler->getCommandPool(), renderer->getQueueIndices()->getQueue());
 	
 	commandBufferHandler->createDrawingCommandBuffers(static_cast<uint32_t>(frameBuffer->getFrameBuffers().size()), 
 														renderObject);

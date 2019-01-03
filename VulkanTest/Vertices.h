@@ -5,6 +5,9 @@
 #include "PLATFORM.h"
 #include <vector>
 #include <array>
+#include <set>
+#include <ppl.h>
+#include <concurrent_vector.h>
 
 struct Vertex {
 	glm::vec3 position;
@@ -43,7 +46,21 @@ struct Vertex {
 
 		return attributeDescriptions;
 	}
+
+	bool operator==(const Vertex& other) const {
+		return position == other.position && color == other.color && texCoord == other.texCoord;
+	}
 };
+
+namespace std {
+	template<> struct hash<Vertex> {
+		size_t operator()(Vertex const& vertex) const {
+			return ((hash<glm::vec3>()(vertex.position) ^
+				(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+				(hash<glm::vec2>()(vertex.texCoord) << 1);
+		}
+	};
+}
 
 class Vertices
 {
@@ -60,5 +77,11 @@ public:
 	std::vector<uint32_t> getIndices();
 	void setVertices(std::vector<Vertex> vertices);
 	void setIndices(std::vector<uint32_t> indices);
+
+	void addVertices(Vertex);
+	void addIndices(uint32_t);
+
+	void insertVertices(concurrency::concurrent_vector<Vertex>);
+	void insertIndices(concurrency::concurrent_vector<uint32_t>);
 };
 
