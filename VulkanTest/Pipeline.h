@@ -17,7 +17,7 @@
 class Pipeline
 {
 public:
-	Pipeline(VkDevice, VkPhysicalDeviceMemoryProperties, VkRenderPass*, float, float, VkExtent2D);
+	Pipeline(VkDevice, VkPhysicalDeviceMemoryProperties, VkRenderPass*, VkSampleCountFlagBits, float, float, VkExtent2D);
 	~Pipeline();
 
 	void createPipelineLayout(); 
@@ -40,7 +40,7 @@ private:
 	void createDynamicState();
 	void createColorBlending();
 	void createRasterizer();
-	void createMultisamplingInformation();
+	void createMultisamplingInformation(VkSampleCountFlagBits);
 	void createInputAssemblyInformation();
 	void createVertexInformation();
 	void createDepthStencilInformation();

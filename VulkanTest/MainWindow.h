@@ -19,6 +19,7 @@
 #include "DescriptorHandler.h"
 #include "DepthTester.h"
 #include "Texture.h"
+#include "Multisample.h"
 #include <vector>
 #include <string>
 #include <assert.h>
@@ -39,7 +40,7 @@ public:
 
 	void continueInitialization(Renderer*);
 
-	/*Koji semafor cekamo da signalizira dobavljenu sliku, viewport koji treba postaviti. NULL ako ne treba viewport.*/
+	/*Koji semafor cekamo da signalizira dobavljenu sliku*/
 	void beginRender(VkSemaphore);
 
 	void endRender(std::vector<VkSemaphore>);
@@ -84,6 +85,7 @@ private:
 	std::unique_ptr<CommandBufferHandler> commandBufferHandler = nullptr;
 	std::unique_ptr<Texture> background = nullptr;
 	std::unique_ptr<DepthTester> depthTester = nullptr;
+	std::unique_ptr<Multisample> multisampler = nullptr;
 
 	Renderer* renderer = nullptr;
 	GLFWwindow* window = nullptr;

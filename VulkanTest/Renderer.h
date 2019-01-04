@@ -41,7 +41,7 @@ public:
 	void _DeinitInstance();
 	QueueFamilyIndices* getQueueIndices();
 	MainWindow* getMainWindowPTR();
-
+	VkSampleCountFlagBits getMSAA();
 
 	void continueInitialization();
 private:
@@ -72,6 +72,7 @@ private:
 	VkQueue	queue = VK_NULL_HANDLE;
 	VkPhysicalDeviceMemoryProperties gpuMemoryProperties = {};
 	VkPhysicalDeviceFeatures gpuFeatures = {};
+	VkSampleCountFlagBits msaaCount = VK_SAMPLE_COUNT_1_BIT;
 	
 	PFN_vkCreateDebugReportCallbackEXT fvkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
 	PFN_vkDestroyDebugReportCallbackEXT fvkDestroyDebugReportCallbackEXT = VK_NULL_HANDLE;

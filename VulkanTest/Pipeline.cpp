@@ -3,7 +3,7 @@
 #include "DepthTester.h"
 
 Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, VkRenderPass* renderPass, 
-					float width, float height, VkExtent2D extent)
+	VkSampleCountFlagBits samples, float width, float height, VkExtent2D extent)
 {
 	this->device = device;
 	this->memprops = memprops;
@@ -18,7 +18,7 @@ Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, V
 
 	this->createInputAssemblyInformation();
 	this->setupViewport(width, height, extent);
-	this->createMultisamplingInformation();
+	this->createMultisamplingInformation(samples);
 	this->createVertexInformation();
 	this->createColorBlending();
 	this->createDynamicState();
@@ -204,14 +204,14 @@ void Pipeline::createInputAssemblyInformation() {
 	inputAssemblyCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 }
 
-void Pipeline::createMultisamplingInformation() {
+void Pipeline::createMultisamplingInformation(VkSampleCountFlagBits samples) {
 	multisampleCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 	multisampleCreateInfo.alphaToOneEnable = VK_FALSE;
 	multisampleCreateInfo.alphaToCoverageEnable = VK_FALSE;
-	multisampleCreateInfo.sampleShadingEnable = VK_FALSE;
-	multisampleCreateInfo.minSampleShading = 1.0f;
+	multisampleCreateInfo.sampleShadingEnable = VK_TRUE;
+	multisampleCreateInfo.minSampleShading = .2f;
 	multisampleCreateInfo.pSampleMask = nullptr;
-	multisampleCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+	multisampleCreateInfo.rasterizationSamples = samples;
 }
 
 void Pipeline::createRasterizer() {

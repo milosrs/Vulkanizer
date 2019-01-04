@@ -13,11 +13,12 @@ class Renderer;
 class RenderPass
 {
 public:
-	RenderPass(Renderer* renderer, VkSurfaceFormatKHR surfaceFormat);
+	RenderPass(Renderer* renderer, VkSurfaceFormatKHR surfaceFormat, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 	~RenderPass();
 
 	VkRenderPass getRenderPass();
 	VkRenderPass* getRenderPassPTR();
+	VkSampleCountFlagBits getSamples();
 
 	void beginRenderPass(VkCommandBuffer, VkRenderPassBeginInfo*);
 	void endRenderPass(VkCommandBuffer commandBuffer);
@@ -30,7 +31,7 @@ private:
 	Renderer* renderer = nullptr;
 
 	VkRenderPass renderPass = nullptr;
-	
+	VkSampleCountFlagBits samples;
 	VkFormat colorFormat;
 	VkSurfaceFormatKHR surfaceFormat;
 

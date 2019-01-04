@@ -37,13 +37,9 @@ void FrameBuffer::initFrameBuffer(
 	for (uint32_t i = 0; i < swapchainImageCount; ++i) {
 		
 		VkFramebufferCreateInfo frameBufferCreateInfo{};
-		std::vector<VkImageView> allAttachments = { imageViews[i] };
-
-		if (DepthTester::isInstanceCreated()) {
-			allAttachments.push_back(imageViews[imageViews.size() - 1]);
-		}
-
+		std::vector<VkImageView> allAttachments;
 		allAttachments.insert(allAttachments.begin(), attachments.begin(), attachments.end());
+		allAttachments.insert(allAttachments.end(), imageViews[i]);	//Render pass ide ovako: Sampler, depth, slika
 
 		frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		frameBufferCreateInfo.renderPass = renderPass;

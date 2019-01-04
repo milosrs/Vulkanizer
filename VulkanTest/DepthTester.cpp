@@ -21,7 +21,8 @@ DepthTester::~DepthTester()
 	vkFreeMemory(device, depthMemory, nullptr);
 }
 
-void DepthTester::createDepthImage(uint32_t width, uint32_t height, VkCommandPool cmdPool, VkQueue queue)
+void DepthTester::createDepthImage(uint32_t width, uint32_t height, VkCommandPool cmdPool, VkQueue queue, 
+	VkSampleCountFlagBits samples)
 {
 	Util::createImage(width, height, 1, this->depthFormat,
 		VK_IMAGE_TILING_OPTIMAL,
@@ -29,7 +30,7 @@ void DepthTester::createDepthImage(uint32_t width, uint32_t height, VkCommandPoo
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		&this->depth,
 		&this->depthMemory,
-		this->device, &this->memprops);
+		this->device, &this->memprops, samples);
 
 	this->depthView = Util::createImageView(device, depth, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 

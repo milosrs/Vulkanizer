@@ -7,7 +7,7 @@ public:
 	DepthTester(VkDevice, VkPhysicalDevice, VkPhysicalDeviceMemoryProperties);
 	~DepthTester();
 
-	void createDepthImage(uint32_t, uint32_t, VkCommandPool, VkQueue);
+	void createDepthImage(uint32_t, uint32_t, VkCommandPool, VkQueue, VkSampleCountFlagBits);
 	VkImageView getDepthImageView();
 	VkImage getDepthImage();
 

@@ -53,7 +53,7 @@ void MainWindow::createData()
 	VkPhysicalDeviceMemoryProperties memprops = renderer->getPhysicalDeviceMemoryProperties();
 	VkPhysicalDeviceMemoryProperties *pMemprops = renderer->getPhysicalDeviceMemoryPropertiesPTR();
 	VkPhysicalDevice gpu = renderer->getGpu();
-	std::vector<VkImageView> framebufferImageViews;
+	std::vector<VkImageView> framebufferAttachments;
 	VkExtent2D extent;
 
 	while (width == 0 || height == 0) {
@@ -66,29 +66,31 @@ void MainWindow::createData()
 	swapchain = std::make_unique<Swapchain>(this, renderer);
 	commandBufferHandler = std::make_unique<CommandBufferHandler>(renderer->getQueueIndices()->getGraphicsFamilyIndex(),
 		device, this);
-
-	std::vector<VkImageView> swapchainImgs = swapchain->getImageViews();
-	framebufferImageViews.insert(framebufferImageViews.begin(), swapchainImgs.begin(), swapchainImgs.end());
 	extent = surfaceCapatibilities.currentExtent;
 
 	if (Util::shouldCreateDepthStencil()) {
 		depthTester = std::make_unique<DepthTester>(device, gpu, memprops);
 	}
 
-	renderPass = std::make_unique<RenderPass>(renderer, this->surfaceFormat);
+	multisampler = std::make_unique<Multisample>(device, pMemprops, commandBufferHandler->getCommandPool(),
+		renderer->getQueueIndices()->getQueue(), surfaceFormat.format, extent.width, extent.height,
+		renderer->getMSAA());
+	
+	renderPass = std::make_unique<RenderPass>(renderer, this->surfaceFormat, renderer->getMSAA());
 
 	scissorsExtent = extent;
-	pipeline = std::make_unique<Pipeline>(device, memprops, renderPass->getRenderPassPTR(), 
+	pipeline = std::make_unique<Pipeline>(device, memprops, renderPass->getRenderPassPTR(), renderer->getMSAA(),
 											(float)width, (float)height, scissorsExtent);	
 
 	if (Util::shouldCreateDepthStencil()) {
+		framebufferAttachments.push_back(multisampler->getView());
 		depthTester->createDepthImage(extent.width, extent.height,
-			commandBufferHandler->getCommandPool(), renderer->getQueueIndices()->getQueue());
-		framebufferImageViews.push_back(depthTester->getDepthImageView());
+			commandBufferHandler->getCommandPool(), renderer->getQueueIndices()->getQueue(), renderer->getMSAA());
+		framebufferAttachments.push_back(depthTester->getDepthImageView());
 	}
 
-	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), framebufferImageViews,
-		renderPass->getRenderPass(), this->getSurfaceSize());
+	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), swapchain->getImageViews(),
+		renderPass->getRenderPass(), this->getSurfaceSize(), framebufferAttachments);
 
 	/*descriptorHandler = std::make_unique<DescriptorHandler>(device, pipeline->getDescriptorSetLayout(), 
 															static_cast<uint32_t>(swapchain->getImageViews().size()));*/

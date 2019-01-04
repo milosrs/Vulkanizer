@@ -157,6 +157,8 @@ void Renderer::createPhysicalDevices() {
 	vkGetPhysicalDeviceProperties(gpu, &gpuProperties);
 	vkGetPhysicalDeviceMemoryProperties(gpu, &gpuMemoryProperties);
 	vkGetPhysicalDeviceFeatures(this->gpu, &this->gpuFeatures);				//Izlistaj mogucnost GPUA
+
+	msaaCount = Util::getMultisamplingLevels(gpuProperties);
 }
 
 void Renderer::enumerateDeviceLayers() {
@@ -413,4 +415,9 @@ QueueFamilyIndices* Renderer::getQueueIndices()
 MainWindow * Renderer::getMainWindowPTR()
 {
 	return this->window.get();
+}
+
+VkSampleCountFlagBits Renderer::getMSAA()
+{
+	return msaaCount;
 }

@@ -36,7 +36,7 @@ public:
 
 	static void createImage(uint32_t, uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags,
 							VkMemoryPropertyFlags, VkImage*, VkDeviceMemory*, VkDevice, 
-							VkPhysicalDeviceMemoryProperties *);
+							VkPhysicalDeviceMemoryProperties *, VkSampleCountFlagBits = VK_SAMPLE_COUNT_1_BIT);
 
 	static VkImageView createImageView(VkDevice, VkImage, VkFormat, VkImageAspectFlags, uint32_t);
 
@@ -50,6 +50,8 @@ public:
 										VkImageTiling tiling, VkFormatFeatureFlags flags);
 
 	static wchar_t *convertCharArrayToLPCWSTR(const char* charArray);
+
+	static VkSampleCountFlagBits getMultisamplingLevels(VkPhysicalDeviceProperties);
 	
 	/*Checks if a given Depth format has a stencil component*/
 	static bool hasStencilComponent(VkFormat depthFormat);

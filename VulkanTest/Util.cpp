@@ -113,6 +113,21 @@ wchar_t* Util::convertCharArrayToLPCWSTR(const char* charArray)
 	return wString;
 }
 
+VkSampleCountFlagBits Util::getMultisamplingLevels(VkPhysicalDeviceProperties props)
+{
+	VkSampleCountFlagBits ret = VK_SAMPLE_COUNT_1_BIT;
+	VkSampleCountFlags counts = std::min(props.limits.framebufferColorSampleCounts, props.limits.framebufferDepthSampleCounts);
+
+	if (counts & VK_SAMPLE_COUNT_64_BIT)	ret = VK_SAMPLE_COUNT_64_BIT;
+	else if (counts & VK_SAMPLE_COUNT_32_BIT) ret = VK_SAMPLE_COUNT_32_BIT;
+	else if (counts & VK_SAMPLE_COUNT_16_BIT) ret = VK_SAMPLE_COUNT_16_BIT;
+	else if (counts & VK_SAMPLE_COUNT_8_BIT) ret = VK_SAMPLE_COUNT_8_BIT;
+	else if (counts & VK_SAMPLE_COUNT_4_BIT) ret = VK_SAMPLE_COUNT_4_BIT;
+	else if (counts & VK_SAMPLE_COUNT_2_BIT) ret = VK_SAMPLE_COUNT_2_BIT;
+	
+	return ret;
+}
+
 uint32_t Util::findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties * memoryProps, const VkMemoryRequirements * memoryRequirements, const VkMemoryPropertyFlags memoryFlags)
 {
 	uint32_t ret = NULL;
@@ -130,7 +145,7 @@ uint32_t Util::findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties * memo
 
 void Util::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
 						VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory,
-						VkDevice device, VkPhysicalDeviceMemoryProperties *memprops) {
+						VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkSampleCountFlagBits samples) {
 
 	VkImageCreateInfo imageInfo = {};
 	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -144,7 +159,7 @@ void Util::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFo
 	imageInfo.tiling = tiling;
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.usage = usage;
-	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.samples = samples;
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	if (vkCreateImage(device, &imageInfo, nullptr, image) != VK_SUCCESS) {
@@ -218,6 +233,12 @@ void Util::transitionImageLayout(VkImage *image, VkFormat format, VkImageLayout 
 
 		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	}
 	else {
 		throw std::invalid_argument("unsupported layout transition!");

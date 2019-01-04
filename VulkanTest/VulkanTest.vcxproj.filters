@@ -120,6 +120,9 @@
     <ClInclude Include="RenderObject.h">
       <Filter>Renderings Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Multisample.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -196,6 +199,9 @@
     </ClCompile>
     <ClCompile Include="RenderObject.cpp">
       <Filter>Renderings Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Multisample.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
