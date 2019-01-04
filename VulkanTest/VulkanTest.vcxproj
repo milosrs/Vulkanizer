@@ -92,7 +92,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -111,7 +111,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -132,7 +132,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -155,7 +155,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.85.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
