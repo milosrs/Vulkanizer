@@ -25,6 +25,13 @@ void UniformBuffer::update(float aspect , float nearPlane, float farPlane)
 	ubo.proj = glm::perspective(glm::radians(45.0f), aspect, nearPlane, farPlane);
 	ubo.proj[1][1] *= -1;														//GLM je napravljen za OpenGL, Y koordinata je na dole, pa ce nam slka biti izvrnuta.
 
+	if (Util::getOption() == 4) {
+		ubo.model *= glm::scale(glm::vec3(0.1)) * glm::translate(glm::vec3(0.0, -10.0, 0.0));
+	}
+	else if (Util::getOption() == 5) {
+		ubo.model *= glm::scale(glm::vec3(0.4));
+	}
+
 	copy();																		//Kopiramo podatke u memoriju bafera
 }
 

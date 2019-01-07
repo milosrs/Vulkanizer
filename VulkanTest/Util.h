@@ -14,6 +14,7 @@ static auto last_time = timer.now();
 static uint64_t frameCounter = 0;
 static uint64_t fps = 0;
 static int selectedOption = -1;
+static float shaderScale = 1.0f;
 
 class CommandBufferHandler;
 template <class T> class StagingBuffer;
@@ -59,9 +60,10 @@ public:
 	/*If user selects to see something that requires depth stencil, create it*/
 	static bool shouldCreateDepthStencil();
 	static void setOption(int option);
+	static int getOption();
 
-	bool shouldHaveBackground();
-	static void setShouldHaveBackground(bool);
+	static bool getScale();
+	static void setScale(float scale);
 
 	VkDevice getDevice();
 private: 

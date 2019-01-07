@@ -73,6 +73,21 @@ void Util::setOption(int option)
 	selectedOption = option;
 }
 
+int Util::getOption()
+{
+	return selectedOption;
+}
+
+bool Util::getScale()
+{
+	return shaderScale;
+}
+
+void Util::setScale(float scale)
+{
+	shaderScale = scale;
+}
+
 VkDevice Util::getDevice()
 {
 	return device;
