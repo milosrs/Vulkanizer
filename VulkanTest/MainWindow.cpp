@@ -3,12 +3,14 @@
 #include "Renderer.h"
 #include "CommandBufferHandler.h"
 #include "RenderObject.h"
+#include "WindowController.h"
 
 MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::string windowName) {
 	this->renderer = renderer;
 	this->sizeX = sizeX;
 	this->sizeY = sizeY;
 	this->name = windowName;
+	windowController = std::make_unique<WindowController>(this);
 
 	InitOSWindow();
 	InitOSSurface();
@@ -92,8 +94,9 @@ void MainWindow::createData()
 	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), swapchain->getImageViews(),
 		renderPass->getRenderPass(), this->getSurfaceSize(), framebufferAttachments);
 
-	/*descriptorHandler = std::make_unique<DescriptorHandler>(device, pipeline->getDescriptorSetLayout(), 
-															static_cast<uint32_t>(swapchain->getImageViews().size()));*/
+	for (RenderObject *robj : objects) {
+		robj->recreateDescriptorHandler();
+	}
 }
 
 void MainWindow::setupPipeline(RenderObject *renderObject, bool uniform)
@@ -107,6 +110,8 @@ void MainWindow::setupPipeline(RenderObject *renderObject, bool uniform)
 	
 	commandBufferHandler->createDrawingCommandBuffers(static_cast<uint32_t>(frameBuffer->getFrameBuffers().size()), 
 														renderObject);
+
+	this->objects.push_back(renderObject);
 }
 
 void MainWindow::bindPipeline(RenderObject* renderObject, VkCommandBuffer cmdBuffer)
@@ -224,6 +229,8 @@ void MainWindow::InitOSWindow()
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);														//Za sada, promena velicine prozora nije moguca
 	this->window = glfwCreateWindow(this->sizeX, this->sizeY, "Hello world!", nullptr, nullptr);	//4-i param: Koji monitor je u pitanju (sada je default)  5-i param: Samo za OpenGL aplikacije
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+	glfwSetMouseButtonCallback(window, WindowController::mouseBtnCallback);
+	glfwSetCursorPosCallback(window, WindowController::mouseMoveCallback);
 }
 
 void MainWindow::DeinitOSWindow()
@@ -276,6 +283,11 @@ Pipeline * MainWindow::getPipelinePTR()
 CommandBufferHandler * MainWindow::getCommandHandler()
 {
 	return this->commandBufferHandler.get();
+}
+
+std::vector<RenderObject*> MainWindow::getRenderObjects()
+{
+	return this->objects;
 }
 
 VkSurfaceKHR MainWindow::getSurface()

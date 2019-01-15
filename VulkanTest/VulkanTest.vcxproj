@@ -197,6 +197,7 @@
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="VertexBuffer.h" />
     <ClInclude Include="Vertices.h" />
+    <ClInclude Include="WindowController.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CommandBufferHandler.cpp" />
@@ -230,6 +231,7 @@
     <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />
     <ClCompile Include="Vertices.cpp" />
+    <ClCompile Include="WindowController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shader.frag" />

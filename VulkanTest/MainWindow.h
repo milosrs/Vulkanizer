@@ -30,6 +30,7 @@
 class Renderer;
 class CommandBufferHandler;
 class RenderObject;
+class WindowController;
 
 class MainWindow
 {
@@ -58,6 +59,7 @@ public:
 	GLFWwindow* getWindowPTR();
 	Pipeline* getPipelinePTR();
 	CommandBufferHandler* getCommandHandler();
+	std::vector<RenderObject*> getRenderObjects();
 
 	VkSurfaceKHR getSurface();
 	VkSurfaceKHR* getSurfacePTR();
@@ -86,6 +88,9 @@ private:
 	std::unique_ptr<Texture> background = nullptr;
 	std::unique_ptr<DepthTester> depthTester = nullptr;
 	std::unique_ptr<Multisample> multisampler = nullptr;
+	std::unique_ptr<WindowController> windowController = nullptr;
+
+	std::vector<RenderObject*> objects;
 
 	Renderer* renderer = nullptr;
 	GLFWwindow* window = nullptr;

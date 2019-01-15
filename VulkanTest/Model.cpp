@@ -3,13 +3,9 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
-Model::Model(std::string objectPath, std::string texturePath, unsigned int mode, 
-	MainWindow* mainWindow, Renderer* renderer) : RenderObject(mainWindow, renderer)
+Model::Model(std::string objectPath, MainWindow* mainWindow, Renderer* renderer) : RenderObject(mainWindow, renderer)
 {
 	this->objectPath = objectPath;
-	this->texturePath = texturePath;
-	this->mode = mode;
-
 	loadModel();
 }
 

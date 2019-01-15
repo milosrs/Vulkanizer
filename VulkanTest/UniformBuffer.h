@@ -24,9 +24,12 @@ public:
 	  near plane
 	  far plane
 	*/
-	void update(float, float, float);
+	void update();
 	void copy();
+	void rotate(glm::vec2 mouseDelta);
+	void setViewData(float, float, float);
 private:
 	UBO ubo = {};
+	float aspect, nearPlane, farPlane;
 };
 

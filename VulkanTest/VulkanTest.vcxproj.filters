@@ -31,9 +31,6 @@
     <Filter Include="Textures">
       <UniqueIdentifier>{3114d425-0efb-491c-9cef-63fddb1a88b5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Images">
-      <UniqueIdentifier>{94a06050-bb76-4db0-802b-b40ba6cc2118}</UniqueIdentifier>
-    </Filter>
     <Filter Include="objects">
       <UniqueIdentifier>{3c711746-4848-47fb-8493-2f25d10eb6b5}</UniqueIdentifier>
     </Filter>
@@ -129,6 +126,9 @@
     <ClInclude Include="Multisample.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WindowController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -207,6 +207,9 @@
       <Filter>Renderings Source</Filter>
     </ClCompile>
     <ClCompile Include="Multisample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

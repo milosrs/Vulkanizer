@@ -61,24 +61,34 @@ void RenderObject::prepareObject(VkCommandPool cmdPool, VkQueue queue)
 		VkDeviceSize verticesSize = sizeof(vertices->getVertices()[0]) * vertices->getVertices().size();
 		VkDeviceSize indicesSize = sizeof(vertices->getIndices()[0]) * vertices->getIndices().size();
 
-		if (texturePath.length() > 0 && mode > 0) {
+		if (texturePaths.size() > 0 && mode > 0) {
 			VkFormat imageFormat = VK_FORMAT_R8G8B8A8_UNORM;
-
-			this->texture = std::make_unique<Texture>(device, pMemprops, VK_FORMAT_R8G8B8A8_UNORM, texturePath, mode);
-			texture->supportsLinearBlitFormat(renderer->getGpu());
-			texture->beginCreatingTexture(cmdPool, queue);
+			
+			for (const std::string& path : texturePaths) {
+				Texture *t = new Texture(device, pMemprops, VK_FORMAT_R8G8B8A8_UNORM, path, mode);
+				t->supportsLinearBlitFormat(renderer->getGpu());
+				t->beginCreatingTexture(cmdPool, queue);
+				this->textures.push_back(t);
+			}
 		}
 
 		this->vertexBuffer = std::make_unique<VertexBuffer>(device, memprops, verticesSize);
 		this->indexBuffer = std::make_unique<IndexBuffer>(device, memprops, indicesSize);
 
+		float aspect = window->getSurfaceCapatibilities().currentExtent.width / (float)window->getSurfaceCapatibilities().currentExtent.height;
+		float nearPlane = 0.1f;
+		float farPlane = 10.0f;
+
 		for (auto i = 0; i < window->getSwapchain()->getImageViews().size(); ++i) {
-			uniformBuffers.push_back(new UniformBuffer(device, memprops));
+			UniformBuffer *ub = new UniformBuffer(device, memprops);
+			ub->setViewData(aspect, nearPlane, farPlane);
+			uniformBuffers.push_back(ub);
 		}
 
 		vertexBuffer->fillBuffer(vertices->getVertices());
 		indexBuffer->fillBuffer(vertices->getIndices());
-		descriptorHandler->createDescriptorSets(uniformBuffers, texture->getSampler(), texture->getTextureImageView());
+		descriptorHandler->createDescriptorSets(uniformBuffers, textures[0]->getSampler(), 
+			textures[0]->getTextureImageView());
 
 		isPrepared = true;
 	}
@@ -98,17 +108,13 @@ void RenderObject::render(VkViewport* viewport) {
 			VkSemaphore imageAcquiredSemaphore = this->imageAvaiableSemaphores[frameCount];
 			VkSemaphore renderSemaphore = this->renderFinishedSemaphores[frameCount];
 			VkFence fence = this->fences[frameCount];
-			uint32_t activeImageIndex;
 			bool isSubmitted = false;
-			float aspect = window->getSurfaceCapatibilities().currentExtent.width / (float)window->getSurfaceCapatibilities().currentExtent.height;
-			float nearPlane = 0.1f;
-			float farPlane = 10.0f;
 
 			vkWaitForFences(renderer->getDevice(), 1, &this->fences[frameCount], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
 			window->beginRender(imageAcquiredSemaphore);
 			activeImageIndex = window->getSwapchain()->getActiveImageSwapchain();
-			uniformBuffers[activeImageIndex]->update(aspect, nearPlane, farPlane);
+			uniformBuffers[activeImageIndex]->update();
 
 			CommandBufferSemaphoreInfo renderSemaphoreInfo(true, renderSemaphore, &stage);
 			CommandBufferSemaphoreInfo imageSemaphoreInfo(true, imageAcquiredSemaphore, &stage);
@@ -147,9 +153,9 @@ void RenderObject::setName(std::string name)
 	this->name = name;
 }
 
-void RenderObject::setTextureParams(std::string path, unsigned int mode)
+void RenderObject::setTextureParams(std::vector<std::string> texturePaths, unsigned int mode)
 {
-	this->texturePath = path;
+	this->texturePaths = texturePaths;
 	this->mode = mode;
 }
 
@@ -163,6 +169,17 @@ bool RenderObject::isObjectReadyToRender()
 	return isPrepared && this->name != "";
 }
 
+void RenderObject::recreateDescriptorHandler()
+{
+	this->descriptorHandler = std::make_unique<DescriptorHandler>(device, window->getPipelinePTR()->getDescriptorSetLayout(),
+		static_cast<uint32_t>(window->getSwapchain()->getImageViews().size()));
+}
+
+void RenderObject::rotate(glm::vec2 mouseDelta)
+{
+	uniformBuffers[activeImageIndex]->rotate(mouseDelta);
+}
+
 IndexBuffer * RenderObject::getIndexBuffer()
 {
 	return indexBuffer.get();
@@ -172,12 +189,10 @@ VertexBuffer * RenderObject::getVertexBuffer()
 {
 	return vertexBuffer.get();
 }
-
-Texture * RenderObject::getTexture()
+std::vector<Texture*> RenderObject::getTextures()
 {
-	return texture.get();
+	return this->textures;
 }
-
 DescriptorHandler * RenderObject::getDescriptorHandler()
 {
 	return this->descriptorHandler.get();
@@ -196,4 +211,9 @@ std::vector<UniformBuffer*> RenderObject::getUniformBuffers()
 std::vector<VkClearValue>* RenderObject::getClearValues()
 {
 	return &clearValues;
+}
+
+std::vector<std::string> RenderObject::getTexturePaths()
+{
+	return this->texturePaths;
 }

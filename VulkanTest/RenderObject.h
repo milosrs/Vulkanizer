@@ -7,13 +7,6 @@
 
 class RenderObject {
 public:
-	/*
-		1. MainWindow, 
-		2. Renderer,
-		3. Name, 
-		4. TexturePath, 
-		5. TextureMode
-	*/
 	RenderObject(MainWindow*, Renderer*, std::string = "");
 	virtual ~RenderObject();
 
@@ -22,27 +15,27 @@ public:
 	void deleteSyncObjects();
 	void prepareObject(VkCommandPool, VkQueue);
 	void setName(std::string);
-	/*
-		1. Texture path,
-		2. Mode
-	*/
-	void setTextureParams(std::string, unsigned int);
+	void setTextureParams(std::vector<std::string> texturePaths, unsigned int);
 	std::string getName();
 	bool isObjectReadyToRender();
+	void recreateDescriptorHandler();
+
+	void rotate(glm::vec2 mouseDelta);
 
 	IndexBuffer* getIndexBuffer();
 	VertexBuffer* getVertexBuffer();
-	Texture* getTexture();
+	std::vector<Texture*> getTextures();
 	DescriptorHandler* getDescriptorHandler();
 	Vertices* getVertices();
 
 	std::vector<UniformBuffer*> getUniformBuffers();
 	std::vector<VkClearValue>* getClearValues();
+
+	std::vector<std::string> getTexturePaths();
 protected:
 	bool isPrepared = false;
-
+	uint32_t activeImageIndex;
 	std::string name;
-	std::string texturePath = "";
 	unsigned int mode = 0;
 
 	std::unique_ptr<Vertices> vertices = nullptr;
@@ -51,10 +44,11 @@ protected:
 	std::vector<VkFence> fences;							//CPU-GPU sinhronizacija
 	std::vector<VkClearValue> clearValues;
 	std::vector<UniformBuffer*> uniformBuffers;
+	std::vector<Texture*> textures;
+	std::vector<std::string> texturePaths;
 
 	std::unique_ptr<IndexBuffer> indexBuffer = nullptr;
 	std::unique_ptr<VertexBuffer> vertexBuffer = nullptr;
-	std::unique_ptr<Texture> texture = nullptr;
 	std::unique_ptr<DescriptorHandler> descriptorHandler = nullptr;
 
 	VkDevice device = VK_NULL_HANDLE;
