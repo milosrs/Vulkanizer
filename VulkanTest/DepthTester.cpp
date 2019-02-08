@@ -34,7 +34,7 @@ void DepthTester::createDepthImage(uint32_t width, uint32_t height, VkCommandPoo
 
 	this->depthView = Util::createImageView(device, depth, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 
-	Util::transitionImageLayout(&depth, depthFormat,
+	Util::transitionImageLayout(depth, depthFormat,
 		VK_IMAGE_LAYOUT_UNDEFINED,
 		VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 		cmdPool, queue, device, 1);

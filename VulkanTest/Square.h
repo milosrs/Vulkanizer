@@ -5,7 +5,7 @@
 class Square : public RenderObject
 {
 public:
-	Square(MainWindow*, Renderer*);
+	Square();
 private:
 	
 };

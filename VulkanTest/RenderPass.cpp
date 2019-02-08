@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "RenderPass.h"
 #include "DepthTester.h"
+#include "Renderer.h"
 
-RenderPass::RenderPass(Renderer* renderer, VkSurfaceFormatKHR surfaceFormat, VkSampleCountFlagBits samples)
+RenderPass::RenderPass(VkSurfaceFormatKHR surfaceFormat, VkSampleCountFlagBits samples)
 {
-	this->renderer = renderer;
+	MainWindow *mainWindow = &MainWindow::getInstance();
+	this->renderer = mainWindow->getRenderer();
 	this->surfaceFormat = surfaceFormat;
 	this->samples = samples;
 	

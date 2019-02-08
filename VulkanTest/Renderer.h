@@ -13,6 +13,7 @@
 #include <sstream>
 #include "BUILD_OPTIONS.h"
 #include "QueueFamilyIndices.h"
+#include "MainWindow.h"
 #include <cstring>
 #include <iostream>
 #include <map>
@@ -26,8 +27,6 @@ public:
 	Renderer(const Renderer&);
 	~Renderer();
 
-	void createWindow(uint32_t, uint32_t, std::string);
-
 	const VkInstance getInstance();
 	const VkPhysicalDevice getGpu();
 	const VkDevice getDevice();
@@ -40,14 +39,12 @@ public:
 	VkPhysicalDeviceMemoryProperties getPhysicalDeviceMemoryProperties();
 	void _DeinitInstance();
 	QueueFamilyIndices* getQueueIndices();
-	MainWindow* getMainWindowPTR();
 	VkSampleCountFlagBits getMSAA();
 
-	void continueInitialization();
+	void initDevice();
 private:
 	void _InitInstance();
 
-	void _InitDevice();
 	void _DeinitDevice();
 
 	void SetupDebug();
@@ -90,6 +87,5 @@ private:
 	const char** glfwInstanceExtensions;
 
 	std::unique_ptr<QueueFamilyIndices> queueFamilyIndices = nullptr;
-	std::unique_ptr<MainWindow> window = nullptr;
 };
 

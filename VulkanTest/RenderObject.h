@@ -7,16 +7,16 @@
 
 class RenderObject {
 public:
-	RenderObject(MainWindow*, Renderer*, std::string = "");
+	RenderObject(std::string = "");
 	virtual ~RenderObject();
 
-	virtual void render(VkViewport*);
+	virtual void render();
 	void createSyncObjects();
 	void deleteSyncObjects();
 	void prepareObject(VkCommandPool, VkQueue);
 	void setName(std::string);
 	void setTextureParams(std::vector<std::string> texturePaths, unsigned int);
-	std::string getName();
+							std::string getName();
 	bool isObjectReadyToRender();
 	void recreateDescriptorHandler();
 

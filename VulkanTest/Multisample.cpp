@@ -14,7 +14,7 @@ Multisample::Multisample(VkDevice device, VkPhysicalDeviceMemoryProperties *memp
 		&image, &imageMemory, device, memprops, samples);
 
 	imageView = Util::createImageView(device, image, swapchainFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
-	Util::transitionImageLayout(&image, swapchainFormat, VK_IMAGE_LAYOUT_UNDEFINED,
+	Util::transitionImageLayout(image, swapchainFormat, VK_IMAGE_LAYOUT_UNDEFINED,
 		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, cmdPool, queue, device, 1);
 }
 

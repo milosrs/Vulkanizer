@@ -1,8 +1,7 @@
 #include "pch.h"
 #include "SquareDepth.h"
 
-
-SquareDepth::SquareDepth(MainWindow *mainWindow, Renderer *renderer) : RenderObject(mainWindow, renderer)
+SquareDepth::SquareDepth() : RenderObject()
 {
 	vertices->setVertices({
 		{{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},

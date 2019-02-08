@@ -32,8 +32,8 @@ public:
 
 	static void ErrorCheck(VkResult result);
 
-	static void transitionImageLayout(VkImage*, VkFormat, VkImageLayout, VkImageLayout, VkCommandPool, 
-										VkQueue, VkDevice, uint32_t);
+	static void transitionImageLayout(VkImage, VkFormat, VkImageLayout, VkImageLayout, VkCommandPool, 
+										VkQueue, VkDevice, uint32_t, VkCommandBuffer = VK_NULL_HANDLE);
 
 	static void createImage(uint32_t, uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags,
 							VkMemoryPropertyFlags, VkImage*, VkDeviceMemory*, VkDevice, 

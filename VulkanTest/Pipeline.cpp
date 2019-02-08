@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "Pipeline.h"
 #include "DepthTester.h"
+#include "Renderer.h"
 
 Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, VkRenderPass* renderPass, 
-	VkSampleCountFlagBits samples, float width, float height, VkExtent2D extent)
-{
+	VkSampleCountFlagBits samples, float width, float height, VkExtent2D extent) {
 	this->device = device;
 	this->memprops = memprops;
 

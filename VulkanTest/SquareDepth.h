@@ -7,7 +7,7 @@
 class SquareDepth : public RenderObject
 {
 public:
-	SquareDepth(MainWindow*, Renderer*);
+	SquareDepth();
 	~SquareDepth();
 };
 

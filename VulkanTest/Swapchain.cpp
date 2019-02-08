@@ -1,24 +1,20 @@
 #include "pch.h"
 #include "Swapchain.h"
 #include "MainWindow.h"
+#include "Renderer.h"
 
-Swapchain::Swapchain(MainWindow* mainWindow, Renderer* renderer)
+Swapchain::Swapchain()
 {
-	this->mainWindow = mainWindow;
-	this->renderer = renderer;
-	this->imagesFormat = mainWindow->getSurfaceFormat().format;
+	mainWindow = &MainWindow::getInstance();
+	renderer = mainWindow->getRenderer();
 
+	imagesFormat = mainWindow->getSurfaceFormat().format;
 	setupSwapExtent();
 
 	initSwapchain();
 	initSwapchainImgs();
-	initDepthStencilImage();
+	setupScreenshotData();
 }
-
-Swapchain::Swapchain()
-{
-}
-
 
 Swapchain::~Swapchain()
 {
@@ -26,6 +22,8 @@ Swapchain::~Swapchain()
 }
 
 void Swapchain::setupSwapExtent() {
+	MainWindow *mainWindow = &MainWindow::getInstance();
+
 	VkSurfaceCapabilitiesKHR capabilities = mainWindow->getSurfaceCapatibilities();			//Ovo ce nam reci koja je maksimalna rezolucija slike za povrsinu
 	VkExtent2D actualSizes = mainWindow->getSurfaceSize();
 	this->isWSISupported = mainWindow->getIsWSISupported();
@@ -95,60 +93,25 @@ void Swapchain::initSwapchainImgs()
 	}
 }
 
-void Swapchain::initDepthStencilImage()
+void Swapchain::setupScreenshotData()
 {
-	if(isStencilAvaiable()) {
-		VkImageCreateInfo imgInfo = {};
-		imgInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		imgInfo.flags = 0;												//Pogledaj sta ima i dokumentaciju
-		imgInfo.imageType = VK_IMAGE_TYPE_2D;
-		imgInfo.extent.width = sizeX;
-		imgInfo.extent.height = sizeY;
-		imgInfo.extent.depth = 1;
-		imgInfo.mipLevels = 1;											//Nivo mipmapinga. Ako je 0 nema slike.
-		imgInfo.arrayLayers = 1;										//Slojevi slike. Ako je 0 nema slike.
-		imgInfo.samples = VK_SAMPLE_COUNT_1_BIT;						//Multisampling, ne koristimo multisample. Ako koristimo multisample, moramo da koristimo isti sample i za depthStencil i sa swapchain slike
-		imgInfo.tiling = VK_IMAGE_TILING_OPTIMAL;						//Kako se slika dobija, ovo je bitno za teksture. (Fragmentacija trouglova)
-		imgInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;	//Kako koristimo sliku
-		imgInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;				//Da li delimo sliku izmedju redova (Trenutno ne)
-		imgInfo.queueFamilyIndexCount = VK_QUEUE_FAMILY_IGNORED;
-		imgInfo.pQueueFamilyIndices = nullptr;
-		imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;				//Slike u Vulkanu imaju uvek neki layout.
-		imgInfo.format = depthStencilFormat;							//Moramo da proverimo koji format je podrzan na nasoj GPU
+	VkFormatProperties formatProps;
+	supportsBlit = true;
 
-		VkMemoryRequirements memoryRequirements = {};
+	//Does device support blitting from optimal tiled images?
+	vkGetPhysicalDeviceFormatProperties(mainWindow->getRenderer()->getGpu(), this->imagesFormat, &formatProps);
+	if (!(formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT)) {
+		assert(0 && "Screenshot error: Device does not support blitting from optimal tiled images.");
+		supportsBlit = false;
+		return;
+	}
 
-		vkCreateImage(renderer->getDevice(), &imgInfo, nullptr, &depthStencilImage);		//Ako izostavimo metodu ispod, nece nam raditi program jer nije alocirana memorija za sliku
-		vkGetImageMemoryRequirements(renderer->getDevice(), this->depthStencilImage, &memoryRequirements);
-
-
-		VkPhysicalDeviceMemoryProperties memoryProps = renderer->getPhysicalDeviceMemoryProperties();
-
-		uint32_t memoryIndex = Util::findMemoryTypeIndex(&memoryProps, &memoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-		this->allocateInfo.allocationSize = memoryRequirements.size;
-		this->allocateInfo.memoryTypeIndex = memoryIndex;
-		this->allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-
-		//Postoji ogranicen broj alokacija na GPU-u.
-		vkAllocateMemory(renderer->getDevice(), &this->allocateInfo, nullptr, &this->depthStencilImageMemory);
-		vkBindImageMemory(renderer->getDevice(), depthStencilImage, depthStencilImageMemory, 0);
-
-		VkImageViewCreateInfo imgCreateInfo = {};
-		imgCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-		imgCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-		imgCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-		imgCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-		imgCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | (stencilAvaiable ? VK_IMAGE_ASPECT_STENCIL_BIT : 0);
-		imgCreateInfo.subresourceRange.baseMipLevel = 0;
-		imgCreateInfo.subresourceRange.levelCount = 1;
-		imgCreateInfo.subresourceRange.baseArrayLayer = 0;
-		imgCreateInfo.subresourceRange.layerCount = 1;
-		imgCreateInfo.format = depthStencilFormat;
-		imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		imgCreateInfo.image = depthStencilImage;
-		imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-
-		vkCreateImageView(renderer->getDevice(), &imgCreateInfo, nullptr, &depthStencilImageView);
+	//Does device support blitting from linear tiled images?
+	vkGetPhysicalDeviceFormatProperties(mainWindow->getRenderer()->getGpu(), VK_FORMAT_R8G8B8A8_UNORM, &formatProps);
+	if (!(formatProps.linearTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT)) {
+		assert(0 && "Screenshot error: Device does not support blitting from linear tiled images.");
+		supportsBlit = false;
+		return;
 	}
 }
 
@@ -238,6 +201,123 @@ VkImageView Swapchain::getDepthStencilImageView()
 std::vector<VkImageView> Swapchain::getImageViews()
 {
 	return this->imageViews;
+}
+
+bool Swapchain::isSupportingBlit()
+{
+	return supportsBlit;
+}
+
+void Swapchain::saveScreenshot(std::string filePath)
+{
+	VkImageCreateInfo screenshotCreateInfo;
+	VkImage srcImage = images[activeImageSwapchainId];
+	VkDeviceMemory dstImageMemory;
+	VkImage dstImage = VK_NULL_HANDLE;
+	
+	if (supportsBlit) {
+		VkCommandBuffer cmdBuffer = CommandBufferHandler::createOneTimeUsageBuffer(
+			mainWindow->getCommandHandler()->getCommandPool(), mainWindow->getRenderer()->getDevice());
+
+		Util::createImage(sizeX, sizeY, 1, VK_FORMAT_B8G8R8A8_UNORM,
+			VK_IMAGE_TILING_LINEAR, VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+			&dstImage, &dstImageMemory, mainWindow->getRenderer()->getDevice(),
+			mainWindow->getRenderer()->getPhysicalDeviceMemoryPropertiesPTR());
+
+		//NOVU Sliku prebacujemo u transfer destination
+		Util::transitionImageLayout(dstImage,
+			VK_FORMAT_B8G8R8A8_UNORM,
+			VK_IMAGE_LAYOUT_UNDEFINED,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			mainWindow->getCommandHandler()->getCommandPool(),
+			mainWindow->getRenderer()->getQueueIndices()->getQueue(),
+			mainWindow->getRenderer()->getDevice(),
+			1,
+			cmdBuffer);
+
+		//Staru sliku prebacujemo iz prezentacije u transfer source
+		Util::transitionImageLayout(srcImage,
+			VK_FORMAT_B8G8R8A8_UNORM,
+			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			mainWindow->getCommandHandler()->getCommandPool(),
+			mainWindow->getRenderer()->getQueueIndices()->getQueue(),
+			mainWindow->getRenderer()->getDevice(),
+			1,
+			cmdBuffer);
+
+	
+		VkOffset3D offsets{};
+		offsets.x = swapExtent.width;
+		offsets.y = swapExtent.height;
+		offsets.z = 1;
+
+		VkImageBlit blit{};
+		blit.srcSubresource.layerCount = 1;
+		blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		blit.dstSubresource.layerCount = 1;
+		blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		blit.srcOffsets[1] = offsets;
+		blit.dstOffsets[1] = offsets;
+
+		vkCmdBlitImage(cmdBuffer,
+			srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			1, &blit, VK_FILTER_NEAREST);
+
+		Util::transitionImageLayout(dstImage, VK_FORMAT_B8G8R8A8_UNORM,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL,
+			mainWindow->getCommandHandler()->getCommandPool(),
+			mainWindow->getRenderer()->getQueueIndices()->getQueue(),
+			mainWindow->getRenderer()->getDevice(),
+			1,
+			cmdBuffer);
+
+		Util::transitionImageLayout(srcImage, VK_FORMAT_B8G8R8A8_UNORM,
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			mainWindow->getCommandHandler()->getCommandPool(),
+			mainWindow->getRenderer()->getQueueIndices()->getQueue(),
+			mainWindow->getRenderer()->getDevice(),
+			1,
+			cmdBuffer);
+
+		CommandBufferHandler::endOneTimeUsageBuffer(cmdBuffer, mainWindow->getRenderer()->getQueueIndices()->getQueue(),
+			mainWindow->getCommandHandler()->getCommandPool(), mainWindow->getRenderer()->getDevice());
+
+		VkImageSubresource subresource{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 0 };
+		VkSubresourceLayout subresourceLayout;
+		vkGetImageSubresourceLayout(mainWindow->getRenderer()->getDevice(), dstImage, &subresource, &subresourceLayout);
+
+		const char *data = nullptr;
+		vkMapMemory(mainWindow->getRenderer()->getDevice(), dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&data);
+		data += subresourceLayout.offset;
+
+		std::ofstream file(filePath, std::ios::out | std::ios::binary);
+		file << "P6\n" << swapExtent.width << "\n" << swapExtent.height << "\n" << 255 << "\n";		//File header
+
+		for (uint32_t y = 0; y < swapExtent.height; ++y) {
+			unsigned int *row = (unsigned int*)data;
+
+			for (uint32_t x = 0; x < swapExtent.width; ++x) {
+				file.write((char*)row, 3);
+				row++;
+			}
+
+			data += subresourceLayout.rowPitch;
+		}
+
+		file.close();
+
+		std::cout << "Screenshot saved to: " << filePath << std::endl;
+
+		vkUnmapMemory(mainWindow->getRenderer()->getDevice(), dstImageMemory);
+		vkFreeMemory(mainWindow->getRenderer()->getDevice(), dstImageMemory, nullptr);
+		vkDestroyImage(mainWindow->getRenderer()->getDevice(), dstImage, nullptr);
+	}
+	else {
+		assert(0 && "Swapchain error: Your device does not support image blitting. Cannot save image. Will be patched.");
+		return;
+	}
 }
 
 void Swapchain::cleanup()

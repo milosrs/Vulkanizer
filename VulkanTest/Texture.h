@@ -32,7 +32,7 @@ private:
 	int width, height, channelCount;
 	unsigned int mode;
 	unsigned char* pixels;
-	unsigned int mipLevels;
+	uint32_t mipLevels;
 	bool supportsLinearBlit;
 
 	VkDevice device = VK_NULL_HANDLE;

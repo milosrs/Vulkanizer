@@ -3,7 +3,6 @@
 #define SWAPCHAIN_H
 #endif // !MAIN_WINDOW_H
 #include "PLATFORM.h"
-#include "Renderer.h"
 #include <vector>
 #include <algorithm>
 
@@ -13,7 +12,6 @@ class Renderer;
 class Swapchain
 {
 public:
-	Swapchain(MainWindow*, Renderer*);
 	Swapchain();
 	~Swapchain();
 
@@ -25,10 +23,17 @@ public:
 	uint32_t getSwapchainImageCount();
 	VkImageView getDepthStencilImageView();
 	std::vector<VkImageView> getImageViews();
+
+	bool isSupportingBlit();
+
+	void saveScreenshot(std::string filePath);
 private:
+	MainWindow *mainWindow = nullptr;
+	Renderer *renderer = nullptr;
+
 	void initSwapchain();
 	void initSwapchainImgs();
-	void initDepthStencilImage();
+	void setupScreenshotData();
 
 	void setupSwapExtent();
 
@@ -37,23 +42,21 @@ private:
 	VkPresentModeKHR getAvaiablePresentMode();
 	bool isStencilAvaiable();
 
-	MainWindow* mainWindow = nullptr;
-	Renderer* renderer = nullptr;
-
 	VkBool32 isWSISupported = false;
 
 	bool stencilAvaiable = false;
+	bool supportsBlit;
 	VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 	VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
 	std::vector<VkImage> images;
 	std::vector<VkImageView> imageViews;
 	VkImage depthStencilImage = VK_NULL_HANDLE;						//Ne treba nam vise od jedne slike, jedino ako hocemo double/tripple buffering
 	VkImageView depthStencilImageView = VK_NULL_HANDLE;				//Ne treba nam vise od jedne slike, jedino ako hocemo double/tripple buffering
-	VkFormat depthStencilFormat = VK_FORMAT_UNDEFINED;
 	VkMemoryAllocateInfo allocateInfo = {};
 	VkDeviceMemory depthStencilImageMemory = VK_NULL_HANDLE;
 	VkExtent2D swapExtent = {};
 	VkFormat imagesFormat = VK_FORMAT_UNDEFINED;
+	VkFormat depthStencilFormat = VK_FORMAT_UNDEFINED;
 
 	uint32_t swapchainImageCount = 2;
 	uint32_t activeImageSwapchainId;

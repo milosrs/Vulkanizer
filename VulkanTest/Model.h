@@ -13,7 +13,7 @@ public:
 		2.Texture path
 	*/
 
-	Model(std::string, MainWindow*, Renderer*);
+	Model(std::string);
 	~Model();
 private:
 	void loadModel();

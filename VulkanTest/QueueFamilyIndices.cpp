@@ -1,18 +1,18 @@
 #include "pch.h"
 #include "QueueFamilyIndices.h"
 
-QueueFamilyIndices::QueueFamilyIndices(VkPhysicalDevice* physicalDevice, VkSurfaceKHR* surface)
+QueueFamilyIndices::QueueFamilyIndices(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
 {
 	if (physicalDevice != VK_NULL_HANDLE && surface != VK_NULL_HANDLE) {
 		bool foundWantedQueue = false;
-		vkGetPhysicalDeviceQueueFamilyProperties(*physicalDevice, &familyCount, nullptr);
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &familyCount, nullptr);
 		queueFamilyProperties.resize(familyCount);
-		vkGetPhysicalDeviceQueueFamilyProperties(*physicalDevice, &familyCount, queueFamilyProperties.data());
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &familyCount, queueFamilyProperties.data());
 
 		int i = 0;
 		for (const auto& queueFamilyProp : queueFamilyProperties) {
 			if (surface != VK_NULL_HANDLE) {
-				vkGetPhysicalDeviceSurfaceSupportKHR(*physicalDevice, i, *surface, &isPresentationSupported);
+				vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &isPresentationSupported);
 
 				if (queueFamilyProp.queueCount > 0 && isPresentationSupported) {
 					this->presentFamily = i;
@@ -27,7 +27,6 @@ QueueFamilyIndices::QueueFamilyIndices(VkPhysicalDevice* physicalDevice, VkSurfa
 				this->graphicsFamilyIndex = i;
 				foundWantedQueue = true;
 			}
-
 
 			++i;
 		}
@@ -118,12 +117,12 @@ void QueueFamilyIndices::createQueueCreateInfos()
 	}
 }
 
-void QueueFamilyIndices::createQueues(VkDevice* device) {
+void QueueFamilyIndices::createQueues(VkDevice device) {
 	std::set<uint32_t> uniqueQueueFamilies = { this->graphicsFamilyIndex.value(), this->presentFamily.value() };
 
 	for (uint32_t i = 0; i < uniqueQueueFamilies.size(); i++) {
 		VkQueue queue = VK_NULL_HANDLE;
-		vkGetDeviceQueue(*device, this->graphicsFamilyIndex.value(), 0, &queue);			//Iz kog reda hocemo da fetchujemo? Mozemo imati vise queue...
+		vkGetDeviceQueue(device, this->graphicsFamilyIndex.value(), 0, &queue);			//Iz koje familije hocemo da uzmemo red
 
 		queues.push_back(queue);
 	}

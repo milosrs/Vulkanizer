@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Square.h"
 
-Square::Square(MainWindow* window, Renderer* renderer) : RenderObject(window, renderer)
+Square::Square() : RenderObject()
 {
 	vertices->setVertices({
 		{ { -1.0f, -1.0f, 0.0f },{ 1.0f, 0.0f, 0.0f },{ 1.0f, 0.0f } },

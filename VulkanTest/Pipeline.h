@@ -11,8 +11,9 @@
 #include "Vertices.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
-#include "Renderer.h"
 #include "Util.h"
+
+class Renderer;
 
 class Pipeline
 {

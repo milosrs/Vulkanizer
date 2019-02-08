@@ -25,7 +25,7 @@ public:
 	/* Graphics Family Index,
 	   Device,
 	   CommandPool Create Flags*/
-	CommandBufferHandler(uint32_t, VkDevice, MainWindow* = nullptr);
+	CommandBufferHandler(uint32_t, VkDevice);
 	~CommandBufferHandler();
 
 	/*

@@ -1,29 +1,34 @@
 #include "pch.h"
 #include "MainWindow.h"
-#include "Renderer.h"
 #include "CommandBufferHandler.h"
 #include "RenderObject.h"
 #include "WindowController.h"
 
-MainWindow::MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::string windowName) {
-	this->renderer = renderer;
+void MainWindow::initialize()
+{
+	this->renderer = std::make_unique<Renderer>();
+
+	if (sizeX > 0 && sizeY > 0 && name != "") {
+		InitOSWindow();
+		InitOSSurface();
+	}
+	else {
+		assert(0 && "Please set width height and window name before continuing.");
+		std::exit(-5);
+	}
+}
+
+void MainWindow::continueInitialization() {
+	this->renderer->initDevice();
+
+	createData();
+}
+
+void MainWindow::setWindowData(uint32_t sizeX, uint32_t sizeY, std::string windowName)
+{
 	this->sizeX = sizeX;
 	this->sizeY = sizeY;
 	this->name = windowName;
-	windowController = std::make_unique<WindowController>(this);
-
-	InitOSWindow();
-	InitOSSurface();
-}
-
-MainWindow::MainWindow(const MainWindow &)
-{
-}
-
-void MainWindow::continueInitialization(Renderer* renderer) {
-	this->renderer = renderer;
-
-	createData();
 }
 
 MainWindow::~MainWindow()
@@ -65,9 +70,9 @@ void MainWindow::createData()
 
 	InitSurface();
 
-	swapchain = std::make_unique<Swapchain>(this, renderer);
+	swapchain = std::make_unique<Swapchain>();
 	commandBufferHandler = std::make_unique<CommandBufferHandler>(renderer->getQueueIndices()->getGraphicsFamilyIndex(),
-		device, this);
+		device);
 	extent = surfaceCapatibilities.currentExtent;
 
 	if (Util::shouldCreateDepthStencil()) {
@@ -78,7 +83,7 @@ void MainWindow::createData()
 		renderer->getQueueIndices()->getQueue(), surfaceFormat.format, extent.width, extent.height,
 		renderer->getMSAA());
 	
-	renderPass = std::make_unique<RenderPass>(renderer, this->surfaceFormat, renderer->getMSAA());
+	renderPass = std::make_unique<RenderPass>(this->surfaceFormat, renderer->getMSAA());
 
 	scissorsExtent = extent;
 	pipeline = std::make_unique<Pipeline>(device, memprops, renderPass->getRenderPassPTR(), renderer->getMSAA(),
@@ -86,12 +91,12 @@ void MainWindow::createData()
 
 	if (Util::shouldCreateDepthStencil()) {
 		framebufferAttachments.push_back(multisampler->getView());
-		depthTester->createDepthImage(extent.width, extent.height,
-			commandBufferHandler->getCommandPool(), renderer->getQueueIndices()->getQueue(), renderer->getMSAA());
+		depthTester->createDepthImage(extent.width, extent.height, commandBufferHandler->getCommandPool(), 
+			renderer->getQueueIndices()->getQueue(), renderer->getMSAA());
 		framebufferAttachments.push_back(depthTester->getDepthImageView());
 	}
 
-	frameBuffer = std::make_unique<FrameBuffer>(renderer, swapchain->getSwapchainImageCount(), swapchain->getImageViews(),
+	frameBuffer = std::make_unique<FrameBuffer>(swapchain->getSwapchainImageCount(), swapchain->getImageViews(),
 		renderPass->getRenderPass(), this->getSurfaceSize(), framebufferAttachments);
 
 	for (RenderObject *robj : objects) {
@@ -101,6 +106,7 @@ void MainWindow::createData()
 
 void MainWindow::setupPipeline(RenderObject *renderObject, bool uniform)
 {
+
 	VkDevice device = renderer->getDevice();
 	VkPhysicalDeviceMemoryProperties memprops = renderer->getPhysicalDeviceMemoryProperties();
 	VkPhysicalDeviceMemoryProperties *pMemprops = renderer->getPhysicalDeviceMemoryPropertiesPTR();
@@ -231,6 +237,7 @@ void MainWindow::InitOSWindow()
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 	glfwSetMouseButtonCallback(window, WindowController::mouseBtnCallback);
 	glfwSetCursorPosCallback(window, WindowController::mouseMoveCallback);
+	glfwSetKeyCallback(window, WindowController::saveImageCombinationCallback);
 }
 
 void MainWindow::DeinitOSWindow()
@@ -246,13 +253,12 @@ void MainWindow::InitOSSurface()
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 	surfaceCreateInfo.hwnd = glfwGetWin32Window(this->window);
-	VkResult result = glfwCreateWindowSurface(renderer->getInstance(), this->window, nullptr, &surfaceKHR);
-	Util::ErrorCheck(result);
+	Util::ErrorCheck(glfwCreateWindowSurface(renderer->getInstance(), this->window, nullptr, &surfaceKHR));
 }
 
 Renderer* MainWindow::getRenderer()
 {
-	return this->renderer;
+	return this->renderer.get();
 }
 
 RenderPass* MainWindow::getRenderPass()

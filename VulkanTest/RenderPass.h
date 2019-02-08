@@ -3,7 +3,6 @@
 #define RENDER_PASS_H
 #endif
 #include "PLATFORM.h"
-#include "Renderer.h"
 #include "Util.h"
 #include <array>
 #include <vector>
@@ -13,7 +12,7 @@ class Renderer;
 class RenderPass
 {
 public:
-	RenderPass(Renderer* renderer, VkSurfaceFormatKHR surfaceFormat, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
+	RenderPass(VkSurfaceFormatKHR surfaceFormat, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 	~RenderPass();
 
 	VkRenderPass getRenderPass();

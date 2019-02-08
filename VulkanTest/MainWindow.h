@@ -20,6 +20,7 @@
 #include "DepthTester.h"
 #include "Texture.h"
 #include "Multisample.h"
+#include "Renderer.h"
 #include <vector>
 #include <string>
 #include <assert.h>
@@ -27,7 +28,6 @@
 #include <vector>
 #include <array>
 
-class Renderer;
 class CommandBufferHandler;
 class RenderObject;
 class WindowController;
@@ -35,11 +35,18 @@ class WindowController;
 class MainWindow
 {
 public:
-	MainWindow(Renderer* renderer, uint32_t sizeX, uint32_t sizeY, std::string windowName);
-	MainWindow(const MainWindow&);
-	~MainWindow();
+	static MainWindow& getInstance()
+	{
+		static MainWindow instance;
 
-	void continueInitialization(Renderer*);
+		return instance;
+	};
+
+	~MainWindow();
+	MainWindow(MainWindow const&) = delete;
+	void operator=(MainWindow const&) = delete;
+
+	void continueInitialization();
 
 	/*Koji semafor cekamo da signalizira dobavljenu sliku*/
 	void beginRender(VkSemaphore);
@@ -69,13 +76,18 @@ public:
 	VkSurfaceFormatKHR getSurfaceFormat();
 	bool windowResized = true;
 private:
+	MainWindow() {
+		setWindowData(800, 600, "Hello World!");
+		initialize();
+	};
+
+	void initialize();
+	void setWindowData(uint32_t sizeX, uint32_t sizeY, std::string windowName);
 	void InitOSWindow();
 	void DeinitOSWindow();
 	void InitOSSurface();
-
 	void InitSurface();
 	void DestroySurface();
-
 	void choosePreferedFormat();
 	void destroySwapchainDependencies();
 	void createData();
@@ -88,11 +100,10 @@ private:
 	std::unique_ptr<Texture> background = nullptr;
 	std::unique_ptr<DepthTester> depthTester = nullptr;
 	std::unique_ptr<Multisample> multisampler = nullptr;
-	std::unique_ptr<WindowController> windowController = nullptr;
+	std::unique_ptr<Renderer> renderer = nullptr;
 
 	std::vector<RenderObject*> objects;
 
-	Renderer* renderer = nullptr;
 	GLFWwindow* window = nullptr;
 
 	VkSurfaceKHR surfaceKHR = VK_NULL_HANDLE;
@@ -103,6 +114,6 @@ private:
 
 	uint32_t sizeX;
 	uint32_t sizeY;
-	std::string name = "MainWindow";
+	std::string name;
 };
 

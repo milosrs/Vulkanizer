@@ -1,24 +1,19 @@
 #include "pch.h"
 #include "Renderer.h"
-#include "MainWindow.h"
 
 VkPhysicalDevice findMostSuitableGPU(std::vector<VkPhysicalDevice>);
 int ratePhysicalDevice(VkPhysicalDevice gpu);
 
 Renderer::Renderer()
 {
-	SetupLayersAndExtensions();
 	SetupDebug();
+	SetupLayersAndExtensions();
 	_InitInstance();
+	InitDebug();
 }
 
 Renderer::Renderer(const Renderer &)
 {
-}
-
-void Renderer::continueInitialization() {
-	_InitDevice();
-	InitDebug();
 }
 
 
@@ -27,8 +22,6 @@ Renderer::~Renderer()
 	DeinitDebug();
 	_DeinitInstance();
 	_DeinitDevice();
-	MainWindow* windowPtr = this->window.release();
-	delete windowPtr;
 }
 
 void Renderer::_InitInstance() {
@@ -39,8 +32,8 @@ void Renderer::_InitInstance() {
 
 	if (areExtensionsSupported) {
 		application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		application_info.apiVersion = VK_MAKE_VERSION(1, 1, 85);
-		application_info.applicationVersion = VK_MAKE_VERSION(1, 1, 0);
+		application_info.apiVersion = VK_MAKE_VERSION(1, 0, 85);
+		application_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 		application_info.pApplicationName = "Hello world by Riki";
 
 		instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -73,10 +66,11 @@ void Renderer::_DeinitDevice() {
 }
 
 //Trazimo GPU, smestamo sve GPU u listu.
-void Renderer::_InitDevice() {
+void Renderer::initDevice() {
+	MainWindow* window = &MainWindow::getInstance();
 	this->createPhysicalDevices();
 
-	queueFamilyIndices = std::make_unique<QueueFamilyIndices> (&this->gpu, this->window->getSurfacePTR());
+	queueFamilyIndices = std::make_unique<QueueFamilyIndices> (this->gpu, window->getSurface());
 	VkDeviceCreateInfo deviceCreateInfo{};
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfo;
 	bool layersAvaiable = this->enumerateInstanceLayers();
@@ -100,7 +94,7 @@ void Renderer::_InitDevice() {
 		deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
 		Util::ErrorCheck(vkCreateDevice(this->gpu, &deviceCreateInfo, nullptr, &device));		//Napravimo uredjaj
-		queueFamilyIndices->createQueues(&this->device);											//Napravimo queue za uredjaj
+		queueFamilyIndices->createQueues(this->device);											//Napravimo queue za uredjaj
 		this->supportedProperties.clear();														//Sprecimo memory leak
 	}
 	else {
@@ -202,10 +196,6 @@ bool Renderer::enumerateInstanceLayers() {
 	return layerFound;
 }
 
-void Renderer::createWindow(uint32_t sizeX, uint32_t sizeY, std::string windowName) {
-	this->window = std::make_unique<MainWindow>(this, sizeX, sizeY, windowName);
-}
-
 const VkInstance Renderer::getInstance()
 {
 	return this->instance;
@@ -216,17 +206,18 @@ const VkPhysicalDevice Renderer::getGpu()
 	return this->gpu;
 }
 
-//True ili false, kako ce se layeri ponasati po nastanku greske. True - Vulkan Core ili drugi layer nece okinuti kod. False - Ide uvek do Vulkan Core-a (.
+//True ili false, kako ce se layeri ponasati po nastanku greske. 
+//True - Vulkan Core ili drugi layer nece okinuti kod. False - Ide uvek do Vulkan Core-a (.
 VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback
 (
-	VkDebugReportFlagsEXT flags,					//Kojom vrstom greske/upozorenja se upravlja? (Peek definition)
-	VkDebugReportObjectTypeEXT objectType,			//Tip objekta koji je proizveo gresku?
+	VkDebugReportFlagsEXT flags,					//Kojom vrstom greske/upozorenja se upravlja?
+	VkDebugReportObjectTypeEXT objectType,			//Tip objekta koji je proizveo gresku
 	uint64_t src_obj,								//Pokazivac na taj objekat
-	size_t location,								//Bog sveti zna, ni autor ne zna
-	int32_t messageCode,							//Flagovi vracaju 0, Greske vracaju 4, vrv prioritet greske
-	const char* layerPrefix,						//Koji Layer je pozvao ovaj callback (String koji covek moze da procita)
-	const char* msg,								//Poruka greske (Opet citljiv)
-	void* userData									//Opet bog zna
+	size_t location,								//Memorijska lokacija objekta
+	int32_t messageCode,							//Kod greske
+	const char* layerPrefix,						//Koji Layer je pozvao ovaj callback
+	const char* msg,								//Poruka greske
+	void* userData									//Loging info
 ) 
 {
 	Util& util = Util::instance();
@@ -410,11 +401,6 @@ VkPhysicalDeviceMemoryProperties Renderer::getPhysicalDeviceMemoryProperties() {
 QueueFamilyIndices* Renderer::getQueueIndices()
 {
 	return this->queueFamilyIndices.get();
-}
-
-MainWindow * Renderer::getMainWindowPTR()
-{
-	return this->window.get();
 }
 
 VkSampleCountFlagBits Renderer::getMSAA()

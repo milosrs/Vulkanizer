@@ -2,15 +2,17 @@
 #include "RenderObject.h"
 #define USES_UNIFORM_BUFFER true
 
-RenderObject::RenderObject(MainWindow* window, Renderer* renderer, std::string name)
+RenderObject::RenderObject(std::string name)
 {
+	this->window = &MainWindow::getInstance();
+	this->renderer = window->getRenderer();
 	this->vertices = std::make_unique<Vertices>();
 	this->name = name;
 	this->device = renderer->getDevice();
 	this->pMemprops = renderer->getPhysicalDeviceMemoryPropertiesPTR();
 	this->memprops = renderer->getPhysicalDeviceMemoryProperties();
-	this->window = window;
-	this->renderer = renderer;
+	this->window = &MainWindow::getInstance();
+	this->renderer = window->getRenderer();
 
 	this->clearValues.resize(2);
 	this->clearValues[0] = { 0.2f, 0.2f, 0.2f, 1.0f };			//Background
@@ -97,7 +99,7 @@ void RenderObject::prepareObject(VkCommandPool cmdPool, VkQueue queue)
 	}
 }
 
-void RenderObject::render(VkViewport* viewport) {
+void RenderObject::render() {
 	VkPipelineStageFlags stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	window->setupPipeline(this, USES_UNIFORM_BUFFER);
 

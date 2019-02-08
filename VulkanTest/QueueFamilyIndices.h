@@ -11,11 +11,11 @@
 class QueueFamilyIndices
 {
 public:
-	QueueFamilyIndices(VkPhysicalDevice*, VkSurfaceKHR*  = VK_NULL_HANDLE);
+	QueueFamilyIndices(VkPhysicalDevice, VkSurfaceKHR = VK_NULL_HANDLE);
 	~QueueFamilyIndices();
 
 	void createQueueCreateInfos();
-	void createQueues(VkDevice* device);
+	void createQueues(VkDevice device);
 
 	uint32_t getGraphicsFamilyIndex();
 	uint32_t getPresentationFamilyIndex();

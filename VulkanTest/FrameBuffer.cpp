@@ -1,16 +1,17 @@
 #include "pch.h"
 #include "FrameBuffer.h"
 #include "DepthTester.h"
+#include "Renderer.h"
 
 FrameBuffer::FrameBuffer(
-	Renderer* renderer,
 	uint32_t swapchainImageCount,
 	std::vector<VkImageView> imageViews,
 	VkRenderPass renderPass,
 	VkExtent2D surfaceSize,
 	std::vector<VkImageView> attachments)
 {
-	this->renderer = renderer;
+	MainWindow *mainWindow = &MainWindow::getInstance();
+	this->renderer = mainWindow->getRenderer();
 
 	initFrameBuffer(swapchainImageCount, imageViews, renderPass, surfaceSize, attachments);
 }

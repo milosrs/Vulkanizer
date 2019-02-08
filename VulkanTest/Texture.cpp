@@ -44,12 +44,12 @@ void Texture::beginCreatingTexture(VkCommandPool commandPool, VkQueue queue)
 	Util::createImage(width, height, mipLevels, imageFormat, tiling, usage,
 		imageMemoryProps, &texture, &textureMemory, device, physicalProperties);
 
-	Util::transitionImageLayout(&texture, imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, 
+	Util::transitionImageLayout(texture, imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, 
 								VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, commandPool, queue, device, mipLevels);
 
 	Util::copyBufferToimage(stagingBuffer->getBuffer(), &texture, width, height, commandPool, device, queue);
 
-	Util::transitionImageLayout(&texture, imageFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+	Util::transitionImageLayout(texture, imageFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
 								VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandPool, queue, device, mipLevels);
 
 	generateMipmaps(commandPool, queue);

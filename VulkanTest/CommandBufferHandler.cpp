@@ -3,13 +3,13 @@
 #include "MainWindow.h"
 #include "RenderObject.h"
 
-CommandBufferHandler::CommandBufferHandler(uint32_t graphicsFamilyIndex, VkDevice device, MainWindow* window)
+CommandBufferHandler::CommandBufferHandler(uint32_t graphicsFamilyIndex, VkDevice device)
 {
+	this->window = &MainWindow::getInstance();
+	this->device = device;
+
 	VkCommandPoolCreateInfo cmdPoolCreateInfo{};
 	VkCommandPoolCreateInfo transferCmdPoolCreateInfo{};
-
-	this->device = device;
-	this->window = window;
 
 	cmdPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	cmdPoolCreateInfo.queueFamilyIndex = graphicsFamilyIndex;
@@ -78,7 +78,7 @@ void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount, Ren
 			1, 0, 0, 0);
 
 		window->getRenderPass()->endRenderPass(cmdBuffer.commandBuffer);
-		Util::ErrorCheck(vkEndCommandBuffer(cmdBuffer.commandBuffer));//Pretvara command buffer u executable koji GPU izvrsava
+		Util::ErrorCheck(vkEndCommandBuffer(cmdBuffer.commandBuffer));	//Pretvara command buffer u executable koji GPU izvrsava
 	}
 }
 
@@ -170,7 +170,8 @@ VkCommandBuffer CommandBufferHandler::createOneTimeUsageBuffer(VkCommandPool cmd
 	return commandBuffer;
 }
 
-void CommandBufferHandler::endOneTimeUsageBuffer(VkCommandBuffer commandBuffer, VkQueue queue, VkCommandPool cmdPool, VkDevice device)
+void CommandBufferHandler::endOneTimeUsageBuffer(VkCommandBuffer commandBuffer, VkQueue queue, 
+	VkCommandPool cmdPool, VkDevice device)
 {
 	vkEndCommandBuffer(commandBuffer);
 

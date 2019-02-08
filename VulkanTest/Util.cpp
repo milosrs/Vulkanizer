@@ -158,9 +158,9 @@ uint32_t Util::findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties * memo
 	return ret;
 }
 
-void Util::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
-						VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory,
-						VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkSampleCountFlagBits samples) {
+void Util::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, 
+	VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory,
+	VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkSampleCountFlagBits samples) {
 
 	VkImageCreateInfo imageInfo = {};
 	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -196,10 +196,12 @@ void Util::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFo
 	vkBindImageMemory(device, *image, *imageMemory, 0);
 }
 
-void Util::transitionImageLayout(VkImage *image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, 
-								VkCommandPool commandPool, VkQueue queue, VkDevice device, uint32_t mipLevels)
+void Util::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, 
+								VkCommandPool commandPool, VkQueue queue, VkDevice device, uint32_t mipLevels,
+								VkCommandBuffer commandBuffer)
 {
-	VkCommandBuffer cmdBuffer = CommandBufferHandler::createOneTimeUsageBuffer(commandPool, device);
+	VkCommandBuffer cmdBuffer = commandBuffer == VK_NULL_HANDLE ? 
+								CommandBufferHandler::createOneTimeUsageBuffer(commandPool, device) : commandBuffer;
 	VkImageMemoryBarrier barrier = {};
 	VkPipelineStageFlags sourceStage = {};
 	VkPipelineStageFlags dstStage = {};
@@ -209,7 +211,7 @@ void Util::transitionImageLayout(VkImage *image, VkFormat format, VkImageLayout 
 	barrier.newLayout = newLayout;
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.image = *image;
+	barrier.image = image;
 	barrier.subresourceRange.baseMipLevel = 0;
 	barrier.subresourceRange.levelCount = mipLevels;
 	barrier.subresourceRange.baseArrayLayer = 0;
@@ -255,12 +257,33 @@ void Util::transitionImageLayout(VkImage *image, VkFormat format, VkImageLayout 
 		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR && newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+		barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_GENERAL) {
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
 	else {
 		throw std::invalid_argument("unsupported layout transition!");
 	}
 
-	vkCmdPipelineBarrier(cmdBuffer, sourceStage, dstStage, 0, 0, nullptr, 0, nullptr, 0, &barrier);
-	CommandBufferHandler::endOneTimeUsageBuffer(cmdBuffer, queue, commandPool, device);
+	vkCmdPipelineBarrier(cmdBuffer, sourceStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+	if (commandBuffer == VK_NULL_HANDLE) {
+		CommandBufferHandler::endOneTimeUsageBuffer(cmdBuffer, queue, commandPool, device);
+	}
 }
 
 void Util::copyBufferToimage(VkBuffer buffer, VkImage *image, uint32_t width, uint32_t height,

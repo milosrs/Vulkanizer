@@ -3,7 +3,6 @@
 #define FRAME_BUFFER_H
 #endif
 #include "PLATFORM.h"
-#include "Renderer.h"
 #include "Util.h"
 #include <vector>
 #include <array>
@@ -15,7 +14,6 @@ class FrameBuffer
 public:
 	FrameBuffer
 	(
-		Renderer* renderer,
 		uint32_t swapchainImageCount,
 		std::vector<VkImageView> imageViews,
 		VkRenderPass renderPass,
