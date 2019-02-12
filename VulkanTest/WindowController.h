@@ -7,9 +7,6 @@
 #include <iostream>
 #include <vector>
 #include <filesystem>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
 
 static bool mousePressed;
 static double mouseX;
@@ -17,10 +14,8 @@ static double mouseY;
 
 //Video data
 static bool ctrlPressed;
-static bool savingInProgress;
 static bool recording = false;
-static const std::string picturePath = "../screnshotsForVideo/";
-static std::vector<std::string> filenames;
+static bool shouldCreateVideo = false;
 
 class MainWindow;
 
@@ -33,5 +28,9 @@ public:
 	static void mouseBtnCallback(GLFWwindow *window, int button, int action, int mods);
 	static void mouseMoveCallback(GLFWwindow *window, double xPos, double yPos);
 	static void saveImageCombinationCallback(GLFWwindow *, int, int, int, int);
+	static void setShouldSaveScreenshot(bool shouldSave);
+	static bool shouldTakeScreenshot();
+	static bool getShouldCreateVideo();
+	static void setShouldCreateVideo(bool);
 };
 

@@ -4,6 +4,11 @@
 #include "CommandBufferSemaphoreInfo.h"
 #include "CommandBufferHandler.h"
 #include <vector>
+#include <stdio.h>
+#include <filesystem>
+#include <iostream>
+
+class WindowController;
 
 class RenderObject {
 public:
@@ -33,6 +38,7 @@ public:
 
 	std::vector<std::string> getTexturePaths();
 protected:
+	void createVideo();
 	bool isPrepared = false;
 	uint32_t activeImageIndex;
 	std::string name;
@@ -59,4 +65,10 @@ protected:
 	Renderer* renderer = nullptr;
 
 	size_t frameCount = 0;
+
+
+	//Video data
+	const std::string picturePath = "../screnshotsForVideo/";
+	std::vector<std::string> filenames;
+	std::vector<std::string> picturenames;
 };

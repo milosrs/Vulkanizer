@@ -46,30 +46,31 @@ void WindowController::saveImageCombinationCallback(GLFWwindow * window, int key
 		ctrlPressed = action == GLFW_PRESS;
 		std::cout << "Ctrl pressed: " + ctrlPressed << std::endl;
 	}
-	else if (key == GLFW_KEY_S && action == GLFW_PRESS && ctrlPressed && !savingInProgress) {
+	else if (key == GLFW_KEY_S && action == GLFW_PRESS && ctrlPressed) {
 		recording = !recording;
-
-		while (recording) {
-			savingInProgress = true;
-			MainWindow* mainWindow = &MainWindow::getInstance();
-			std::string pictureName = picturePath + "screenshot_";
-
-			pictureName += std::to_string(filenames.size()) + ".png";
-			mainWindow->getSwapchain()->saveScreenshot(pictureName);
-			savingInProgress = false;
-			filenames.push_back(pictureName);
-		}
-
-		if (!recording) {
-			std::ofstream file(picturePath + "input.txt", std::ios::out);
-			double duration = 0.0001;
-
-			for (const auto &filename : filenames) {
-				std::string line1 = "file \'" + filename + "\'";
-				std::string line2 = "duration " + std::to_string(duration);
-			}
-
-			system("ffmpeg -f concat -i input.txt -vsync vfr -pix_fmt yuv420p output.mp4");
-		}
 	}
+
+	if (key == GLFW_KEY_S && action == GLFW_PRESS && ctrlPressed) {
+		shouldCreateVideo = !recording;
+	}
+}
+
+void WindowController::setShouldSaveScreenshot(bool shouldSave)
+{
+	recording = shouldSave;
+}
+
+bool WindowController::shouldTakeScreenshot()
+{
+	return recording;
+}
+
+bool WindowController::getShouldCreateVideo()
+{
+	return shouldCreateVideo;
+}
+
+void WindowController::setShouldCreateVideo(bool should)
+{
+	shouldCreateVideo = should;
 }

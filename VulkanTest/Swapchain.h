@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <Magick++.h>
 
+class WindowController;
 class MainWindow;
 class Renderer;
 

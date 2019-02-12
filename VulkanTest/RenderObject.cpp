@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "RenderObject.h"
+#include "WindowController.h"
 #define USES_UNIFORM_BUFFER true
 
 RenderObject::RenderObject(std::string name)
@@ -106,7 +107,7 @@ void RenderObject::render() {
 	if (isObjectReadyToRender()) {
 		while (!glfwWindowShouldClose(window->getWindowPTR())) {
 			glfwPollEvents();
-
+			
 			VkSemaphore imageAcquiredSemaphore = this->imageAvaiableSemaphores[frameCount];
 			VkSemaphore renderSemaphore = this->renderFinishedSemaphores[frameCount];
 			VkFence fence = this->fences[frameCount];
@@ -132,9 +133,8 @@ void RenderObject::render() {
 			}
 
 			window->endRender({ renderSemaphore });
-
 			frameCount = (frameCount + 1) % MAX_FRAMES_IN_FLIGHT;
-
+			createVideo();
 			vkQueueWaitIdle(renderer->getQueueIndices()->getQueue());
 		}
 
@@ -218,4 +218,44 @@ std::vector<VkClearValue>* RenderObject::getClearValues()
 std::vector<std::string> RenderObject::getTexturePaths()
 {
 	return this->texturePaths;
+}
+
+void RenderObject::createVideo()
+{
+	if (WindowController::shouldTakeScreenshot()) {
+		MainWindow* mainWindow = &MainWindow::getInstance();
+		std::string pictureName = "screenshot_";
+		std::string filename = picturePath + pictureName;
+
+		filename += std::to_string(filenames.size()) + ".png";
+		pictureName += std::to_string(filenames.size()) + ".png";
+
+		mainWindow->getSwapchain()->saveScreenshot(filename);
+		filenames.push_back(filename);
+		picturenames.push_back(pictureName);
+	}
+
+	if (WindowController::getShouldCreateVideo()) {
+		std::string command = "ffmpeg -i ..\\screnshotsForVideo\\screenshot_%01d.png ..\\Videos\\";
+		std::string filename = "output";
+		int entries = 0;
+
+		for (const auto & entry : std::filesystem::directory_iterator("..\\Videos")) {
+			++entries;
+		}
+
+		filename += ".mpg";
+		command += filename;
+
+		system(command.c_str());
+
+		for (const auto &filename : filenames) {
+			remove(filename.c_str());
+		}
+
+		picturenames.clear();
+		filenames.clear();
+
+		WindowController::setShouldCreateVideo(false);
+	}
 }

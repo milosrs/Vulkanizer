@@ -2,6 +2,7 @@
 #include "Swapchain.h"
 #include "MainWindow.h"
 #include "Renderer.h"
+#include "WindowController.h"
 
 Swapchain::Swapchain()
 {
