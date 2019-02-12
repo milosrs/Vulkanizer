@@ -5,6 +5,7 @@
 #include "PLATFORM.h"
 #include <vector>
 #include <algorithm>
+#include <Magick++.h>
 
 class MainWindow;
 class Renderer;
@@ -62,5 +63,7 @@ private:
 	uint32_t activeImageSwapchainId;
 	uint32_t sizeX;
 	uint32_t sizeY;
+
+	const std::string magickPath = "C:\\Program Files\\ImageMagick-7.0.8-Q16";
 };
 

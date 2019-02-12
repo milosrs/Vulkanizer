@@ -71,6 +71,13 @@ void Swapchain::initSwapchain() {
 		swapchainCreateInfo.pQueueFamilyIndices = nullptr;										//Ignorisemo za Exclusive
 	}
 
+	if (mainWindow->getSurfaceCapatibilities().supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
+		swapchainCreateInfo.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	}
+	if (mainWindow->getSurfaceCapatibilities().supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
+		swapchainCreateInfo.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+	}
+
 	swapchainCreateInfo.preTransform = mainWindow->getSurfaceCapatibilities().currentTransform;	//mainWindow->getCapabilities().currentTransform ako necemo transformaciju. VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 	swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;						//Alfa kanal SURFACE-a, da li je ona transparentna
 	swapchainCreateInfo.presentMode = presentMode;												//Vertical Sync
@@ -219,14 +226,14 @@ void Swapchain::saveScreenshot(std::string filePath)
 		VkCommandBuffer cmdBuffer = CommandBufferHandler::createOneTimeUsageBuffer(
 			mainWindow->getCommandHandler()->getCommandPool(), mainWindow->getRenderer()->getDevice());
 
-		Util::createImage(sizeX, sizeY, 1, VK_FORMAT_B8G8R8A8_UNORM,
+		Util::createImage(sizeX, sizeY, 1, VK_FORMAT_R8G8B8A8_UNORM,
 			VK_IMAGE_TILING_LINEAR, VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 			&dstImage, &dstImageMemory, mainWindow->getRenderer()->getDevice(),
 			mainWindow->getRenderer()->getPhysicalDeviceMemoryPropertiesPTR());
 
 		//NOVU Sliku prebacujemo u transfer destination
 		Util::transitionImageLayout(dstImage,
-			VK_FORMAT_B8G8R8A8_UNORM,
+			VK_FORMAT_R8G8B8A8_UNORM,
 			VK_IMAGE_LAYOUT_UNDEFINED,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			mainWindow->getCommandHandler()->getCommandPool(),
@@ -237,7 +244,7 @@ void Swapchain::saveScreenshot(std::string filePath)
 
 		//Staru sliku prebacujemo iz prezentacije u transfer source
 		Util::transitionImageLayout(srcImage,
-			VK_FORMAT_B8G8R8A8_UNORM,
+			VK_FORMAT_R8G8B8A8_UNORM,
 			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 			mainWindow->getCommandHandler()->getCommandPool(),
@@ -246,26 +253,34 @@ void Swapchain::saveScreenshot(std::string filePath)
 			1,
 			cmdBuffer);
 
-	
+		VkExtent3D extent = { swapExtent.width, swapExtent.height, 1 };
 		VkOffset3D offsets{};
-		offsets.x = swapExtent.width;
-		offsets.y = swapExtent.height;
-		offsets.z = 1;
+		offsets.x = 0;
+		offsets.y = 0;
+		offsets.z = 0;
 
-		VkImageBlit blit{};
-		blit.srcSubresource.layerCount = 1;
-		blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		blit.dstSubresource.layerCount = 1;
-		blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		blit.srcOffsets[1] = offsets;
-		blit.dstOffsets[1] = offsets;
+		VkImageSubresourceLayers layers{};
+		layers.mipLevel = 0;
+		layers.layerCount = 1;
+		layers.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		layers.baseArrayLayer = 0;
+		
+		VkImageCopy	regions{};
+		regions.dstOffset = offsets;
+		regions.extent = extent;
+		regions.srcOffset = offsets;
+		regions.srcSubresource = layers;
+		regions.dstSubresource = layers;
 
-		vkCmdBlitImage(cmdBuffer,
-			srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			1, &blit, VK_FILTER_NEAREST);
+		vkCmdCopyImage(cmdBuffer,
+			srcImage,
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			dstImage,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			1,
+			&regions);
 
-		Util::transitionImageLayout(dstImage, VK_FORMAT_B8G8R8A8_UNORM,
+		Util::transitionImageLayout(dstImage, VK_FORMAT_R8G8B8A8_UNORM,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL,
 			mainWindow->getCommandHandler()->getCommandPool(),
 			mainWindow->getRenderer()->getQueueIndices()->getQueue(),
@@ -273,7 +288,7 @@ void Swapchain::saveScreenshot(std::string filePath)
 			1,
 			cmdBuffer);
 
-		Util::transitionImageLayout(srcImage, VK_FORMAT_B8G8R8A8_UNORM,
+		Util::transitionImageLayout(srcImage, VK_FORMAT_R8G8B8A8_UNORM,
 			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 			mainWindow->getCommandHandler()->getCommandPool(),
 			mainWindow->getRenderer()->getQueueIndices()->getQueue(),
@@ -284,35 +299,24 @@ void Swapchain::saveScreenshot(std::string filePath)
 		CommandBufferHandler::endOneTimeUsageBuffer(cmdBuffer, mainWindow->getRenderer()->getQueueIndices()->getQueue(),
 			mainWindow->getCommandHandler()->getCommandPool(), mainWindow->getRenderer()->getDevice());
 
-		VkImageSubresource subresource{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 0 };
-		VkSubresourceLayout subresourceLayout;
-		vkGetImageSubresourceLayout(mainWindow->getRenderer()->getDevice(), dstImage, &subresource, &subresourceLayout);
-
-		const char *data = nullptr;
+		unsigned char *data = nullptr;
 		vkMapMemory(mainWindow->getRenderer()->getDevice(), dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&data);
-		data += subresourceLayout.offset;
-
-		std::ofstream file(filePath, std::ios::out | std::ios::binary);
-		file << "P6\n" << swapExtent.width << "\n" << swapExtent.height << "\n" << 255 << "\n";		//File header
-
-		for (uint32_t y = 0; y < swapExtent.height; ++y) {
-			unsigned int *row = (unsigned int*)data;
-
-			for (uint32_t x = 0; x < swapExtent.width; ++x) {
-				file.write((char*)row, 3);
-				row++;
-			}
-
-			data += subresourceLayout.rowPitch;
-		}
-
-		file.close();
-
-		std::cout << "Screenshot saved to: " << filePath << std::endl;
+		
+		MagickCore::MagickWand *wand = MagickCore::NewMagickWand();
+		MagickConstituteImage(wand, swapExtent.width, swapExtent.height, "BGRA", MagickCore::CharPixel, data);
 
 		vkUnmapMemory(mainWindow->getRenderer()->getDevice(), dstImageMemory);
 		vkFreeMemory(mainWindow->getRenderer()->getDevice(), dstImageMemory, nullptr);
 		vkDestroyImage(mainWindow->getRenderer()->getDevice(), dstImage, nullptr);
+
+		MagickCore::MagickBooleanType status = MagickWriteImage(wand, filePath.c_str());
+
+		if (!status) {
+			assert(0 && "ImageMagick error: Unable to save image to file.");
+		}
+
+		MagickCore::DestroyMagickWand(wand);
+		MagickCore::MagickWandTerminus();
 	}
 	else {
 		assert(0 && "Swapchain error: Your device does not support image blitting. Cannot save image. Will be patched.");

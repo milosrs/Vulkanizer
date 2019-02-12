@@ -54,7 +54,7 @@ void WindowController::saveImageCombinationCallback(GLFWwindow * window, int key
 			MainWindow* mainWindow = &MainWindow::getInstance();
 			std::string pictureName = picturePath + "screenshot_";
 
-			pictureName += std::to_string(filenames.size()) + ".ppm";
+			pictureName += std::to_string(filenames.size()) + ".png";
 			mainWindow->getSwapchain()->saveScreenshot(pictureName);
 			savingInProgress = false;
 			filenames.push_back(pictureName);

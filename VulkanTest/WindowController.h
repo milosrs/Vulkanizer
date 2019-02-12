@@ -7,6 +7,9 @@
 #include <iostream>
 #include <vector>
 #include <filesystem>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 static bool mousePressed;
 static double mouseX;
