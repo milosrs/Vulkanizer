@@ -227,8 +227,8 @@ void RenderObject::createVideo()
 		std::string pictureName = "screenshot_";
 		std::string filename = picturePath + pictureName;
 
-		filename += std::to_string(filenames.size()) + ".png";
-		pictureName += std::to_string(filenames.size()) + ".png";
+		filename += std::to_string(filenames.size()) + pictureFormat;
+		pictureName += std::to_string(filenames.size()) + pictureFormat;
 
 		mainWindow->getSwapchain()->saveScreenshot(filename);
 		filenames.push_back(filename);
@@ -236,7 +236,7 @@ void RenderObject::createVideo()
 	}
 
 	if (WindowController::getShouldCreateVideo()) {
-		std::string command = "ffmpeg -i ..\\screnshotsForVideo\\screenshot_%01d.png ..\\Videos\\";
+		std::string command = "ffmpeg -i  ..\\screnshotsForVideo\\screenshot_%01d" + pictureFormat + " -pix_fmt yuv420p ..\\Videos\\";
 		std::string filename = "output";
 		int entries = 0;
 
@@ -244,7 +244,7 @@ void RenderObject::createVideo()
 			++entries;
 		}
 
-		filename += ".mpg";
+		filename += std::to_string(entries) + videoFormat;
 		command += filename;
 
 		system(command.c_str());

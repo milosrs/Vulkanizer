@@ -69,6 +69,8 @@ protected:
 
 	//Video data
 	const std::string picturePath = "../screnshotsForVideo/";
+	const std::string pictureFormat = ".jpg";
+	const std::string videoFormat = ".mp4";
 	std::vector<std::string> filenames;
 	std::vector<std::string> picturenames;
 };
