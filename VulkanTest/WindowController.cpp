@@ -31,6 +31,8 @@ void WindowController::mouseMoveCallback(GLFWwindow * window, double xPos, doubl
 
 		glm::vec2 mouseDelta = { deltaX, deltaY };
 
+		std::cout << "Delta: {" << mouseDelta.x << ", " << mouseDelta.y << "}" << std::endl;
+
 		if (mainWindow != nullptr) {
 			std::vector<RenderObject*> objects = mainWindow->getRenderObjects();
 
