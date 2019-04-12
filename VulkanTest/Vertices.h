@@ -70,7 +70,7 @@ private:
 public:
 	Vertices();
 	Vertices(std::vector<Vertex>);
-	Vertices(Vertices const& vertices);
+	Vertices(Vertices const & vertices);
 	~Vertices();
 
 	std::vector<Vertex> getVertices();

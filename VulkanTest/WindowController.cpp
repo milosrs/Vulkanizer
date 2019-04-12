@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "WindowController.h"
 #include "MainWindow.h"
+#include "RenderObject.h"
 
 WindowController::WindowController()
 {

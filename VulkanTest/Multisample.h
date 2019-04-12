@@ -1,6 +1,5 @@
 #pragma once
 #include "PLATFORM.h"
-#include "Util.h"
 
 class Multisample
 {

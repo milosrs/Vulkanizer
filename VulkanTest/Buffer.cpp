@@ -1,5 +1,9 @@
 #include "pch.h"
 #include "Buffer.h"
+#include "Vertices.h"
+#include "Util.h"
+
+Buffer::Buffer() {};
 
 Buffer::Buffer(VkDevice device, VkPhysicalDeviceMemoryProperties deviceMemoryProps, VkDeviceSize size)
 {
@@ -30,7 +34,7 @@ void Buffer::initBuffer(VkBufferUsageFlags usage, VkDeviceSize size,
 	allocateInfo.memoryTypeIndex = Util::findMemoryTypeIndex(&this->deviceMemoryProps, &memoryRequirements, memPropFlags);
 
 	Util::ErrorCheck(vkAllocateMemory(device, &allocateInfo, nullptr, &bufferMemory));
-	Util::ErrorCheck(vkBindBufferMemory(device, this->buffer, bufferMemory, 0));
+	this->bindBufferData();
 }
 
 void Buffer::setDeviceSize(VkDeviceSize size)
@@ -51,4 +55,29 @@ VkBuffer * Buffer::getBufferPTR()
 VkDeviceSize Buffer::getSize()
 {
 	return size;
+}
+
+void * Buffer::getData()
+{
+	return data;
+}
+
+void Buffer::setBuffer(VkBuffer buffer)
+{
+	this->buffer = buffer;
+}
+
+void Buffer::setSize(VkDeviceSize size)
+{
+	this->size = size;
+}
+
+void Buffer::setData(void *data)
+{
+	this->data = data;
+}
+
+void Buffer::bindBufferData()
+{
+	Util::ErrorCheck(vkBindBufferMemory(device, this->buffer, bufferMemory, 0));
 }

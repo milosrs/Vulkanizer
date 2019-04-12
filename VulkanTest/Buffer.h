@@ -3,12 +3,13 @@
 #define BUFFER_H
 #endif
 #include "PLATFORM.h"
-#include "Vertices.h"
-#include "Util.h"
+
+class Vertices;
 
 class Buffer
 {
 public:
+	Buffer();
 	Buffer(VkDevice, VkPhysicalDeviceMemoryProperties, VkDeviceSize = 0);
 	~Buffer();
 
@@ -18,7 +19,14 @@ public:
 	VkBuffer getBuffer();
 	VkBuffer* getBufferPTR();
 	VkDeviceSize getSize();
+	void* getData();
+
+	void setBuffer(VkBuffer);
+	void setSize(VkDeviceSize);
+	void setData(void* data);
+	void bindBufferData();
 protected:
+	void *data;
 	VkBuffer buffer = VK_NULL_HANDLE;
 	VkDevice device = VK_NULL_HANDLE;
 	VkDeviceSize size = VK_NULL_HANDLE;

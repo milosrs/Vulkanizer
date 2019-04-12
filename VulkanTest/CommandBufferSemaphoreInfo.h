@@ -3,6 +3,7 @@
 #define COMMAND_BUFFER_SEMAPHORE_INFO_H
 #endif
 #include "PLATFORM.h"
+#include "Util.h"
 
 class CommandBufferSemaphoreInfo
 {

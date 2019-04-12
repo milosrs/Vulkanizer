@@ -3,7 +3,7 @@
 
 IndexBuffer::IndexBuffer(VkDevice device, VkPhysicalDeviceMemoryProperties memoryProperties, VkDeviceSize size) : Buffer(device, memoryProperties, size)
 {
-	this->initBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+	this->initBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 						this->size,
 						VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 }

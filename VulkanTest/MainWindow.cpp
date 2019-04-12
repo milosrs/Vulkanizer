@@ -1,8 +1,17 @@
 #include "pch.h"
 #include "MainWindow.h"
-#include "CommandBufferHandler.h"
 #include "RenderObject.h"
 #include "WindowController.h"
+
+#include "QueueFamilyIndices.h"
+#include "Vertices.h"
+#include "Buffer.h"
+#include "VertexBuffer.h"
+#include "StagingBuffer.h"
+#include "IndexBuffer.h"
+#include "UniformBuffer.h"
+#include "DescriptorHandler.h"
+#include "Util.h"
 
 void MainWindow::initialize()
 {
@@ -237,7 +246,9 @@ void MainWindow::InitOSWindow()
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 	glfwSetMouseButtonCallback(window, WindowController::mouseBtnCallback);
 	glfwSetCursorPosCallback(window, WindowController::mouseMoveCallback);
-	glfwSetKeyCallback(window, WindowController::saveImageCombinationCallback);
+	glfwSetKeyCallback(window, WindowController::saveImageCombinationCallback); 
+
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);									//Zakljucava i sakriva kursor
 }
 
 void MainWindow::DeinitOSWindow()

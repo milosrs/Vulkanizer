@@ -2,10 +2,12 @@
 #ifdef DESCRIPTOR_HANDLER_H
 #define DESCRIPTOR_HANDLER_H
 #endif
-#include "PLATFORM.h"
-#include "UniformBuffer.h"
-#include "Util.h"
 #include <vector>
+#include "PLATFORM.h"
+
+class MainWindow;
+class Renderer;
+class UniformBuffer;
 
 class DescriptorHandler
 {
@@ -19,23 +21,18 @@ public:
 	~DescriptorHandler();
 
 	void createDescriptorSets(std::vector<UniformBuffer*>, VkSampler = nullptr, VkImageView = nullptr);
-	void bind(VkCommandBuffer, VkPipelineLayout, int);
-private:
+	static void bind(VkCommandBuffer, VkDescriptorSet*, VkPipelineLayout, int);
 	void updateWritables(std::vector<UniformBuffer*>, VkSampler, VkImageView);
 	void updateWritables(std::vector<UniformBuffer*>);
-
+	std::vector<VkDescriptorSet> getDescriptorSets();
+private:
 	VkDescriptorPool pool;
 	std::vector<VkDescriptorPoolSize> poolSizes = {};
 	VkDescriptorPoolCreateInfo poolCreateInfo = {};
 
 	std::vector<VkDescriptorSetLayout> descriptorLayouts;
 	std::vector<VkDescriptorSet> descriptorSets;
-	std::vector<VkDescriptorBufferInfo> descriptorBufferInfos;
-	std::vector<VkDescriptorImageInfo> descriptorImageInfos;
-	std::vector<VkWriteDescriptorSet> descriptorUpdaters;
 
-	uint32_t descriptorCount = -1;
 	VkDescriptorSetLayout descriptorSetLayout{};
-	VkDevice device = VK_NULL_HANDLE;
 };
 

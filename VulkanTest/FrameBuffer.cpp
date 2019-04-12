@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "FrameBuffer.h"
+#include "Util.h"
 #include "DepthTester.h"
 #include "Renderer.h"
+#include "MainWindow.h"
 
 FrameBuffer::FrameBuffer(
 	uint32_t swapchainImageCount,

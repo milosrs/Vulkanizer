@@ -4,7 +4,6 @@
 #endif
 #include "Buffer.h"
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 
 struct UniformBufferObject {
@@ -17,16 +16,15 @@ class UniformBuffer : public Buffer
 {
 public:
 	UniformBuffer(VkDevice, VkPhysicalDeviceMemoryProperties);
+	UniformBuffer(VkDevice, VkPhysicalDeviceMemoryProperties, VkDeviceSize);
 	~UniformBuffer();
 
-	/*
-	  Aspect ratio
-	  near plane
-	  far plane
-	*/
 	void update();
 	void copy();
 	void rotate(glm::vec2 mouseDelta);
+	/*
+		Aspect ratio, Near, Far
+	*/
 	void setViewData(float, float, float);
 private:
 	UBO ubo = {};

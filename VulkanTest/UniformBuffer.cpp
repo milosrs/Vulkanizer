@@ -1,10 +1,18 @@
 #include "pch.h"
 #include "UniformBuffer.h"
+#include "Util.h"
 
 UniformBuffer::UniformBuffer(VkDevice device, VkPhysicalDeviceMemoryProperties memprops) : Buffer(device, memprops)
 {
 	this->size = sizeof(UBO);
 	initBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, size, 
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+}
+
+UniformBuffer::UniformBuffer(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, VkDeviceSize size) : Buffer(device, memprops)
+{
+	this->size = size;
+	initBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, size,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 

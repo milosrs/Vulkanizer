@@ -1,7 +1,15 @@
 #include "pch.h"
 #include "CommandBufferHandler.h"
+#include "CommandBufferSemaphoreInfo.h"
+#include "DescriptorHandler.h"
+#include "UniformBuffer.h"
 #include "MainWindow.h"
 #include "RenderObject.h"
+#include "RenderPass.h"
+#include "FrameBuffer.h"
+#include "Pipeline.h"
+#include "Vertices.h"
+#include "Util.h"
 
 CommandBufferHandler::CommandBufferHandler(uint32_t graphicsFamilyIndex, VkDevice device)
 {
@@ -69,13 +77,18 @@ void CommandBufferHandler::createDrawingCommandBuffers(uint32_t bufferCount, Ren
 
 		Util::ErrorCheck(vkBeginCommandBuffer(cmdBuffer.commandBuffer, &beginInfo));
 
+		//Begin render pass
 		window->getRenderPass()->beginRenderPass(cmdBuffer.commandBuffer, &renderPassBeginInfo);
-		window->getPipelinePTR()->bindPipeline(cmdBuffer.commandBuffer,
-			object->getVertexBuffer(), object->getIndexBuffer());
-		object->getDescriptorHandler()->bind(cmdBuffer.commandBuffer, window->getPipelinePTR()->getPipelineLayout(), i);
-
-		vkCmdDrawIndexed(cmdBuffer.commandBuffer, static_cast<uint32_t>(object->getVertices()->getIndices().size()),
-			1, 0, 0, 0);
+		//Bind pipeline
+		object->getGLTFVertexBuffer() == nullptr ? 
+			window->getPipelinePTR()->bindPipeline(cmdBuffer.commandBuffer, object->getVertexBuffer(), object->getIndexBuffer())
+			:
+			window->getPipelinePTR()->bindPipelineGLTF(cmdBuffer.commandBuffer, object->getGLTFVertexBuffer(), object->getIndexBuffer());
+		//Bind descriptor sets
+		DescriptorHandler::bind(cmdBuffer.commandBuffer, &object->getDescriptorHandler()->getDescriptorSets()[i],
+			window->getPipelinePTR()->getPipelineLayout(), i);
+		//Draw
+		object->draw(cmdBuffer.commandBuffer);
 
 		window->getRenderPass()->endRenderPass(cmdBuffer.commandBuffer);
 		Util::ErrorCheck(vkEndCommandBuffer(cmdBuffer.commandBuffer));	//Pretvara command buffer u executable koji GPU izvrsava
@@ -92,7 +105,6 @@ void CommandBufferHandler::copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize s
 	copyRegion.dstOffset = 0;
 
 	vkCmdCopyBuffer(activeBuffer, src, dst, 1, &copyRegion);
-	vkEndCommandBuffer(activeBuffer);
 	
 	endOneTimeUsageBuffer(activeBuffer, queue, cmdPool, device);
 }

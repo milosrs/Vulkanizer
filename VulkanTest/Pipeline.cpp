@@ -2,6 +2,10 @@
 #include "Pipeline.h"
 #include "DepthTester.h"
 #include "Renderer.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+#include "Vertices.h"
+#include "Util.h"
 
 Pipeline::Pipeline(VkDevice device, VkPhysicalDeviceMemoryProperties memprops, VkRenderPass* renderPass, 
 	VkSampleCountFlagBits samples, float width, float height, VkExtent2D extent) {
@@ -132,9 +136,9 @@ void Pipeline::setupViewport(float width, float height, VkExtent2D extent) {
 	viewportCreated = true;
 }
 
-void Pipeline::bindPipeline(VkCommandBuffer commandBuffer, VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer)
+void Pipeline::bindPipeline(VkCommandBuffer commandBuffer, VertexBuffer<Vertex>* vertexBuffer, IndexBuffer* indexBuffer)
 {
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline);
 
 	if (vertexBuffer != nullptr) {
 		VkBuffer vertexBuffers[] = { vertexBuffer->getBuffer() };
@@ -147,6 +151,20 @@ void Pipeline::bindPipeline(VkCommandBuffer commandBuffer, VertexBuffer* vertexB
 	}
 }
 
+void Pipeline::bindPipelineGLTF(VkCommandBuffer commandBuffer, VertexBuffer<vkglTF::Vertex>* vertexBuffer, IndexBuffer* indexBuffer)
+{
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline);
+
+	if (vertexBuffer != nullptr) {
+		VkBuffer vertexBuffers[] = { vertexBuffer->getBuffer() };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+	}
+
+	if (indexBuffer != nullptr) {
+		vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
+	}
+}
 
 std::vector<char> Pipeline::loadShader(const std::string filename)
 {

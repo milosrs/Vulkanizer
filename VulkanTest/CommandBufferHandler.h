@@ -2,12 +2,16 @@
 #ifndef COMMAND_BUFFER_HANDLER_H
 #define COMMAND_BUFFER_HANDLER_H
 #endif
+#include "PLATFORM.h"
 #include <vector>
-#include "CommandBufferSemaphoreInfo.h"
 #include <map>
 
+class UniformBuffer;
+class CommandBufferSemaphoreInfo;
+class DescriptorHandler;
 class MainWindow;
 class RenderObject;
+class IndexBuffer;
 
 enum CommandBufferType {
 	GRAPHICS = 0,

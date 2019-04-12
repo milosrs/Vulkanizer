@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "SquareDepth.h"
+#include "Vertices.h"
+#include "MainWindow.h"
+#include "Renderer.h"
 
 SquareDepth::SquareDepth() : RenderObject()
 {
@@ -27,4 +30,9 @@ SquareDepth::SquareDepth() : RenderObject()
 
 SquareDepth::~SquareDepth()
 {
+}
+
+void SquareDepth::draw(VkCommandBuffer cmdBuffer)
+{
+	vkCmdDrawIndexed(cmdBuffer, static_cast<uint32_t>(this->vertices->getIndices().size()), 1, 0, 0, 0);
 }

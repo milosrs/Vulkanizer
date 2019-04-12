@@ -2,6 +2,7 @@
 #include "Util.h"
 #include "StagingBuffer.h"
 #include "CommandBufferHandler.h"
+#define NOMINMAX
 
 Util::Util()
 {

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "DepthTester.h"
+#include "Util.h"
 
 static int instanceCount = 0;
 

@@ -3,10 +3,11 @@
 #define FRAME_BUFFER_H
 #endif
 #include "PLATFORM.h"
-#include "Util.h"
 #include <vector>
 #include <array>
 
+class MainWindow;
+class DepthTester;
 class Renderer;
 
 class FrameBuffer

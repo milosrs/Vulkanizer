@@ -5,22 +5,6 @@
 
 #include "PLATFORM.h"
 #include "BUILD_OPTIONS.h"
-#include "Swapchain.h"
-#include "RenderPass.h"
-#include "FrameBuffer.h"
-#include "Pipeline.h"
-#include "QueueFamilyIndices.h"
-#include "Vertices.h"
-#include "Buffer.h"
-#include "VertexBuffer.h"
-#include "StagingBuffer.h"
-#include "IndexBuffer.h"
-#include "UniformBuffer.h"
-#include "DescriptorHandler.h"
-#include "DepthTester.h"
-#include "Texture.h"
-#include "Multisample.h"
-#include "Renderer.h"
 #include <vector>
 #include <string>
 #include <assert.h>
@@ -28,9 +12,29 @@
 #include <vector>
 #include <array>
 
-class CommandBufferHandler;
+#include "Swapchain.h"
+#include "RenderPass.h"
+#include "FrameBuffer.h"
+#include "Pipeline.h"
+#include "CommandBufferHandler.h"
+#include "DepthTester.h"
+#include "Texture.h"
+#include "Multisample.h"
+#include "Renderer.h"
+
+class QueueFamilyIndices;
+class Vertices;
+class Buffer;
+class IndexBuffer;
+class UniformBuffer;
+class DescriptorHandler;
 class RenderObject;
 class WindowController;
+struct Vertex;
+
+namespace vkglTF {
+	struct Vertex;
+};
 
 class MainWindow
 {
@@ -43,8 +47,6 @@ public:
 	};
 
 	~MainWindow();
-	MainWindow(MainWindow const&) = delete;
-	void operator=(MainWindow const&) = delete;
 
 	void continueInitialization();
 

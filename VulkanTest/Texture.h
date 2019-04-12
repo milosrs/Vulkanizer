@@ -4,29 +4,41 @@
 #endif
 #include <cstring>
 #include <memory>
-#include "StagingBuffer.h"
-#include "CommandBufferHandler.h"
+#include <algorithm>
 #include "PLATFORM.h"
-#include "Util.h"
 #include <vector>
+
+template <typename T> class StagingBuffer;
+
+enum TextureType {BASE_COLOR, EMISSIVE, METALLIC_ROUGHNESS, NORMAL, OCCLUSION};
+
+namespace vkglTF {
+	struct TextureSampler;
+};
 
 class Texture
 {
 public:
 	/*String: Path to image,
 	  Unsigned: Mode in which to open the image*/
-	Texture(VkDevice, VkPhysicalDeviceMemoryProperties*, VkFormat, std::string, unsigned int);
+	Texture(VkDevice, VkPhysicalDeviceMemoryProperties*, VkFormat, std::string, unsigned int, vkglTF::TextureSampler *sampler = nullptr);
+	Texture(VkDevice, VkPhysicalDeviceMemoryProperties*, VkFormat, unsigned char*, size_t width, size_t height);
 	~Texture();
 
 	void beginCreatingTexture(VkCommandPool, VkQueue);
-	
+	static void readImage(std::string path, unsigned char* buffer, int* w, int *h, int *channels, unsigned int mode);
 	void supportsLinearBlitFormat(VkPhysicalDevice);
 
 	VkSampler getSampler();
 	VkImageView getTextureImageView();
 	VkImage getTextureImage();
+	std::string getTextureId();
+	TextureType getTextureType();
+
+	void setTextureId(std::string id);
+	void setTextureType(std::string textureName = "");
 private:
-	void createSampler();
+	void createSampler(vkglTF::TextureSampler *samplerglTF);
 	void generateMipmaps(VkCommandPool, VkQueue);
 
 	int width, height, channelCount;
@@ -34,6 +46,8 @@ private:
 	unsigned char* pixels;
 	uint32_t mipLevels;
 	bool supportsLinearBlit;
+	std::string textureId;
+	TextureType type;
 
 	VkDevice device = VK_NULL_HANDLE;
 	VkPhysicalDeviceMemoryProperties *physicalProperties = nullptr;

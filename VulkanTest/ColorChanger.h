@@ -1,9 +1,10 @@
 #pragma once
-#include <array>
+#ifndef SQUARE_H
+#define SQUARE_H
+#endif
 #include "PLATFORM.h"
-#include "MainWindow.h"
-#include "Renderer.h"
 #include "RenderObject.h"
+#include <array>
 
 #define PI 3.14159265389786351235489
 #define CIRCLE_RAD PI*2
@@ -14,13 +15,15 @@
 
 static double colorRotator = 0;
 
+class Vertices;
+
 class ColorChanger : public RenderObject
 {
 public:
 	ColorChanger();
 
 	std::array<VkClearValue, 2> getNewClearValues();
-
+	void draw(VkCommandBuffer) override;
 private:
 	std::array<VkClearValue, 2> clearValues{};
 

@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "ColorChanger.h"
+#include "MainWindow.h"
+#include "Renderer.h"
+#include "Vertices.h"
 
 ColorChanger::ColorChanger() : RenderObject()
 {
@@ -18,6 +21,11 @@ std::array<VkClearValue, 2> ColorChanger::getNewClearValues() {
 	clearValues[1].color = { getColor(CIRCLE_THIRD_1), getColor(CIRCLE_THIRD_2), getColor(CIRCLE_THIRD_3), 0.0f };
 
 	return clearValues;
+}
+
+void ColorChanger::draw(VkCommandBuffer cmdBuffer)
+{
+	vkCmdDrawIndexed(cmdBuffer, static_cast<uint32_t>(this->vertices->getIndices().size()), 1, 0, 0, 0);
 }
 
 float ColorChanger::getColor(float circleNo) {

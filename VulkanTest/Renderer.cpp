@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Renderer.h"
+#include "MainWindow.h"
+#include "Util.h"
 
 VkPhysicalDevice findMostSuitableGPU(std::vector<VkPhysicalDevice>);
 int ratePhysicalDevice(VkPhysicalDevice gpu);
@@ -11,11 +13,6 @@ Renderer::Renderer()
 	_InitInstance();
 	InitDebug();
 }
-
-Renderer::Renderer(const Renderer &)
-{
-}
-
 
 Renderer::~Renderer()
 {
@@ -238,7 +235,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback
 
 #ifdef _WIN32
 	if(shouldShowMessage)
-		MessageBox(NULL, util.convertCharArrayToLPCWSTR(stream.str().c_str()), L"Vulkan Error!", 0);
+		MessageBox(NULL, Util::convertCharArrayToLPCWSTR(stream.str().c_str()), L"Vulkan Error!", 0);
 #endif // DEBUG
 
 	return false;									//xD

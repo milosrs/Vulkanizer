@@ -12,11 +12,11 @@
 #include <iostream>
 #include <sstream>
 #include "BUILD_OPTIONS.h"
-#include "QueueFamilyIndices.h"
-#include "MainWindow.h"
 #include <cstring>
 #include <iostream>
 #include <map>
+
+#include "QueueFamilyIndices.h"
 
 class MainWindow;
 
@@ -24,7 +24,6 @@ class Renderer
 {
 public:
 	Renderer();
-	Renderer(const Renderer&);
 	~Renderer();
 
 	const VkInstance getInstance();

@@ -1,7 +1,23 @@
 #include "pch.h"
 #include "RenderObject.h"
+#include "DescriptorHandler.h"
+#include "Renderer.h"
+#include "VertexBuffer.h"
+#include "Texture.h"
+#include "UniformBuffer.h"
 #include "WindowController.h"
+#include "IndexBuffer.h"
+#include "CommandBufferSemaphoreInfo.h"
+#include "Util.h"
+#include "Vertices.h"
+#include "Pipeline.h"
+#include "Swapchain.h"
+#include "MainWindow.h"
+#include "Vertices.h"
+#define INCLUDE_GLTFMODEL
+#include "glTFModel.hpp"
 #define USES_UNIFORM_BUFFER true
+
 
 RenderObject::RenderObject(std::string name)
 {
@@ -25,10 +41,12 @@ RenderObject::RenderObject(std::string name)
 	createSyncObjects();
 }
 
+
 RenderObject::~RenderObject()
 {
 	deleteSyncObjects();
 }
+
 
 void RenderObject::createSyncObjects() {
 	imageAvaiableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -49,6 +67,7 @@ void RenderObject::createSyncObjects() {
 	}
 }
 
+
 void RenderObject::deleteSyncObjects()
 {
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -67,7 +86,7 @@ void RenderObject::prepareObject(VkCommandPool cmdPool, VkQueue queue)
 		if (texturePaths.size() > 0 && mode > 0) {
 			VkFormat imageFormat = VK_FORMAT_R8G8B8A8_UNORM;
 			
-			for (const std::string& path : texturePaths) {
+			for (const std::string path : texturePaths) {
 				Texture *t = new Texture(device, pMemprops, VK_FORMAT_R8G8B8A8_UNORM, path, mode);
 				t->supportsLinearBlitFormat(renderer->getGpu());
 				t->beginCreatingTexture(cmdPool, queue);
@@ -75,8 +94,8 @@ void RenderObject::prepareObject(VkCommandPool cmdPool, VkQueue queue)
 			}
 		}
 
-		this->vertexBuffer = std::make_unique<VertexBuffer>(device, memprops, verticesSize);
-		this->indexBuffer = std::make_unique<IndexBuffer>(device, memprops, indicesSize);
+		this->vertexBuffer = new VertexBuffer<Vertex>(device, memprops, verticesSize);		
+		this->indexBuffer = new IndexBuffer(device, memprops, indicesSize);
 
 		float aspect = window->getSurfaceCapatibilities().currentExtent.width / (float)window->getSurfaceCapatibilities().currentExtent.height;
 		float nearPlane = 0.1f;
@@ -99,6 +118,7 @@ void RenderObject::prepareObject(VkCommandPool cmdPool, VkQueue queue)
 		throw new std::runtime_error("Vertices of an object cant be null.");
 	}
 }
+
 
 void RenderObject::render() {
 	VkPipelineStageFlags stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -150,10 +170,12 @@ void RenderObject::render() {
 	}
 }
 
+
 void RenderObject::setName(std::string name)
 {
 	this->name = name;
 }
+
 
 void RenderObject::setTextureParams(std::vector<std::string> texturePaths, unsigned int mode)
 {
@@ -161,15 +183,18 @@ void RenderObject::setTextureParams(std::vector<std::string> texturePaths, unsig
 	this->mode = mode;
 }
 
+
 std::string RenderObject::getName()
 {
 	return name;
 }
 
+
 bool RenderObject::isObjectReadyToRender()
 {
 	return isPrepared && this->name != "";
 }
+
 
 void RenderObject::recreateDescriptorHandler()
 {
@@ -177,48 +202,64 @@ void RenderObject::recreateDescriptorHandler()
 		static_cast<uint32_t>(window->getSwapchain()->getImageViews().size()));
 }
 
+
 void RenderObject::rotate(glm::vec2 mouseDelta)
 {
 	uniformBuffers[activeImageIndex]->rotate(mouseDelta);
 }
 
+
 IndexBuffer * RenderObject::getIndexBuffer()
 {
-	return indexBuffer.get();
+	return indexBuffer;
 }
 
-VertexBuffer * RenderObject::getVertexBuffer()
+VertexBuffer<Vertex>* RenderObject::getVertexBuffer()
 {
-	return vertexBuffer.get();
+	return this->vertexBuffer;
 }
+
+VertexBuffer<vkglTF::Vertex>* RenderObject::getGLTFVertexBuffer()
+{
+	return this->glTFVertexBuffer;
+}
+
+
 std::vector<Texture*> RenderObject::getTextures()
 {
 	return this->textures;
 }
+
+
 DescriptorHandler * RenderObject::getDescriptorHandler()
 {
 	return this->descriptorHandler.get();
 }
+
 
 Vertices* RenderObject::getVertices()
 {
 	return this->vertices.get();
 }
 
+
 std::vector<UniformBuffer*> RenderObject::getUniformBuffers()
 {
 	return uniformBuffers;
 }
+
 
 std::vector<VkClearValue>* RenderObject::getClearValues()
 {
 	return &clearValues;
 }
 
+
 std::vector<std::string> RenderObject::getTexturePaths()
 {
 	return this->texturePaths;
 }
+
 
 void RenderObject::createVideo()
 {
@@ -240,7 +281,7 @@ void RenderObject::createVideo()
 		std::string filename = "output";
 		int entries = 0;
 
-		for (const auto & entry : std::filesystem::directory_iterator("..\\Videos")) {
+		for (const auto entry : std::filesystem::directory_iterator("..\\Videos")) {
 			++entries;
 		}
 
@@ -249,7 +290,7 @@ void RenderObject::createVideo()
 
 		system(command.c_str());
 
-		for (const auto &filename : filenames) {
+		for (const auto filename : filenames) {
 			remove(filename.c_str());
 		}
 

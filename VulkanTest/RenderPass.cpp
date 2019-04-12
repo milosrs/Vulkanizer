@@ -2,6 +2,8 @@
 #include "RenderPass.h"
 #include "DepthTester.h"
 #include "Renderer.h"
+#include "Util.h"
+#include "MainWindow.h"
 
 RenderPass::RenderPass(VkSurfaceFormatKHR surfaceFormat, VkSampleCountFlagBits samples)
 {

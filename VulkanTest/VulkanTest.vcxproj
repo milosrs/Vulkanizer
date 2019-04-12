@@ -92,7 +92,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Program Files\ImageMagick-7.0.8-Q16\include;C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.97.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\Program Files\ImageMagick-7.0.8-Q16\include;C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.97.0\Include;C:\Users\milos\Documents\Visual Studio 2017\Libraries;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -111,7 +111,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Program Files\ImageMagick-7.0.8-Q16\include;C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.97.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\Program Files\ImageMagick-7.0.8-Q16\include;C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.97.0\Include;C:\Users\milos\Documents\Visual Studio 2017\Libraries;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -132,7 +132,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Program Files\ImageMagick-7.0.8-Q16\include;C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.97.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\Program Files\ImageMagick-7.0.8-Q16\include;C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.97.0\Include;C:\Users\milos\Documents\Visual Studio 2017\Libraries;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -155,7 +155,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Program Files\ImageMagick-7.0.8-Q16\include;C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\stb-master;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.97.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\milos\Documents\Visual Studio 2017\Libraries\tinyobjloader-master;C:\Program Files\ImageMagick-7.0.8-Q16\include;C:\Users\milos\Documents\Visual Studio 2017\Libraries\imgui;C:\Users\milos\source\repos\VulkanTest\base;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glm;C:\Users\milos\Documents\Visual Studio 2017\Libraries\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.1.97.0\Include;C:\Users\milos\Documents\Visual Studio 2017\Libraries;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -175,6 +175,7 @@
     <ClInclude Include="DepthTester.h" />
     <ClInclude Include="DescriptorHandler.h" />
     <ClInclude Include="FrameBuffer.h" />
+    <ClInclude Include="glTFModel.hpp" />
     <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="Model.h" />
@@ -189,6 +190,7 @@
     <ClInclude Include="RenderObject.h" />
     <ClInclude Include="SquareDepth.h" />
     <ClInclude Include="StagingBuffer.h" />
+    <ClInclude Include="StreamReader.hpp" />
     <ClInclude Include="Swapchain.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Square.h" />
@@ -206,6 +208,7 @@
     <ClCompile Include="DepthTester.cpp" />
     <ClCompile Include="DescriptorHandler.cpp" />
     <ClCompile Include="FrameBuffer.cpp" />
+    <ClCompile Include="glTFModel.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Model.cpp" />
@@ -234,6 +237,9 @@
     <ClCompile Include="WindowController.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="pbrFragmentShader.frag" />
+    <None Include="pbrVertexShader.vert" />
     <None Include="shader.frag" />
     <None Include="shader.vert" />
   </ItemGroup>
@@ -250,5 +256,14 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\rapidjson.temprelease.0.0.2.20\build\native\rapidjson.temprelease.targets" Condition="Exists('..\packages\rapidjson.temprelease.0.0.2.20\build\native\rapidjson.temprelease.targets')" />
+    <Import Project="..\packages\Microsoft.glTF.CPP.1.6.3.1\build\native\Microsoft.glTF.CPP.targets" Condition="Exists('..\packages\Microsoft.glTF.CPP.1.6.3.1\build\native\Microsoft.glTF.CPP.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\rapidjson.temprelease.0.0.2.20\build\native\rapidjson.temprelease.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rapidjson.temprelease.0.0.2.20\build\native\rapidjson.temprelease.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.glTF.CPP.1.6.3.1\build\native\Microsoft.glTF.CPP.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.glTF.CPP.1.6.3.1\build\native\Microsoft.glTF.CPP.targets'))" />
+  </Target>
 </Project>

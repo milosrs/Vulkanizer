@@ -1,24 +1,45 @@
 #pragma once
-#include "PLATFORM.h"
-#include "RenderObject.h"
-#include "Texture.h"
 #include <unordered_map>
-#include <ppl.h>
+#include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <GLTFSDK/GLTF.h>
+#include <GLTFSDK/Document.h>
+
+#include "RenderObject.h"
+#include "StreamReader.hpp"
+#include "RenderObject.h"
+#include "Vertices.h"
+#include "glTFModel.hpp"
+
+class MainWindow;
+class Renderer;
+class QueueFamilyIndices;
+
+namespace vkglTF {
+	struct Model;
+};
+
+enum ModelLoadingType {OBJ, glTF, glB};
 
 class Model : public RenderObject
 {
 public:
-	/*
-		1.OBJ or GLTF path
-		2.Texture path
-	*/
-
 	Model(std::string);
 	~Model();
+	void draw(VkCommandBuffer cmdBuffer) override;
 private:
+	MainWindow *mainWindow;
+
 	void loadModel();
-	//void parallelLoadingIsBadIdea();						WONT WORK! Messes up VERTICES/INDICES order
+	void loadGLTFModel();
+
+	std::string objectFolder;
 	std::string objectPath;
-	
+	std::filesystem::path filesystemPath;
+	ModelLoadingType modelType;
+
+	std::unique_ptr<Microsoft::glTF::Document> glTFDocument = nullptr;
+	std::unique_ptr<vkglTF::ModelInfo> glTFModel = nullptr;
 };
 

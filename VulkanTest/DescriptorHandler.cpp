@@ -1,12 +1,14 @@
 #include "pch.h"
 #include "DescriptorHandler.h"
+#include "MainWindow.h"
+#include "Renderer.h"
+#include "UniformBuffer.h"
+#include "Util.h"
 
 DescriptorHandler::DescriptorHandler(VkDevice device, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorCount)
 {
 	poolSizes.resize(2);
 
-	this->device = device;
-	this->descriptorCount = descriptorCount;
 	this->descriptorSetLayout = descriptorSetLayout;
 	this->descriptorLayouts.resize(descriptorCount, descriptorSetLayout);
 
@@ -27,26 +29,21 @@ DescriptorHandler::DescriptorHandler(VkDevice device, VkDescriptorSetLayout desc
 
 DescriptorHandler::~DescriptorHandler()
 {
-	vkDestroyDescriptorPool(device, pool, nullptr);
+	vkDestroyDescriptorPool(MainWindow::getInstance().getRenderer()->getDevice(), pool, nullptr);
 }
 
 void DescriptorHandler::createDescriptorSets(std::vector<UniformBuffer*> uniformBuffers, VkSampler sampler, VkImageView textureView)
 {
 	VkDescriptorSetAllocateInfo createInfo{};
+	descriptorSets.resize(uniformBuffers.size());
 	
-	descriptorSets.resize(descriptorCount);
-
 	createInfo.descriptorPool = pool;
-	createInfo.descriptorSetCount = descriptorCount;
+	createInfo.descriptorSetCount = uniformBuffers.size();
 	createInfo.pSetLayouts = descriptorLayouts.data();
 	createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	createInfo.pNext = nullptr;
 
-	Util::ErrorCheck(vkAllocateDescriptorSets(device, &createInfo, descriptorSets.data()));
-
-	descriptorUpdaters.resize(descriptorCount);
-	descriptorBufferInfos.resize(descriptorCount);
-	descriptorImageInfos.resize(descriptorCount);
+	Util::ErrorCheck(vkAllocateDescriptorSets(MainWindow::getInstance().getRenderer()->getDevice(), &createInfo, descriptorSets.data()));
 
 	if (sampler == nullptr && textureView == nullptr) {
 		updateWritables(uniformBuffers);
@@ -59,14 +56,14 @@ void DescriptorHandler::createDescriptorSets(std::vector<UniformBuffer*> uniform
 	}
 }
 
-void DescriptorHandler::bind(VkCommandBuffer cmdBuffer, VkPipelineLayout pipelineLayout, int index)
+void DescriptorHandler::bind(VkCommandBuffer cmdBuffer, VkDescriptorSet *descriptorSet, VkPipelineLayout pipelineLayout, int index)
 {
-	vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[index], 0, nullptr);
+	vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descriptorSet, 0, nullptr);
 }
 
 void DescriptorHandler::updateWritables(std::vector<UniformBuffer*> uniformBuffers, VkSampler sampler, VkImageView textureView)
 {
-	for (auto i = 0; i < descriptorUpdaters.size(); ++i) {
+	for (auto i = 0; i < uniformBuffers.size(); ++i) {
 		VkDescriptorBufferInfo bufferInfo = {};
 		bufferInfo.buffer = uniformBuffers[i]->getBuffer();
 		bufferInfo.offset = 0;
@@ -95,13 +92,14 @@ void DescriptorHandler::updateWritables(std::vector<UniformBuffer*> uniformBuffe
 		descriptorWrites[1].descriptorCount = 1;
 		descriptorWrites[1].pImageInfo = &imageInfo;
 
-		vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+		vkUpdateDescriptorSets(MainWindow::getInstance().getRenderer()->getDevice(), static_cast<uint32_t>(descriptorWrites.size()),
+			descriptorWrites.data(), 0, nullptr);
 	}
 }
 
 void DescriptorHandler::updateWritables(std::vector<UniformBuffer*> uniformBuffers)
 {
-	for (uint32_t i = 0; i < descriptorCount; ++i) {
+	for (uint32_t i = 0; i < uniformBuffers.size(); ++i) {
 		VkDescriptorBufferInfo bufferInfo = {};
 		bufferInfo.buffer = uniformBuffers[i]->getBuffer();
 		bufferInfo.offset = 0;
@@ -120,6 +118,11 @@ void DescriptorHandler::updateWritables(std::vector<UniformBuffer*> uniformBuffe
 		descriptorWrites.pTexelBufferView = nullptr;
 		descriptorWrites.pNext = nullptr;
 
-		vkUpdateDescriptorSets(device, 1, &descriptorWrites, 0, nullptr);
+		vkUpdateDescriptorSets(MainWindow::getInstance().getRenderer()->getDevice(), 1, &descriptorWrites, 0, nullptr);
 	}
+}
+
+std::vector<VkDescriptorSet> DescriptorHandler::getDescriptorSets()
+{
+	return descriptorSets;
 }

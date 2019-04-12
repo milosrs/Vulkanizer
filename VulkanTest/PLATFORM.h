@@ -12,8 +12,6 @@
 #define GLFW_EXPOSE_NATIVE_WGL
 #define GLFW_INCLUDE_VULKAN
 
-#define NOMINMAX							//min() i max() fje koje su deo namespace std
-
 #define GLM_ENABLE_EXPERIMENTAL				//ukljuci experimentalnu biblioteku
 #define GLM_FORCE_RADIANS					//neka GLM koristi radijane umesto stepeni
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE			//depth buffer po Vulkanovoj specifikaciji [0,1] dubina. GLM koristi [-1, 1]
@@ -32,3 +30,9 @@
 #include <glm/ext.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/hash.hpp>
+
+
+static const std::string texturesPath = "../Textures/";
+static const std::string objectsPath = "../objects/obj/";
+static const std::string meshesPath = "../objects/meshes/";
+static const std::string gltfPath = "../objects/gltf/";

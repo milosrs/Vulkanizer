@@ -37,6 +37,9 @@
     <Filter Include="objects\meshes">
       <UniqueIdentifier>{390dc61d-5841-4bb3-91f3-0e49cedb33a9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Base">
+      <UniqueIdentifier>{98d02902-c787-4bfd-9fc0-cfcaecbd671f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -105,9 +108,6 @@
     <ClInclude Include="Texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Square.h">
       <Filter>Renderings Headers</Filter>
     </ClInclude>
@@ -117,17 +117,26 @@
     <ClInclude Include="DepthTester.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Model.h">
-      <Filter>Renderings Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderObject.h">
-      <Filter>Renderings Headers</Filter>
-    </ClInclude>
     <ClInclude Include="Multisample.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WindowController.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Util.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderObject.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="glTFModel.hpp">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="StreamReader.hpp">
+      <Filter>Base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -188,9 +197,6 @@
     <ClCompile Include="Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Square.cpp">
       <Filter>Renderings Source</Filter>
     </ClCompile>
@@ -200,17 +206,23 @@
     <ClCompile Include="DepthTester.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Model.cpp">
-      <Filter>Renderings Source</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderObject.cpp">
-      <Filter>Renderings Source</Filter>
-    </ClCompile>
     <ClCompile Include="Multisample.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WindowController.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Util.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderObject.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="glTFModel.cpp">
+      <Filter>Base</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -218,6 +230,13 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="packages.config" />
+    <None Include="pbrFragmentShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="pbrVertexShader.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

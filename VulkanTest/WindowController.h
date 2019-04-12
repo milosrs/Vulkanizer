@@ -3,7 +3,6 @@
 #define WINDOW_CONTROLLER_H
 #endif
 #include "PLATFORM.h"
-#include "RenderObject.h"
 #include <iostream>
 #include <vector>
 #include <filesystem>
@@ -18,6 +17,7 @@ static bool recording = false;
 static bool shouldCreateVideo = false;
 
 class MainWindow;
+class RenderObject;
 
 class WindowController
 {

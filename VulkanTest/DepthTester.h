@@ -1,6 +1,6 @@
 #pragma once
 #include "PLATFORM.h"
-#include "Util.h"
+
 class DepthTester
 {
 public:

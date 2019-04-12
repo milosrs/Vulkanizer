@@ -8,6 +8,7 @@
 #include "BUILD_OPTIONS.h"
 #include <chrono>
 #include <vector>
+#include <algorithm>
 
 static auto timer = std::chrono::steady_clock();
 static auto last_time = timer.now();
@@ -17,7 +18,7 @@ static int selectedOption = -1;
 static float shaderScale = 1.0f;
 
 class CommandBufferHandler;
-template <class T> class StagingBuffer;
+template <typename T> class StagingBuffer;
 
 class Util
 {

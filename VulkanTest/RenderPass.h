@@ -3,7 +3,6 @@
 #define RENDER_PASS_H
 #endif
 #include "PLATFORM.h"
-#include "Util.h"
 #include <array>
 #include <vector>
 

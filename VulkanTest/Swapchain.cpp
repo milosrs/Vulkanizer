@@ -3,6 +3,9 @@
 #include "MainWindow.h"
 #include "Renderer.h"
 #include "WindowController.h"
+#include "QueueFamilyIndices.h"
+#include "CommandBufferHandler.h"
+#include "Util.h"
 
 Swapchain::Swapchain()
 {
@@ -50,7 +53,7 @@ void Swapchain::setupSwapExtent() {
 
 void Swapchain::initSwapchain() {
 	VkPresentModeKHR presentMode = getAvaiablePresentMode();
-	QueueFamilyIndices indices = *mainWindow->getRenderer()->getQueueIndices();
+	QueueFamilyIndices *indices = mainWindow->getRenderer()->getQueueIndices();
 
 	swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swapchainCreateInfo.surface = this->mainWindow->getSurface();
@@ -60,8 +63,8 @@ void Swapchain::initSwapchain() {
 	swapchainCreateInfo.imageExtent = this->swapExtent;
 	swapchainCreateInfo.imageArrayLayers = 1;													//Koliko slojeva ima slika (1 je obicno renderovanje, 2 je stetoskopsko)
 	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;						//Za koju vrstu operacija koristimo slike? Renderujemo ih, sto znaci da su oni COLOR ATTACHMENTS						
-	if (indices.getGraphicsFamilyIndex() != indices.getPresentationFamilyIndex()) {
-		uint32_t queueIndices[] = { indices.getGraphicsFamilyIndex(), indices.getPresentationFamilyIndex() };
+	if (indices->getGraphicsFamilyIndex() != indices->getPresentationFamilyIndex()) {
+		uint32_t queueIndices[] = { indices->getGraphicsFamilyIndex(), indices->getPresentationFamilyIndex() };
 		swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;						//Slika moze da se koristi paralelno, bez transfera vlasnistva nad slikom.
 		swapchainCreateInfo.queueFamilyIndexCount = 2;
 		swapchainCreateInfo.pQueueFamilyIndices = queueIndices;

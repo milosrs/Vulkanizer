@@ -1,10 +1,14 @@
 #include "pch.h"
 #include "Texture.h"
+#include "CommandBufferHandler.h"
+#include "StagingBuffer.h"
+#include "Util.h"
+#include "glTFModel.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 Texture::Texture(VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkFormat imageFormat,
-				std::string path, unsigned int mode)
+				std::string path, unsigned int mode, vkglTF::TextureSampler *sampler)
 {
 	this->device = device;
 	this->imageFormat = imageFormat;
@@ -19,9 +23,26 @@ Texture::Texture(VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, Vk
 	}
 
 	this->mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
-
 	stagingBuffer = new StagingBuffer<unsigned char>(device, *memprops, size);
-	createSampler();
+	createSampler(sampler);
+}
+
+Texture::Texture(VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkFormat format, unsigned char *pixels, size_t width, size_t height)
+{
+	this->device = device;
+	this->imageFormat = imageFormat;
+	this->physicalProperties = memprops;
+	this->pixels = pixels;
+	this->size = width * height * 4;
+
+	if (!pixels) {
+		throw std::runtime_error("No raw data to read");
+		exit(1);
+	}
+
+	this->mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
+	stagingBuffer = new StagingBuffer<unsigned char>(device, *memprops, this->size);
+	createSampler(nullptr);
 }
 
 Texture::~Texture()
@@ -56,6 +77,11 @@ void Texture::beginCreatingTexture(VkCommandPool commandPool, VkQueue queue)
 	this->textureView = Util::createImageView(device, texture, imageFormat, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels);
 }
 
+void Texture::readImage(std::string path, unsigned char* buffer, int* w, int *h, int *channels, unsigned int mode)
+{
+	buffer = stbi_load(path.c_str(), w, h, channels, mode);
+}
+
 VkSampler Texture::getSampler()
 {
 	return sampler;
@@ -71,16 +97,61 @@ VkImage Texture::getTextureImage()
 	return texture;
 }
 
-void Texture::createSampler()
+std::string Texture::getTextureId()
+{
+	return this->textureId;
+}
+
+TextureType Texture::getTextureType()
+{
+	return this->type;
+}
+
+void Texture::setTextureId(std::string id)
+{
+	this->textureId = id;
+}
+
+void Texture::setTextureType(std::string textureName)
+{
+	if (textureName.find("baseColor") != -1) {
+		this->type = TextureType::BASE_COLOR;
+	}
+	else if (textureName.find("emissive") != -1) {
+		this->type = TextureType::EMISSIVE;
+	}
+	else if (textureName.find("metallicRoughness") != -1) {
+		this->type = TextureType::METALLIC_ROUGHNESS;
+	}
+	else if (textureName.find("normal") != -1) {
+		this->type = TextureType::NORMAL;
+	}
+	else if (textureName.find("occlusion") != -1) {
+		this->type = TextureType::OCCLUSION;
+	}
+}
+
+void Texture::createSampler(vkglTF::TextureSampler *samplerglTF)
 {
 	VkSamplerCreateInfo info = {};
 
-	info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	info.minFilter = VK_FILTER_LINEAR;						//Undersampler
-	info.magFilter = VK_FILTER_LINEAR;						//Oversampler
-	info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;		//U, V, W su koordinate texela, za geometriju su x,y,z
-	info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	if (samplerglTF == nullptr) {
+		info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		info.minFilter = VK_FILTER_LINEAR;						//Undersampler
+		info.magFilter = VK_FILTER_LINEAR;						//Oversampler
+		info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;		//U, V, W su koordinate texela, za geometriju su x,y,z
+		info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	}
+	else {
+		info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		info.minFilter = samplerglTF->minFilter;						//Undersampler
+		info.magFilter = samplerglTF->magFilter;						//Oversampler
+		info.addressModeU = samplerglTF->U;								//U, V, W su koordinate texela, za geometriju su x,y,z
+		info.addressModeV = samplerglTF->V;
+		info.addressModeW = samplerglTF->W;
+	}
+
 	info.anisotropyEnable = VK_TRUE;
 	info.maxAnisotropy = 16;
 	info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
@@ -92,7 +163,7 @@ void Texture::createSampler()
 	info.maxLod = static_cast<uint32_t>(mipLevels);
 	info.anisotropyEnable = VK_TRUE;						//Anisotropy je opciona, mora se navesti u logicalDevice-u
 	info.maxAnisotropy = 16;
-
+	
 	Util::ErrorCheck(vkCreateSampler(device, &info, nullptr, &sampler));
 }
 

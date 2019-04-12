@@ -1,4 +1,3 @@
-/*Pipeline ne mora da cuva reference na create info-ove, tako da samo ih vracaj u private fjama.*/
 #pragma once
 #ifndef PIPELINE_H
 #define PIPELINE_H
@@ -8,11 +7,14 @@
 #include <vector>
 #include <array>
 #include "PLATFORM.h"
-#include "Vertices.h"
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
-#include "Util.h"
 
+struct Vertex;
+namespace vkglTF {
+	struct Vertex;
+};
+class Vertices;
+class IndexBuffer;
+template<typename T> class VertexBuffer;
 class Renderer;
 
 class Pipeline
@@ -24,7 +26,8 @@ public:
 	void createPipelineLayout(); 
 	void setupViewport(float width, float height, VkExtent2D extent);
 
-	void bindPipeline(VkCommandBuffer, VertexBuffer* = nullptr, IndexBuffer* = nullptr);
+	void bindPipeline(VkCommandBuffer, VertexBuffer<Vertex>* = nullptr, IndexBuffer* = nullptr);
+	void bindPipelineGLTF(VkCommandBuffer, VertexBuffer<vkglTF::Vertex>* = nullptr, IndexBuffer* = nullptr);
 
 	VkViewport getViewport();
 	VkViewport* getViewportPTR();
