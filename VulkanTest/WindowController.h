@@ -10,6 +10,8 @@
 static bool mousePressed;
 static double mouseX;
 static double mouseY;
+static double lastMouseX = 0;
+static double lastMouseY = 0;
 
 //Video data
 static bool ctrlPressed;
@@ -29,6 +31,7 @@ public:
 	static void mouseMoveCallback(GLFWwindow *window, double xPos, double yPos);
 	static void saveImageCombinationCallback(GLFWwindow *, int, int, int, int);
 	static void setShouldSaveScreenshot(bool shouldSave);
+	static void keyboardArrowCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 	static bool shouldTakeScreenshot();
 	static bool getShouldCreateVideo();
 	static void setShouldCreateVideo(bool);

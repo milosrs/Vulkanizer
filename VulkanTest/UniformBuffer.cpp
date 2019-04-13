@@ -65,9 +65,18 @@ void UniformBuffer::copy()
 	vkUnmapMemory(device, bufferMemory);
 }
 
-void UniformBuffer::rotate(glm::vec2 mouseDelta)
+void UniformBuffer::rotate(glm::vec2 mouseDelta, glm::vec3 axis)
 {
-	ubo.model = glm::rotate(glm::mat4(1.0f), mouseDelta.x * glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 1.0f));
+	float angleMultiplicator = 0.0f;
+	
+	if (axis.y == 1.0f) {
+		angleMultiplicator = mouseDelta.y;
+	}
+	else if (axis.z == 1.0f) {
+		angleMultiplicator = mouseDelta.x;
+	}
+
+	ubo.model = glm::rotate(ubo.model, glm::radians(3.0f), axis);
 	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	ubo.proj = glm::perspective(glm::radians(45.0f), aspect, nearPlane, farPlane);
 	ubo.proj[1][1] *= -1;
@@ -78,7 +87,6 @@ void UniformBuffer::setViewData(float aspect, float nearPlane, float farPlane)
 	this->aspect = aspect;
 	this->nearPlane = nearPlane;
 	this->farPlane = farPlane;
-
 
 	ubo = initUBO(aspect, nearPlane, farPlane);
 }

@@ -21,7 +21,7 @@ public:
 
 	void update();
 	void copy();
-	void rotate(glm::vec2 mouseDelta);
+	void rotate(glm::vec2 mouseDelta, glm::vec3 axis);
 	/*
 		Aspect ratio, Near, Far
 	*/

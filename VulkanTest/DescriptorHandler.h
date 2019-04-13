@@ -5,6 +5,7 @@
 #include <vector>
 #include "PLATFORM.h"
 
+
 class MainWindow;
 class Renderer;
 class UniformBuffer;

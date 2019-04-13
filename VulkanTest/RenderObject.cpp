@@ -203,13 +203,10 @@ void RenderObject::recreateDescriptorHandler()
 }
 
 
-void RenderObject::rotate(glm::vec2 mouseDelta)
+void RenderObject::rotate(glm::vec2 mouseDelta, glm::vec3 axis)
 {
-	uniformBuffers[activeImageIndex]->rotate(mouseDelta);
-
 	for (auto buffer : uniformBuffers) {
-		buffer->setData(uniformBuffers[activeImageIndex]->getData());
-		buffer->copy();
+		buffer->rotate(mouseDelta, axis);
 	}
 }
 

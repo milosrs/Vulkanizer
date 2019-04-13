@@ -37,7 +37,7 @@ public:
 							std::string getName();
 	
 	void recreateDescriptorHandler();
-	void rotate(glm::vec2 mouseDelta);
+	void rotate(glm::vec2 mouseDelta, glm::vec3 axis);
 	virtual void draw(VkCommandBuffer cmdBuffer) = 0;
 
 	bool isObjectReadyToRender();

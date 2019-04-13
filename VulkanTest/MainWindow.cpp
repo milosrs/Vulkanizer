@@ -246,7 +246,8 @@ void MainWindow::InitOSWindow()
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 	glfwSetMouseButtonCallback(window, WindowController::mouseBtnCallback);
 	glfwSetCursorPosCallback(window, WindowController::mouseMoveCallback);
-	glfwSetKeyCallback(window, WindowController::saveImageCombinationCallback); 
+	glfwSetKeyCallback(window, WindowController::saveImageCombinationCallback);
+	//glfwSetKeyCallback(window, WindowController::keyboardArrowCallback);
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);									//Zakljucava i sakriva kursor
 }
