@@ -8,7 +8,7 @@
 #include <stb_image.h>
 
 Texture::Texture(VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkFormat imageFormat,
-				std::string path, unsigned int mode, vkglTF::TextureSampler *sampler)
+				std::string path, unsigned int mode, VkSamplerCreateInfo *samplerInfo, vkglTF::TextureSampler *glTFsampler)
 {
 	this->device = device;
 	this->imageFormat = imageFormat;
@@ -24,7 +24,7 @@ Texture::Texture(VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, Vk
 
 	this->mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
 	stagingBuffer = new StagingBuffer<unsigned char>(device, *memprops, size);
-	createSampler(sampler);
+	createSampler(samplerInfo, glTFsampler);
 }
 
 Texture::Texture(VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkFormat format, unsigned char *pixels, size_t width, size_t height)
@@ -53,7 +53,7 @@ Texture::~Texture()
 	vkFreeMemory(device, textureMemory, nullptr);
 }
 
-void Texture::beginCreatingTexture(VkCommandPool commandPool, VkQueue queue)
+void Texture::beginCreatingTexture(VkCommandPool commandPool, VkQueue queue, TexturePurpose textureType)
 {
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
@@ -102,7 +102,7 @@ std::string Texture::getTextureId()
 	return this->textureId;
 }
 
-TextureType Texture::getTextureType()
+TexturePurpose Texture::getTextureType()
 {
 	return this->type;
 }
@@ -131,11 +131,21 @@ void Texture::setTextureType(std::string textureName)
 	}
 }
 
-void Texture::createSampler(vkglTF::TextureSampler *samplerglTF)
+unsigned int Texture::getFullDimension()
+{
+	return width * height * channelCount;
+}
+
+unsigned char* Texture::getPixels()
+{
+	return this->pixels;
+}
+
+void Texture::createSampler(VkSamplerCreateInfo *samplerInfo, vkglTF::TextureSampler *glTFsampler)
 {
 	VkSamplerCreateInfo info = {};
 
-	if (samplerglTF == nullptr) {
+	if (glTFsampler == nullptr && samplerInfo == nullptr) {
 		info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		info.minFilter = VK_FILTER_LINEAR;						//Undersampler
 		info.magFilter = VK_FILTER_LINEAR;						//Oversampler
@@ -143,13 +153,21 @@ void Texture::createSampler(vkglTF::TextureSampler *samplerglTF)
 		info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	}
-	else {
+	else if (glTFsampler != nullptr && samplerInfo == nullptr) {
 		info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		info.minFilter = samplerglTF->minFilter;						//Undersampler
-		info.magFilter = samplerglTF->magFilter;						//Oversampler
-		info.addressModeU = samplerglTF->U;								//U, V, W su koordinate texela, za geometriju su x,y,z
-		info.addressModeV = samplerglTF->V;
-		info.addressModeW = samplerglTF->W;
+		info.minFilter = glTFsampler->minFilter;						//Undersampler
+		info.magFilter = glTFsampler->magFilter;						//Oversampler
+		info.addressModeU = glTFsampler->U;								//U, V, W su koordinate texela, za geometriju su x,y,z
+		info.addressModeV = glTFsampler->V;
+		info.addressModeW = glTFsampler->W;
+	}
+	else if (glTFsampler == nullptr && samplerInfo != nullptr) {
+		info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		info.minFilter = samplerInfo->minFilter;						//Undersampler
+		info.magFilter = samplerInfo->magFilter;						//Oversampler
+		info.addressModeU = samplerInfo->addressModeU;					//U, V, W su koordinate texela, za geometriju su x,y,z
+		info.addressModeV = samplerInfo->addressModeV;
+		info.addressModeW = samplerInfo->addressModeW;
 	}
 
 	info.anisotropyEnable = VK_TRUE;

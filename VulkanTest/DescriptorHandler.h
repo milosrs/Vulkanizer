@@ -9,6 +9,7 @@
 class MainWindow;
 class Renderer;
 class UniformBuffer;
+class Texture;
 
 class DescriptorHandler
 {
@@ -21,10 +22,9 @@ public:
 	DescriptorHandler(VkDevice, VkDescriptorSetLayout, uint32_t);
 	~DescriptorHandler();
 
-	void createDescriptorSets(std::vector<UniformBuffer*>, VkSampler = nullptr, VkImageView = nullptr);
+	void createDescriptorSets(std::vector<UniformBuffer*> uniformBuffers, std::vector<Texture*> textures = {});
 	static void bind(VkCommandBuffer, VkDescriptorSet*, VkPipelineLayout, int);
-	void updateWritables(std::vector<UniformBuffer*>, VkSampler, VkImageView);
-	void updateWritables(std::vector<UniformBuffer*>);
+	void updateWritables(std::vector<UniformBuffer*>, std::vector<Texture*> textures = {});
 	std::vector<VkDescriptorSet> getDescriptorSets();
 private:
 	VkDescriptorPool pool;

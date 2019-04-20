@@ -89,7 +89,7 @@ void RenderObject::prepareObject(VkCommandPool cmdPool, VkQueue queue)
 			for (const std::string path : texturePaths) {
 				Texture *t = new Texture(device, pMemprops, VK_FORMAT_R8G8B8A8_UNORM, path, mode);
 				t->supportsLinearBlitFormat(renderer->getGpu());
-				t->beginCreatingTexture(cmdPool, queue);
+				t->beginCreatingTexture(cmdPool, queue, TexturePurpose::DEFAULT);
 				this->textures.push_back(t);
 			}
 		}
@@ -109,8 +109,7 @@ void RenderObject::prepareObject(VkCommandPool cmdPool, VkQueue queue)
 
 		vertexBuffer->fillBuffer(vertices->getVertices());
 		indexBuffer->fillBuffer(vertices->getIndices());
-		descriptorHandler->createDescriptorSets(uniformBuffers, textures[0]->getSampler(), 
-			textures[0]->getTextureImageView());
+		descriptorHandler->createDescriptorSets(uniformBuffers, textures);
 
 		isPrepared = true;
 	}

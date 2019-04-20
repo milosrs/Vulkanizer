@@ -32,7 +32,7 @@ DescriptorHandler::~DescriptorHandler()
 	vkDestroyDescriptorPool(MainWindow::getInstance().getRenderer()->getDevice(), pool, nullptr);
 }
 
-void DescriptorHandler::createDescriptorSets(std::vector<UniformBuffer*> uniformBuffers, VkSampler sampler, VkImageView textureView)
+void DescriptorHandler::createDescriptorSets(std::vector<UniformBuffer*> uniformBuffers, std::vector<Texture*> textures)
 {
 	VkDescriptorSetAllocateInfo createInfo{};
 	descriptorSets.resize(uniformBuffers.size());
@@ -45,14 +45,11 @@ void DescriptorHandler::createDescriptorSets(std::vector<UniformBuffer*> uniform
 
 	Util::ErrorCheck(vkAllocateDescriptorSets(MainWindow::getInstance().getRenderer()->getDevice(), &createInfo, descriptorSets.data()));
 
-	if (sampler == nullptr && textureView == nullptr) {
+	if (textures.size() == 0) {
 		updateWritables(uniformBuffers);
 	}
-	else if(sampler != nullptr && textureView != nullptr) {
-		updateWritables(uniformBuffers, sampler, textureView);
-	}
 	else {
-		throw new std::exception("You cant create a texture without an image sampler or view.");
+		updateWritables(uniformBuffers, textures);
 	}
 }
 
@@ -61,20 +58,25 @@ void DescriptorHandler::bind(VkCommandBuffer cmdBuffer, VkDescriptorSet *descrip
 	vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, descriptorSet, 0, nullptr);
 }
 
-void DescriptorHandler::updateWritables(std::vector<UniformBuffer*> uniformBuffers, VkSampler sampler, VkImageView textureView)
+void DescriptorHandler::updateWritables(std::vector<UniformBuffer*> uniformBuffers, std::vector<Texture*> textures)
 {
+	std::vector<VkDescriptorImageInfo> imageInfos;
+	std::vector<VkWriteDescriptorSet> descriptorWrites;
+	imageInfos.resize(textures.size());
+
+	for (auto i = 0; i < imageInfos.size(); i++) {
+		VkDescriptorImageInfo imageInfo;
+
+		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfo.imageView = textures[i]->getTextureImageView();
+		imageInfo.sampler = textures[i]->getSampler();
+	}
+
 	for (auto i = 0; i < uniformBuffers.size(); ++i) {
 		VkDescriptorBufferInfo bufferInfo = {};
 		bufferInfo.buffer = uniformBuffers[i]->getBuffer();
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(UBO);
-
-		VkDescriptorImageInfo imageInfo = {};
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = textureView;
-		imageInfo.sampler = sampler;
-
-		std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[0].dstSet = descriptorSets[i];
@@ -84,41 +86,18 @@ void DescriptorHandler::updateWritables(std::vector<UniformBuffer*> uniformBuffe
 		descriptorWrites[0].descriptorCount = 1;
 		descriptorWrites[0].pBufferInfo = &bufferInfo;
 
-		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[1].dstSet = descriptorSets[i];
-		descriptorWrites[1].dstBinding = 1;
-		descriptorWrites[1].dstArrayElement = 0;
-		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[1].descriptorCount = 1;
-		descriptorWrites[1].pImageInfo = &imageInfo;
+		for (auto j = 0; j < imageInfos.size(); ++j) {
+			descriptorWrites[j + 1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrites[j + 1].dstSet = descriptorSets[i];
+			descriptorWrites[j + 1].dstBinding = 1;
+			descriptorWrites[j + 1].dstArrayElement = 0;
+			descriptorWrites[j + 1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			descriptorWrites[j + 1].descriptorCount = 1;
+			descriptorWrites[j + 1].pImageInfo = &imageInfos[j];
+		}
 
 		vkUpdateDescriptorSets(MainWindow::getInstance().getRenderer()->getDevice(), static_cast<uint32_t>(descriptorWrites.size()),
 			descriptorWrites.data(), 0, nullptr);
-	}
-}
-
-void DescriptorHandler::updateWritables(std::vector<UniformBuffer*> uniformBuffers)
-{
-	for (uint32_t i = 0; i < uniformBuffers.size(); ++i) {
-		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.buffer = uniformBuffers[i]->getBuffer();
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(UBO);
-
-		VkWriteDescriptorSet descriptorWrites;
-
-		descriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites.dstSet = descriptorSets[i];									//Odredisni deskriptor set
-		descriptorWrites.dstBinding = 0;												//Iz sejdera
-		descriptorWrites.dstArrayElement = 0;											//Prvi index u nizu Deskriptora koji azuriramo. Ne koristimo niz->0
-		descriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;			//Uniform Object Buffer
-		descriptorWrites.descriptorCount = 1;											//Koliko elemenata niza azuriramo
-		descriptorWrites.pBufferInfo = &bufferInfo;
-		descriptorWrites.pImageInfo = nullptr;
-		descriptorWrites.pTexelBufferView = nullptr;
-		descriptorWrites.pNext = nullptr;
-
-		vkUpdateDescriptorSets(MainWindow::getInstance().getRenderer()->getDevice(), 1, &descriptorWrites, 0, nullptr);
 	}
 }
 

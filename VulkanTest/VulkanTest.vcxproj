@@ -188,6 +188,7 @@
     <ClInclude Include="RenderPass.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RenderObject.h" />
+    <ClInclude Include="Skybox.h" />
     <ClInclude Include="SquareDepth.h" />
     <ClInclude Include="StagingBuffer.h" />
     <ClInclude Include="StreamReader.hpp" />
@@ -225,6 +226,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="RenderObject.cpp" />
+    <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="SquareDepth.cpp" />
     <ClCompile Include="Swapchain.cpp" />
     <ClCompile Include="Texture.cpp" />
