@@ -108,9 +108,7 @@ void MainWindow::createData()
 	frameBuffer = std::make_unique<FrameBuffer>(swapchain->getSwapchainImageCount(), swapchain->getImageViews(),
 		renderPass->getRenderPass(), this->getSurfaceSize(), framebufferAttachments);
 
-	for (RenderObject *robj : objects) {
-		robj->recreateDescriptorHandler();
-	}
+	renderer->recreateDescriptorHandler();
 }
 
 void MainWindow::setupPipeline(RenderObject *renderObject, bool uniform)

@@ -174,6 +174,7 @@
     <ClInclude Include="ColorChanger.h" />
     <ClInclude Include="DepthTester.h" />
     <ClInclude Include="DescriptorHandler.h" />
+    <ClInclude Include="Enums.h" />
     <ClInclude Include="FrameBuffer.h" />
     <ClInclude Include="glTFModel.hpp" />
     <ClInclude Include="IndexBuffer.h" />
@@ -188,6 +189,8 @@
     <ClInclude Include="RenderPass.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RenderObject.h" />
+    <ClInclude Include="resource1.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="SquareDepth.h" />
     <ClInclude Include="StagingBuffer.h" />
@@ -226,6 +229,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="RenderObject.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="SquareDepth.cpp" />
     <ClCompile Include="Swapchain.cpp" />
@@ -255,6 +259,9 @@
     <Image Include="..\objects\meshes\truck.jpg" />
     <Image Include="..\textures\chef.png" />
     <Image Include="..\textures\sculpture.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Vulkanizer.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

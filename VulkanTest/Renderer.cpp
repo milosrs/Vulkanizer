@@ -2,16 +2,29 @@
 #include "Renderer.h"
 #include "MainWindow.h"
 #include "Util.h"
+#include "WindowController.h"
+#include "UniformBuffer.h"
+#include "CommandBufferSemaphoreInfo.h"
+#include "RenderObject.h"
+#include "DescriptorHandler.h"
+#include "Scene.h"
 
 VkPhysicalDevice findMostSuitableGPU(std::vector<VkPhysicalDevice>);
 int ratePhysicalDevice(VkPhysicalDevice gpu);
 
 Renderer::Renderer()
 {
+	window = &MainWindow::getInstance();
 	SetupDebug();
 	SetupLayersAndExtensions();
 	_InitInstance();
 	InitDebug();
+
+	this->clearValues.resize(2);
+	this->clearValues[0] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	this->clearValues[1] = { 1.0f, 0.0f };
+	this->descriptorHandler = std::make_unique<DescriptorHandler>(device, window->getPipelinePTR()->getDescriptorSetLayout(),
+		static_cast<uint32_t>(window->getSwapchain()->getImageViews().size()));
 }
 
 Renderer::~Renderer()
@@ -19,6 +32,7 @@ Renderer::~Renderer()
 	DeinitDebug();
 	_DeinitInstance();
 	_DeinitDevice();
+	deleteSyncObjects();
 }
 
 void Renderer::_InitInstance() {
@@ -358,6 +372,128 @@ int ratePhysicalDevice(VkPhysicalDevice gpu) {
 	return score;
 }
 
+void Renderer::render(Scene scene) {
+	VkPipelineStageFlags stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	window->setupPipeline(objects, USES_UNIFORM_BUFFER);
+
+				//SCENA OVDE DOLAZI
+
+	while (!glfwWindowShouldClose(window->getWindowPTR())) {
+		glfwPollEvents();
+
+		VkSemaphore imageAcquiredSemaphore = this->imageAvaiableSemaphores[frameCount];
+		VkSemaphore renderSemaphore = this->renderFinishedSemaphores[frameCount];
+		VkFence fence = this->fences[frameCount];
+		bool isSubmitted = false;
+
+		vkWaitForFences(device, 1, &this->fences[frameCount], VK_TRUE, std::numeric_limits<uint64_t>::max());
+
+		window->beginRender(imageAcquiredSemaphore);
+		activeImageIndex = window->getSwapchain()->getActiveImageSwapchain();
+
+		{
+			for (RenderObject *robj : objects) {
+				robj->getUniformBuffers()[activeImageIndex]->update();
+			}
+		}
+
+		CommandBufferSemaphoreInfo renderSemaphoreInfo(true, renderSemaphore, &stage);
+		CommandBufferSemaphoreInfo imageSemaphoreInfo(true, imageAcquiredSemaphore, &stage);
+
+		vkResetFences(device, 1, &this->fences[frameCount]);
+
+		isSubmitted = window->getCommandHandler()->submitQueue(activeImageIndex, queueFamilyIndices->getQueue(),
+			&imageSemaphoreInfo, &renderSemaphoreInfo, &fence);
+
+		if (!isSubmitted) {
+			window->recreateSwapchain();
+			continue;
+		}
+
+		window->endRender({ renderSemaphore });
+		frameCount = (frameCount + 1) % MAX_FRAMES_IN_FLIGHT;
+		createVideo();
+		vkQueueWaitIdle(queueFamilyIndices->getQueue());
+	}
+
+	vkDeviceWaitIdle(device);
+}
+
+void Renderer::createSyncObjects() {
+	imageAvaiableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	fences.resize(MAX_FRAMES_IN_FLIGHT);
+
+	VkSemaphoreCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkFenceCreateInfo fcreateInfo{};
+	fcreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fcreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		Util::ErrorCheck(vkCreateSemaphore(device, &createInfo, nullptr, &imageAvaiableSemaphores[i]));
+		Util::ErrorCheck(vkCreateSemaphore(device, &createInfo, nullptr, &renderFinishedSemaphores[i]));
+		Util::ErrorCheck(vkCreateFence(device, &fcreateInfo, nullptr, &fences[i]));
+	}
+}
+
+void Renderer::deleteSyncObjects()
+{
+	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		vkDestroySemaphore(device, imageAvaiableSemaphores[i], nullptr);
+		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+		vkDestroyFence(device, fences[i], nullptr);
+	}
+}
+
+void Renderer::createVideo()
+{
+	if (WindowController::shouldTakeScreenshot()) {
+		MainWindow* mainWindow = &MainWindow::getInstance();
+		std::string pictureName = "screenshot_";
+		std::string filename = picturePath + pictureName;
+
+		filename += std::to_string(filenames.size()) + pictureFormat;
+		pictureName += std::to_string(filenames.size()) + pictureFormat;
+
+		mainWindow->getSwapchain()->saveScreenshot(filename);
+		filenames.push_back(filename);
+		picturenames.push_back(pictureName);
+	}
+
+	if (WindowController::getShouldCreateVideo()) {
+		std::string command = "ffmpeg -i  ..\\screnshotsForVideo\\screenshot_%01d" + pictureFormat + " -pix_fmt yuv420p ..\\Videos\\";
+		std::string filename = "output";
+		int entries = 0;
+
+		for (const auto entry : std::filesystem::directory_iterator("..\\Videos")) {
+			++entries;
+		}
+
+		filename += std::to_string(entries) + videoFormat;
+		command += filename;
+
+		system(command.c_str());
+
+		for (const auto filename : filenames) {
+			remove(filename.c_str());
+		}
+
+		picturenames.clear();
+		filenames.clear();
+
+		WindowController::setShouldCreateVideo(false);
+	}
+}
+
+void Renderer::recreateDescriptorHandler()
+{
+	this->descriptorHandler = std::make_unique<DescriptorHandler>(device, window->getPipelinePTR()->getDescriptorSetLayout(),
+		static_cast<uint32_t>(window->getSwapchain()->getImageViews().size()));
+}
+
+
 const VkDevice Renderer::getDevice() {
 	return this->device;
 }
@@ -403,4 +539,14 @@ QueueFamilyIndices* Renderer::getQueueIndices()
 VkSampleCountFlagBits Renderer::getMSAA()
 {
 	return msaaCount;
+}
+
+std::vector<VkClearValue>* Renderer::getClearValues()
+{
+	return &clearValues;
+}
+
+DescriptorHandler * Renderer::getDescriptorHandler()
+{
+	return this->descriptorHandler.get();
 }

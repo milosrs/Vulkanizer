@@ -13,10 +13,6 @@ class MainWindow;
 class RenderObject;
 class IndexBuffer;
 
-enum CommandBufferType {
-	GRAPHICS = 0,
-	TRANSFER = 1
-};
 
 struct CommandBuffer {
 	VkCommandBuffer commandBuffer;

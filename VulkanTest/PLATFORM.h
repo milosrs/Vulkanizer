@@ -31,6 +31,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/hash.hpp>
 
+#include "Enums.h"
 
 static const std::string texturesPath = "../Textures/";
 static const std::string objectsPath = "../objects/obj/";

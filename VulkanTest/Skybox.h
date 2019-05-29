@@ -1,12 +1,13 @@
 #include <vector>
 #include <filesystem>
 #include <algorithm>
+#include <memory>
 #include "PLATFORM.h"
 #include "RenderObject.h"
-
-enum SkyboxFaces { TOP = 0, BOTTOM = 1, LEFT = 2, RIGHT = 3, BACK = 4, FORWARD = 5 };
+#include "Vertices.h"
 
 class Texture;
+template class VertexBuffer<Vertex>;
 template class StagingBuffer<unsigned char>;
 
 #pragma once
@@ -24,53 +25,11 @@ private:
 	VkSamplerCreateInfo samplerInfo{};
 	VkPhysicalDeviceMemoryProperties *memprops = nullptr;
 	Texture* faces[6];				//UP, DOWN, LEFT, RIGHT, BACK, FORWARD
+	
 	StagingBuffer<unsigned char> *stagingBuffer = nullptr;
+	VertexBuffer<Vertex> *vertexBuffer = nullptr;
 
 	int getFaceArrayPositionByFilename(std::string filename);
 	void createSampler();
-
-	std::vector<float> skyboxVertices = { 
-		-1.0f,  1.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f,
-		 1.0f, -1.0f, -1.0f,
-		 1.0f, -1.0f, -1.0f,
-		 1.0f,  1.0f, -1.0f,
-		-1.0f,  1.0f, -1.0f,
-
-		-1.0f, -1.0f,  1.0f,
-		-1.0f, -1.0f, -1.0f,
-		-1.0f,  1.0f, -1.0f,
-		-1.0f,  1.0f, -1.0f,
-		-1.0f,  1.0f,  1.0f,
-		-1.0f, -1.0f,  1.0f,
-
-		 1.0f, -1.0f, -1.0f,
-		 1.0f, -1.0f,  1.0f,
-		 1.0f,  1.0f,  1.0f,
-		 1.0f,  1.0f,  1.0f,
-		 1.0f,  1.0f, -1.0f,
-		 1.0f, -1.0f, -1.0f,
-
-		-1.0f, -1.0f,  1.0f,
-		-1.0f,  1.0f,  1.0f,
-		 1.0f,  1.0f,  1.0f,
-		 1.0f,  1.0f,  1.0f,
-		 1.0f, -1.0f,  1.0f,
-		-1.0f, -1.0f,  1.0f,
-
-		-1.0f,  1.0f, -1.0f,
-		 1.0f,  1.0f, -1.0f,
-		 1.0f,  1.0f,  1.0f,
-		 1.0f,  1.0f,  1.0f,
-		-1.0f,  1.0f,  1.0f,
-		-1.0f,  1.0f, -1.0f,
-
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f,  1.0f,
-		 1.0f, -1.0f, -1.0f,
-		 1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f,  1.0f,
-		 1.0f, -1.0f,  1.0f
-	};
 };
 

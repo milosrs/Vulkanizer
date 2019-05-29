@@ -10,6 +10,7 @@
 Texture::Texture(VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkFormat imageFormat,
 				std::string path, unsigned int mode, VkSamplerCreateInfo *samplerInfo, vkglTF::TextureSampler *glTFsampler)
 {
+	std::vector<double> vector = std::vector<double>();
 	this->device = device;
 	this->imageFormat = imageFormat;
 	this->physicalProperties = memprops;
@@ -53,7 +54,7 @@ Texture::~Texture()
 	vkFreeMemory(device, textureMemory, nullptr);
 }
 
-void Texture::beginCreatingTexture(VkCommandPool commandPool, VkQueue queue, TexturePurpose textureType)
+void Texture::beginCreatingTexture(VkCommandPool commandPool, VkQueue queue, bool isCubemap)
 {
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
@@ -63,7 +64,7 @@ void Texture::beginCreatingTexture(VkCommandPool commandPool, VkQueue queue, Tex
 	stbi_image_free(pixels);
 
 	Util::createImage(width, height, mipLevels, imageFormat, tiling, usage,
-		imageMemoryProps, &texture, &textureMemory, device, physicalProperties);
+		imageMemoryProps, &texture, &textureMemory, device, physicalProperties, VK_SAMPLE_COUNT_1_BIT, isCubemap);
 
 	Util::transitionImageLayout(texture, imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, 
 								VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, commandPool, queue, device, mipLevels);
@@ -102,7 +103,7 @@ std::string Texture::getTextureId()
 	return this->textureId;
 }
 
-TexturePurpose Texture::getTextureType()
+TextureType Texture::getTextureType()
 {
 	return this->type;
 }

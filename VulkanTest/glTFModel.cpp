@@ -75,7 +75,7 @@ namespace vkglTF {
 		if (std::filesystem::exists(imagePath)) {
 			std::filesystem::path path = imagePath;
 			texture = new Texture(device, &memprops, VK_FORMAT_R8G8B8A8_UNORM, imagePath, 4, nullptr, &sampler);
-			texture->beginCreatingTexture(MainWindow::getInstance().getCommandHandler()->getCommandPool(), transferQueue, TexturePurpose::DEFAULT);
+			texture->beginCreatingTexture(MainWindow::getInstance().getCommandHandler()->getCommandPool(), transferQueue);
 			texture->setTextureId(gltfTexture.id);
 			texture->setTextureType(image.uri);
 		}

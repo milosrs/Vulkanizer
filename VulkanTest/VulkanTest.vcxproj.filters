@@ -141,6 +141,15 @@
     <ClInclude Include="Skybox.h">
       <Filter>Base</Filter>
     </ClInclude>
+    <ClInclude Include="resource1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Enums.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Renderings Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -230,6 +239,9 @@
     <ClCompile Include="Skybox.cpp">
       <Filter>Base</Filter>
     </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Renderings Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader.vert">
@@ -274,5 +286,10 @@
     <Image Include="..\objects\meshes\truck.jpg">
       <Filter>objects\meshes</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Vulkanizer.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

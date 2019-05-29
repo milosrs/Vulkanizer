@@ -20,8 +20,6 @@ namespace vkglTF {
 	struct Model;
 };
 
-enum ModelLoadingType {OBJ, glTF, glB};
-
 class Model : public RenderObject
 {
 public:

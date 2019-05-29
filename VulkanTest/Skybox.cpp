@@ -6,8 +6,54 @@
 #include "Util.h"
 #include "StagingBuffer.h"
 
+std::vector<float> skyboxVertices = {
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f
+};
+
 Skybox::Skybox(std::string facesDirectory)
 {
+	std::vector<Vertex> vertices;
+
 	createSampler();
 	device = MainWindow::getInstance().getRenderer()->getDevice();
 	*memprops = MainWindow::getInstance().getRenderer()->getPhysicalDeviceMemoryProperties();
@@ -30,14 +76,32 @@ Skybox::Skybox(std::string facesDirectory)
 	std::vector<unsigned char> allTexturesData;
 	cubemapSize = faces[0]->getFullDimension() * 6;
 	oneFaceSize = faces[0]->getFullDimension();
+	
 	stagingBuffer = new StagingBuffer<unsigned char>(device, *memprops, cubemapSize);
+	vertexBuffer = new VertexBuffer<Vertex>(device, *memprops, skyboxVertices.size());
 
 	for (int i = 0; i < 6; i++) {
 		std::vector<unsigned char> pixels(faces[i]->getPixels()[0], faces[i]->getPixels()[faces[i]->getFullDimension() - 1]);
 		allTexturesData.insert(allTexturesData.end(), pixels.begin(), pixels.end());
 	}
 
+	{
+		glm::vec3 color = { 0.0f, 0.0f, 0.0f };
+		glm::vec2 texCoord = { 0.0f, 0.0f };
+		for (int i = 0; i < skyboxVertices.size(); i += 3) {
+			glm::vec3 position = glm::make_vec3(&skyboxVertices[i]);
+			Vertex v{};
+
+			v.position = position;
+			v.color = color;
+			v.texCoord = texCoord;
+
+			vertices.push_back(v);
+		}
+	}
+
 	stagingBuffer->fillBuffer(allTexturesData);
+	vertexBuffer->fillBuffer(vertices);
 }
 
 Skybox::~Skybox()

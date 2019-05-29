@@ -162,7 +162,7 @@ uint32_t Util::findMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties * memo
 
 void Util::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, 
 	VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory,
-	VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkSampleCountFlagBits samples, TexturePurpose textureType) {
+	VkDevice device, VkPhysicalDeviceMemoryProperties *memprops, VkSampleCountFlagBits samples, bool isCubemap) {
 
 	VkImageCreateInfo imageInfo = {};
 	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -171,7 +171,7 @@ void Util::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFo
 	imageInfo.extent.height = height;
 	imageInfo.extent.depth = 1;
 	imageInfo.mipLevels = mipLevels;
-	imageInfo.arrayLayers = textureType == TexturePurpose::CUBEMAP ? 6 : 1;
+	imageInfo.arrayLayers = isCubemap ? 6 : 1;
 	imageInfo.format = format;
 	imageInfo.tiling = tiling;
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -312,12 +312,12 @@ void Util::copyBufferToimage(VkBuffer buffer, VkImage *image, uint32_t width, ui
 	CommandBufferHandler::endOneTimeUsageBuffer(cmdBuffer, queue, commandPool, device);
 }
 
-VkImageView Util::createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect, uint32_t mipLevels, TexturePurpose textureType)
+VkImageView Util::createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect, uint32_t mipLevels, bool isCubemap)
 {
 	VkImageViewCreateInfo imgCreateInfo = {};
 	VkImageView ret = VK_NULL_HANDLE;
 
-	if (textureType == TexturePurpose::CUBEMAP) {
+	if (isCubemap) {
 		imgCreateInfo.subresourceRange.layerCount = 6;
 		imgCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
 	}

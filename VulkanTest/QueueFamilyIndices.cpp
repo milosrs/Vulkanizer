@@ -15,7 +15,7 @@ QueueFamilyIndices::QueueFamilyIndices(VkPhysicalDevice physicalDevice, VkSurfac
 				vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &isPresentationSupported);
 
 				if (queueFamilyProp.queueCount > 0 && isPresentationSupported) {
-					this->presentFamily = i;
+					this->presentFamilyIndex = i;
 					foundWantedQueue = true;
 				}
 				if (queueFamilyProp.queueCount > 0 && queueFamilyProp.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
@@ -23,9 +23,21 @@ QueueFamilyIndices::QueueFamilyIndices(VkPhysicalDevice physicalDevice, VkSurfac
 					foundWantedQueue = true;
 				}
 			}
+
 			else if (queueFamilyProp.queueCount > 0 && queueFamilyProp.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 				this->graphicsFamilyIndex = i;
 				foundWantedQueue = true;
+			}
+
+			else if (queueFamilyProp.queueCount > 0 &&
+				(queueFamilyProp.queueFlags & VK_QUEUE_TRANSFER_BIT && !(queueFamilyProp.queueFlags & VK_QUEUE_GRAPHICS_BIT))
+				) {
+				this->transferFamilyIndex = i;
+			}
+
+			else if (queueFamilyProp.queueCount > 0 &&
+				(queueFamilyProp.queueFlags & VK_QUEUE_COMPUTE_BIT)) {
+				this->computeFamilyIndex = i;
 			}
 
 			++i;
@@ -58,8 +70,8 @@ uint32_t QueueFamilyIndices::getPresentationFamilyIndex()
 {
 	uint32_t ret = NULL;
 
-	if (this->presentFamily.has_value()) {
-		ret = presentFamily.value();
+	if (this->presentFamilyIndex.has_value()) {
+		ret = presentFamilyIndex.value();
 	}
 
 	return ret;
@@ -69,8 +81,8 @@ uint32_t QueueFamilyIndices::getTransferFamilyIndex()
 {
 	uint32_t ret = NULL;
 
-	if (this->transferFamily.has_value()) {
-		ret = transferFamily.value();
+	if (this->transferFamilyIndex.has_value()) {
+		ret = transferFamilyIndex.value();
 	}
 
 	return ret;
@@ -97,12 +109,12 @@ std::vector<VkDeviceQueueCreateInfo> QueueFamilyIndices::getQueueCreateInfos() {
 
 void QueueFamilyIndices::createQueueCreateInfos()
 {
-	std::set<uint32_t> uniqueQueueFamilies = { this->graphicsFamilyIndex.value(), this->presentFamily.value() };
-	
-	if (this->isComplete()) {
+	std::set<uint32_t> uniqueQueueFamilies = getUniqueQueueFamilyIndices();
+
+	if (this->isComplete(graphicsFamilyIndex) && this->isComplete(presentFamilyIndex)) {
 		for (uint32_t family : uniqueQueueFamilies) {
 			VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
-			float queuePriorities[]{ 1.0f };														//Ovo pomaze Vulkan Core-u da skonta koji red je najprioritetniji za zavrsavanje zadataka iz Command Buffera
+			float queuePriorities[]{ 1.0f, 1.0f, 0.9f, 0.5f };														//Ovo pomaze Vulkan Core-u da skonta koji red je najprioritetniji za zavrsavanje zadataka iz Command Buffera
 
 			deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 			deviceQueueCreateInfo.queueFamilyIndex = family;
@@ -118,11 +130,11 @@ void QueueFamilyIndices::createQueueCreateInfos()
 }
 
 void QueueFamilyIndices::createQueues(VkDevice device) {
-	std::set<uint32_t> uniqueQueueFamilies = { this->graphicsFamilyIndex.value(), this->presentFamily.value() };
+	std::set<uint32_t> uniqueQueueFamilies = getUniqueQueueFamilyIndices();
 
-	for (uint32_t i = 0; i < uniqueQueueFamilies.size(); i++) {
+	for (uint32_t index : uniqueQueueFamilies) {
 		VkQueue queue = VK_NULL_HANDLE;
-		vkGetDeviceQueue(device, this->graphicsFamilyIndex.value(), 0, &queue);			//Iz koje familije hocemo da uzmemo red
+		vkGetDeviceQueue(device, index, 0, &queue);
 
 		queues.push_back(queue);
 	}

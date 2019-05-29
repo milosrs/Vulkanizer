@@ -18,7 +18,6 @@ static int selectedOption = -1;
 static float shaderScale = 1.0f;
 
 class CommandBufferHandler;
-enum TexturePurpose;
 template <typename T> class StagingBuffer;
 
 class Util
@@ -39,9 +38,9 @@ public:
 
 	static void createImage(uint32_t, uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags,
 							VkMemoryPropertyFlags, VkImage*, VkDeviceMemory*, VkDevice, 
-							VkPhysicalDeviceMemoryProperties *, VkSampleCountFlagBits = VK_SAMPLE_COUNT_1_BIT, TexturePurpose textureType = TexturePurpose::DEFAULT);
+							VkPhysicalDeviceMemoryProperties *, VkSampleCountFlagBits = VK_SAMPLE_COUNT_1_BIT, bool isCubemap = false);
 
-	static VkImageView createImageView(VkDevice, VkImage, VkFormat, VkImageAspectFlags, uint32_t, TexturePurpose textureType = TexturePurpose::DEFAULT);
+	static VkImageView createImageView(VkDevice, VkImage, VkFormat, VkImageAspectFlags, uint32_t, bool isCubemap = false);
 
 	static void copyBufferToimage(VkBuffer, VkImage*, uint32_t, uint32_t, VkCommandPool, VkDevice, VkQueue);
 
